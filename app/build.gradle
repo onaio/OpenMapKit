@@ -28,4 +28,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile group: 'com.google.guava', name: 'guava', version: '18.0'
     compile project(':MapboxAndroidSDK')
+    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile "org.mockito:mockito-core:1.9.5"
 }

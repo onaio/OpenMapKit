@@ -505,4 +505,20 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     public static String getVersion() {
         return version;
     }
+
+    /**
+     *
+     * @return the radius of enabled proximity around a user.
+     */
+    public double getRadius() {
+        return boundRadius;
+    }
+
+    /**
+     *
+     * @return true if proximity is enabled and radius should be drawn.
+     */
+    public boolean getCheckProximity() {
+        return LocationXMLParser.getProximityCheck();
+    }
 }
