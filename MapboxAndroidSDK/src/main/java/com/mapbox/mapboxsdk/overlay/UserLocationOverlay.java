@@ -38,6 +38,7 @@ import java.util.LinkedList;
  * @author Manuel Stahl
  */
 public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, MapListener {
+    public static final int GPS_THRESHOLD_ACCURACY = 25;
 
     public enum TrackingMode {
         NONE, FOLLOW, FOLLOW_BEARING
@@ -193,7 +194,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         float radius = (float) LocationXMLParser.getProximityRadius();
         //If proximity check is true and the GPS is not enabled, don't show user location else
         //draw circle of provided radius around the user.
-        if (!(LocationXMLParser.getProximityCheck() && !isGPSEnabled())) {
+        if (getGPSAccuracy() < GPS_THRESHOLD_ACCURACY && (!LocationXMLParser.getProximityCheck() || isGPSEnabled())) {
             radius = radius / (float) Projection.groundResolution(
                     lastFix.getLatitude(), mapView.getZoomLevel()) * mapView.getScale();
             mCirclePaint.setAlpha(50);
@@ -585,9 +586,18 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
      */
     private boolean isGPSEnabled() {
         LocationManager manager = (LocationManager) mContext.getSystemService( Context.LOCATION_SERVICE );
-        if ( manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+        if ( manager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
             return true;
         }
         return false;
+    }
+
+    /**
+     *
+     * @return the accuracy of the GPS.
+     */
+    private float getGPSAccuracy() {
+        Location location = new Location(LocationManager.GPS_PROVIDER);
+        return location.getAccuracy();
     }
 }
