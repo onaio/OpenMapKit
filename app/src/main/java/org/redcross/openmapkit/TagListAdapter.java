@@ -138,7 +138,7 @@ public class TagListAdapter extends BaseAdapter {
                     currentTagValueLabel = odkCollectData.getTagValueLabel(currentTagKey, currentTagValue);
                 }
                 catch (Exception ex) {
-                    ex.printStackTrace();
+
                     Log.e("error", "exception raised when calling getTagKeyLabel or getTagValueLabel with tag key: '" + currentTagKey + "' and tag value: '" + currentTagValue + "'") ;
                 }
             }

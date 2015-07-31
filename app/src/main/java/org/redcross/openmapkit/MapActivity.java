@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cocoahero.android.geojson.FeatureCollection;
+import com.mapbox.mapboxsdk.constants.MathConstants;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.LocationXMLParser;
@@ -67,7 +68,6 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     public static final String USER_LNG = "user longitude";
     public static final String USER_ALT = "user altitude";
     public static final String GPS_ACCURACY = "gps accuracy";
-    public static final String SPRAY_STATUS = "spray status";
 
     private static String version = "";
 
@@ -92,7 +92,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
 
         determineVersion();
 
-        if (android.os.Build.VERSION.SDK_INT >= 21) {
+        if(android.os.Build.VERSION.SDK_INT >= 21) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
@@ -110,19 +110,19 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         setContentView(R.layout.activity_map);
 
         //get the layout the ListView is nested in
-        mBottomLinearLayout = (LinearLayout) findViewById(R.id.bottomLinearLayout);
+        mBottomLinearLayout = (LinearLayout)findViewById(R.id.bottomLinearLayout);
 
         //the ListView from layout
         mTagListView = (ListView) findViewById(R.id.tagListView);
 
         //the ListView close image button
-        mCloseListViewButton = (ImageButton) findViewById(R.id.imageViewCloseList);
+        mCloseListViewButton = (ImageButton)findViewById(R.id.imageViewCloseList);
 
         //get the layout the Map is nested in
-        mTopLinearLayout = (LinearLayout) findViewById(R.id.topLinearLayout);
+        mTopLinearLayout = (LinearLayout)findViewById(R.id.topLinearLayout);
 
         //get map from layout
-        mapView = (MapView) findViewById(R.id.mapView);
+        mapView = (MapView)findViewById(R.id.mapView);
 
         // initialize basemap object
         basemap = new Basemap(this);
@@ -132,11 +132,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         //add user location toggle button
         initializeLocationButton();
 
-        initializeSaveButton();
-
         positionMap();
-
-        addGeojsonOverlay();
 
         initializeListView();
 
@@ -194,45 +190,13 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         }
     }
 
-    protected void addGeojsonOverlay() {
-//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/buffers.json?target_area=408_257");
-//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/targetareas.json?target_area=408_257");
-//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/spraydays.json?spray_date=&target_area=408_257");
-//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/districts.json?district=Milenge");
-        //addGeoJSONOverlayFromAssets("kilimani.json");
-//        mapView.addTileSource(new MBTilesLayer(this, "buffers.mbtiles"));
-//        mapView.postInvalidate();
-    }
-
-    protected void addGeoJSONOverlayFromAssets(String filename) {
-        ArrayList<Object> uiObjects = new ArrayList<Object>();
-        try {
-            FeatureCollection parsed = DataLoadingUtils.loadGeoJSONFromAssets(this, filename);
-            uiObjects = DataLoadingUtils.createUIObjectsFromGeoJSONObjects(parsed, null);
-        } catch (Exception e) {
-            Log.e("", "Error loading / parsing GeoJSON: " + e.toString());
-            e.printStackTrace();
-        }
-
-        for (Object obj : uiObjects) {
-            if (obj instanceof Marker) {
-                mapView.addMarker((Marker) obj);
-            } else if (obj instanceof PathOverlay) {
-                mapView.getOverlays().add((PathOverlay) obj);
-            }
-        }
-        if (uiObjects.size() > 0) {
-            mapView.invalidate();
-        }
-    }
-
     /**
      * For initializing the ListView of tags
      */
     protected void initializeListView() {
 
         //the ListView title
-        mTagTextView = (TextView) findViewById(R.id.tagTextView);
+        mTagTextView = (TextView)findViewById(R.id.tagTextView);
         mTagTextView.setText(R.string.tagListViewTitle);
 
         //hide the ListView by default
@@ -290,7 +254,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         //pass the tags to the list adapter
         tagListAdapter = new TagListAdapter(this, osmElement);
 
-        if (!tagListAdapter.isEmpty()) {
+        if(!tagListAdapter.isEmpty()) {
             //set the ListView's adapter
             mTagListView.setAdapter(tagListAdapter);
 
@@ -307,8 +271,8 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
      */
     protected void proportionMapAndList(int topWeight, int bottomWeight) {
 
-        LinearLayout.LayoutParams topLayoutParams = (LinearLayout.LayoutParams) mTopLinearLayout.getLayoutParams();
-        LinearLayout.LayoutParams bottomLayoutParams = (LinearLayout.LayoutParams) mBottomLinearLayout.getLayoutParams();
+        LinearLayout.LayoutParams topLayoutParams = (LinearLayout.LayoutParams)mTopLinearLayout.getLayoutParams();
+        LinearLayout.LayoutParams bottomLayoutParams = (LinearLayout.LayoutParams)mBottomLinearLayout.getLayoutParams();
 
         //update weight of top and bottom linear layouts
         mTopLinearLayout.setLayoutParams(new LinearLayout.LayoutParams(topLayoutParams.width, topLayoutParams.height, topWeight));
@@ -343,24 +307,6 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
             }
         });
     }
-
-    /**
-     * For instantiating the save tags button and setting up its tap event handler
-     */
-    protected void initializeSaveButton() {
-
-        //instantiate save button
-        final Button saveButton = (Button) findViewById(R.id.saveTagsButton);
-
-        //set tap event - saves tags to ODK..
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-    }
-
 
     /**
      * For presenting a dialog to allow the user to choose which OSM XML files to use that have been uploaded to their device's openmapkit/osm folder
@@ -457,7 +403,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     @Override
     public void selectedElementsChanged(LinkedList<OSMElement> selectedElements) {
         if (selectedElements != null && selectedElements.size() > 0) {
-            //tagsButton.setVisibility(View.VISIBLE);
+//            tagsButton.setVisibility(View.VISIBLE);
             //fetch the tapped feature
             OSMElement tappedOSMElement = selectedElements.get(0);
             boolean userLocationIsEnabled = mapView.getUserLocationEnabled();
