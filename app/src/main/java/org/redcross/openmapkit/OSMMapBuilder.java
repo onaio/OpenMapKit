@@ -35,13 +35,13 @@ import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
  */
 public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
     
-    private static final float MIN_VECTOR_RENDER_ZOOM = 18;
+    private static final float MIN_VECTOR_RENDER_ZOOM = 5;
     private static final String PERSISTED_OSM_FILES = "org.redcross.openmapkit.PERSISTED_OSM_FILES";
 
     private static MapActivity mapActivity;
     private static SharedPreferences sharedPreferences;
     private static Set<String> persistedOSMFiles = new HashSet<>();
-    private static Set<String> loadedOSMFiles = new HashSet<>();
+    private static Set<String> loadedOSMFiles;
     private static JTSModel jtsModel = new JTSModel();
     private static ProgressDialog progressDialog;
 
@@ -64,6 +64,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         mapActivity = ma;
         sharedPreferences = mapActivity.getPreferences(Context.MODE_PRIVATE);
         persistedOSMFiles = sharedPreferences.getStringSet(PERSISTED_OSM_FILES, loadedOSMFiles);
+        loadedOSMFiles = new HashSet<>();
 
         // load the previously selected OSM files in OpenMapKit
         for (String absPath : persistedOSMFiles) {

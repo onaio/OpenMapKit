@@ -1,8 +1,9 @@
 package com.mapbox.mapboxsdk.overlay;
 
 import android.content.Context;
-import android.os.Environment;
 import android.widget.Toast;
+
+import com.mapbox.mapboxsdk.util.ExternalStorage;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -21,8 +22,6 @@ public class LocationXMLParser {
     public static final String FILENAME = "proximity_settings.xml";
     public static final String PROXIMITY_CHECK = "proximity_check";
     public static final String PROXIMITY_RADIUS = "proximity_radius";
-    public static final String APP_DIR = "openmapkit";
-    public static final String SETTINGS_DIR = "settings";
     private static double radius = 50;
     public static boolean check = false;
     public static boolean proximityEnabled = false;
@@ -34,7 +33,7 @@ public class LocationXMLParser {
             pullParserFactory = XmlPullParserFactory.newInstance();
             XmlPullParser parser = pullParserFactory.newPullParser();
 
-            final File file = new File(getSettingsDir()+FILENAME);
+            final File file = new File(ExternalStorage.getSettingsDir()+FILENAME);
             InputStream in_s = new FileInputStream(file);
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             parser.setInput(in_s, null);
@@ -46,7 +45,7 @@ public class LocationXMLParser {
             // TODO Auto-generated catch block
             //e.printStackTrace();
         }
-        Toast.makeText(ctx, "Add the file " + FILENAME + " in the dir " + getSettingsDir(), Toast.LENGTH_LONG).show();
+        Toast.makeText(ctx, "Add the file " + FILENAME + " in the dir " + ExternalStorage.getSettingsDir(), Toast.LENGTH_LONG).show();
         return null;
     }
 
@@ -120,31 +119,5 @@ public class LocationXMLParser {
      */
     public static boolean isProximityEnabled() {
         return proximityEnabled;
-    }
-
-    /**
-     *
-     * @return the path to the settings directory.
-     */
-    public static String getSettingsDir() {
-        createSettingsDir();
-        return Environment.getExternalStorageDirectory() + "/"
-                + APP_DIR + "/"
-                + SETTINGS_DIR + "/";
-    }
-
-    /**
-     * Create settings dir if it does not exist.
-     * @return true if successfully created.
-     */
-    public static boolean createSettingsDir() {
-        File folder = new File(Environment.getExternalStorageDirectory() + "/"
-                + APP_DIR + "/"
-                + SETTINGS_DIR);
-        boolean createStatus = true;
-        if (!folder.exists()) {
-            createStatus = folder.mkdirs() ? true : false;
-        }
-        return createStatus;
     }
 }

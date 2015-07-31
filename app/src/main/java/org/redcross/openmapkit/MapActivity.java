@@ -9,8 +9,12 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.TouchDelegate;
@@ -18,23 +22,27 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.cocoahero.android.geojson.FeatureCollection;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.LocationXMLParser;
+import com.mapbox.mapboxsdk.overlay.Marker;
+import com.mapbox.mapboxsdk.overlay.PathOverlay;
+import com.mapbox.mapboxsdk.tileprovider.tilesource.MBTilesLayer;
+import com.mapbox.mapboxsdk.util.DataLoadingUtils;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.events.OSMSelectionListener;
-import com.spatialdev.osm.model.JTSModel;
 import com.spatialdev.osm.model.OSMElement;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
 
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
@@ -42,8 +50,10 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
 public class MapActivity extends ActionBarActivity implements OSMSelectionListener {
@@ -52,6 +62,12 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     protected static final String PREVIOUS_LAT = "org.redcross.openmapkit.PREVIOUS_LAT";
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
+
+    public static final String USER_LAT = "user latitude";
+    public static final String USER_LNG = "user longitude";
+    public static final String USER_ALT = "user altitude";
+    public static final String GPS_ACCURACY = "gps accuracy";
+    public static final String SPRAY_STATUS = "spray status";
 
     private static String version = "";
 
@@ -116,6 +132,8 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         //add user location toggle button
         initializeLocationButton();
 
+        initializeSaveButton();
+
         positionMap();
 
         addGeojsonOverlay();
@@ -177,10 +195,35 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     }
 
     protected void addGeojsonOverlay() {
-        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/buffers.json?target_area=408_257");
-        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/targetareas.json?target_area=408_257");
-        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/spraydays.json?spray_date=&target_area=408_257");
-        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/districts.json?district=Milenge");
+//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/buffers.json?target_area=408_257");
+//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/targetareas.json?target_area=408_257");
+//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/spraydays.json?spray_date=&target_area=408_257");
+//        mapView.loadFromGeoJSONURL("http://api.mspray.onalabs.org/districts.json?district=Milenge");
+        //addGeoJSONOverlayFromAssets("kilimani.json");
+//        mapView.addTileSource(new MBTilesLayer(this, "buffers.mbtiles"));
+//        mapView.postInvalidate();
+    }
+
+    protected void addGeoJSONOverlayFromAssets(String filename) {
+        ArrayList<Object> uiObjects = new ArrayList<Object>();
+        try {
+            FeatureCollection parsed = DataLoadingUtils.loadGeoJSONFromAssets(this, filename);
+            uiObjects = DataLoadingUtils.createUIObjectsFromGeoJSONObjects(parsed, null);
+        } catch (Exception e) {
+            Log.e("", "Error loading / parsing GeoJSON: " + e.toString());
+            e.printStackTrace();
+        }
+
+        for (Object obj : uiObjects) {
+            if (obj instanceof Marker) {
+                mapView.addMarker((Marker) obj);
+            } else if (obj instanceof PathOverlay) {
+                mapView.getOverlays().add((PathOverlay) obj);
+            }
+        }
+        if (uiObjects.size() > 0) {
+            mapView.invalidate();
+        }
     }
 
     /**
@@ -301,6 +344,23 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         });
     }
 
+    /**
+     * For instantiating the save tags button and setting up its tap event handler
+     */
+    protected void initializeSaveButton() {
+
+        //instantiate save button
+        final Button saveButton = (Button) findViewById(R.id.saveTagsButton);
+
+        //set tap event - saves tags to ODK..
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+    }
+
 
     /**
      * For presenting a dialog to allow the user to choose which OSM XML files to use that have been uploaded to their device's openmapkit/osm folder
@@ -405,6 +465,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
                 //Checks whether tappedElement is within select range.
                 Geometry tappedElementGeometry = tappedOSMElement.getJTSGeom();
                 if (isWithinDistance(tappedElementGeometry)) {
+                    addTagsForSelectedElement(tappedOSMElement);
                     //present OSM Feature tags in bottom ListView
                     identifyOSMFeature(tappedOSMElement);
                 } else {
@@ -416,6 +477,16 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
                 identifyOSMFeature(tappedOSMElement);
             }
         }
+    }
+    
+    private void addTagsForSelectedElement(OSMElement selectedElement) {
+        //Add GPS data to selected element
+        LatLng userPos = getUserLocation();
+        selectedElement.addOrEditTag(USER_LAT, Double.toString(userPos.getLatitude()));
+        selectedElement.addOrEditTag(USER_LNG, Double.toString(userPos.getLongitude()));
+        selectedElement.addOrEditTag(USER_ALT, Double.toString(userPos.getAltitude()));
+        selectedElement.addOrEditTag(GPS_ACCURACY,
+                Double.toString(new Location(LocationManager.GPS_PROVIDER).getAccuracy()));
     }
 
     /**
