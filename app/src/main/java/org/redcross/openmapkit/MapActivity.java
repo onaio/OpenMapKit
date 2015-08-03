@@ -10,6 +10,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -431,8 +432,26 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         selectedElement.addOrEditTag(USER_LAT, Double.toString(userPos.getLatitude()));
         selectedElement.addOrEditTag(USER_LNG, Double.toString(userPos.getLongitude()));
         selectedElement.addOrEditTag(USER_ALT, Double.toString(userPos.getAltitude()));
-        selectedElement.addOrEditTag(GPS_ACCURACY,
-                Double.toString(new Location(LocationManager.GPS_PROVIDER).getAccuracy()));
+        //Add accuracy of the GPS provider.
+        LocationManager locationManager=(LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
+        };
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (loc != null) {
+            selectedElement.addOrEditTag(GPS_ACCURACY, Double.toString(loc.getAccuracy()));
+        }
     }
 
     /**

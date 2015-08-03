@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.spatialdev.osm.model.OSMElement;
 
+import org.redcross.openmapkit.MapActivity;
 import org.redcross.openmapkit.R;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 
@@ -134,7 +135,7 @@ public class ODKCollectTagActivity extends ActionBarActivity {
                 insertTagKeyAndValueForRow(row++, reqTag, initialTagVal);
             }
         }
-        
+
         private void insertTagKeyAndValueForRow(int row, ODKTag reqTag, String initialTagVal) {
             Activity activity = getActivity();
 

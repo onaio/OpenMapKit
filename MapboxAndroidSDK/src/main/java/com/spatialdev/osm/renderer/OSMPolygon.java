@@ -6,7 +6,7 @@ import android.graphics.Path;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.model.OSMWay;
 import com.spatialdev.osm.renderer.util.ColorElement;
-import com.spatialdev.osm.renderer.util.XmlColorSettingsParser;
+import com.spatialdev.osm.renderer.util.ColorXmlParser;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -109,7 +109,7 @@ public class OSMPolygon extends OSMPath {
     private static void loadColorElements(MapView mv) {
         if (!initializedColors) {
             try {
-                colorElements = XmlColorSettingsParser.parseXML(mv.getContext());
+                colorElements = ColorXmlParser.parseXML(mv.getContext());
                 initializedColors = true;
             } catch (XmlPullParserException e) {
                 e.printStackTrace();
