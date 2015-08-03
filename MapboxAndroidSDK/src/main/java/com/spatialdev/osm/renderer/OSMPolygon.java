@@ -11,6 +11,7 @@ import com.spatialdev.osm.renderer.util.XmlColorSettingsParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,8 @@ import java.util.Map;
  */
 public class OSMPolygon extends OSMPath {
 
+    private static List<ColorElement> colorElements = new ArrayList<>();
+    private static boolean initializedColors = false;
     // ALPHA
     private static final int DEFAULT_ALPHA = 200;
     private static final int HEX_RADIX = 16;
@@ -46,14 +49,7 @@ public class OSMPolygon extends OSMPath {
 
         // color polygon according to values in tags.
         Map<String, String> tags = w.getTags();
-        List<ColorElement> colorElements = null;
-        try {
-            colorElements = XmlColorSettingsParser.parseXML(mv.getContext());
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        loadColorElements(mv);
         String colorCode;
         for (ColorElement el : colorElements) {
             String key = el.getKey();
@@ -107,6 +103,19 @@ public class OSMPolygon extends OSMPath {
         } else {
             path.moveTo( (float) screenPoint[0], (float) screenPoint[1] );
             pathLineToReady = true;
+        }
+    }
+
+    private static void loadColorElements(MapView mv) {
+        if (!initializedColors) {
+            try {
+                colorElements = XmlColorSettingsParser.parseXML(mv.getContext());
+                initializedColors = true;
+            } catch (XmlPullParserException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
