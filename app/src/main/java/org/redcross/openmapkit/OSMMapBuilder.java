@@ -287,7 +287,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
             totalFileSizes += fileSize;
         }
     }
-    
+
 
 
     /**

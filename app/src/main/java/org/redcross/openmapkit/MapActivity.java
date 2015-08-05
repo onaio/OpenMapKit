@@ -13,9 +13,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.TouchDelegate;
@@ -23,22 +21,15 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.cocoahero.android.geojson.FeatureCollection;
-import com.mapbox.mapboxsdk.constants.MathConstants;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.LocationXMLParser;
-import com.mapbox.mapboxsdk.overlay.Marker;
-import com.mapbox.mapboxsdk.overlay.PathOverlay;
-import com.mapbox.mapboxsdk.tileprovider.tilesource.MBTilesLayer;
-import com.mapbox.mapboxsdk.util.DataLoadingUtils;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.events.OSMSelectionListener;
 import com.spatialdev.osm.model.OSMElement;
@@ -52,10 +43,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 
 public class MapActivity extends ActionBarActivity implements OSMSelectionListener {
@@ -421,6 +410,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
                 }
             } else {
                 //If GPS is disabled, user can select any point.
+                clearTagsForSelectedElement(tappedOSMElement);
                 identifyOSMFeature(tappedOSMElement);
             }
         }
@@ -432,26 +422,15 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         selectedElement.addOrEditTag(USER_LAT, Double.toString(userPos.getLatitude()));
         selectedElement.addOrEditTag(USER_LNG, Double.toString(userPos.getLongitude()));
         selectedElement.addOrEditTag(USER_ALT, Double.toString(userPos.getAltitude()));
-        //Add accuracy of the GPS provider.
-        LocationManager locationManager=(LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-            }
+        selectedElement.addOrEditTag(GPS_ACCURACY, Double.toString(mapView.getAccuracy()));
+    }
 
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-            }
-
-            public void onProviderDisabled(String provider) {
-            }
-        };
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (loc != null) {
-            selectedElement.addOrEditTag(GPS_ACCURACY, Double.toString(loc.getAccuracy()));
-        }
+    private void clearTagsForSelectedElement(OSMElement selectedElement) {
+        //Remove GPS data of selected element
+        selectedElement.deleteTag(USER_LAT);
+        selectedElement.deleteTag(USER_LNG);
+        selectedElement.deleteTag(USER_ALT);
+        selectedElement.deleteTag(GPS_ACCURACY);
     }
 
     /**

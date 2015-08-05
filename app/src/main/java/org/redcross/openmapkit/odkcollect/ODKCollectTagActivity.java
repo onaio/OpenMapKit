@@ -15,7 +15,6 @@ import android.widget.TextView;
 
 import com.spatialdev.osm.model.OSMElement;
 
-import org.redcross.openmapkit.MapActivity;
 import org.redcross.openmapkit.R;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 

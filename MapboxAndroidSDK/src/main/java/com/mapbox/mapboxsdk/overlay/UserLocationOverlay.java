@@ -12,6 +12,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.R;
 import com.mapbox.mapboxsdk.events.MapListener;
@@ -57,6 +58,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
 
     private Location mLocation;
     private LatLng mLatLng;
+    private double accuracy;
     private boolean mIsLocationEnabled = false;
     private boolean mDrawAccuracyEnabled = true;
     private TrackingMode mTrackingMode = TrackingMode.NONE;
@@ -194,7 +196,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         float radius = (float) LocationXMLParser.getProximityRadius();
         //If proximity check is true and the GPS is not enabled, don't show user location else
         //draw circle of provided radius around the user.
-        if (getGPSAccuracy() < GPS_THRESHOLD_ACCURACY && (!LocationXMLParser.getProximityCheck() || isGPSEnabled())) {
+        if (mMapView.getAccuracy() < GPS_THRESHOLD_ACCURACY && (!LocationXMLParser.getProximityCheck() || isGPSEnabled())) {
             radius = radius / (float) Projection.groundResolution(
                     lastFix.getLatitude(), mapView.getZoomLevel()) * mapView.getScale();
             mCirclePaint.setAlpha(50);
@@ -350,6 +352,13 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         return mLatLng;
     }
 
+    /**
+     * Return a LatLng of the last known location, or null if not known.
+     */
+    public double getAccuracy() {
+        return accuracy;
+    }
+
     public Location getLastFix() {
         return mLocation;
     }
@@ -488,9 +497,11 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         mLocation = location;
         if (mLocation == null) {
             mLatLng = null;
+            accuracy = 100;
             return;
         }
         mLatLng = new LatLng(mLocation);
+        accuracy = mLocation.getAccuracy();
         //if goToMyPosition return false, it means we are already there
         //which means we have to invalidate ourselves to make sure we are redrawn
         if (!isFollowLocationEnabled() || !goToMyPosition(true)) {
@@ -590,14 +601,5 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
             return true;
         }
         return false;
-    }
-
-    /**
-     *
-     * @return the accuracy of the GPS.
-     */
-    private float getGPSAccuracy() {
-        Location location = new Location(LocationManager.GPS_PROVIDER);
-        return location.getAccuracy();
     }
 }
