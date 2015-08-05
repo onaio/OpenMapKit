@@ -38,6 +38,9 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 @SmallTest
 public class LocationXmlParserTest {
+    /**
+     * Test whether the right tag names are used in the settings files.
+     */
     @Test
     public void testLocationXmlTagNames() {
         assertEquals(LocationXMLParser.FILENAME, "proximity_settings.xml");
@@ -45,6 +48,11 @@ public class LocationXmlParserTest {
         assertEquals(LocationXMLParser.PROXIMITY_CHECK, "proximity_check");
     }
 
+    /**
+     * Test whether the proximity radius matches the provided in settings file.
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     @Test
     public void testLocationProximityRadius() throws IOException, XmlPullParserException {
         Context context = new MockContext();
@@ -53,6 +61,11 @@ public class LocationXmlParserTest {
         assertEquals(radius, 100);
     }
 
+    /**
+     * Test whether the right proximity check is used within the application.
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     @Test
     public void testLocationProximityCheck() throws IOException, XmlPullParserException {
         Context context = new MockContext();

@@ -29,6 +29,11 @@ public class ColorXmlParserTest {
         assertEquals(ColorXmlParser.VALUE, "value");
     }
 
+    /**
+     * Test both the size and the ranking according to priority for tag colors.
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     @Test
     public void testColorElements() throws IOException, XmlPullParserException {
         Context context = new MockContext();
@@ -40,6 +45,11 @@ public class ColorXmlParserTest {
         }
     }
 
+    /**
+     * Ensure color codes are in the right format.
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     @Test
     public void testColorCodes() throws IOException, XmlPullParserException {
         Context context = new MockContext();

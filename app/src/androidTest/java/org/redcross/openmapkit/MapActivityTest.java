@@ -128,7 +128,7 @@ public class MapActivityTest extends ActivityUnitTestCase<MapActivity> {
 
                 //Structure is within 100m of the user location.
                 structureLat = 1.1;
-                structureLong = 1.20001;
+                structureLong = 1.2005;
                 cord = new Coordinate(structureLong, structureLat);
                 tappedStructure = geometryFactory.createPoint(cord);
                 assertTrue(mapActivity.isWithinDistance(tappedStructure));
