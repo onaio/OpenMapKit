@@ -1792,16 +1792,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     }
 
     /**
-     * Show or hide the user location overlay
+     * Show the user location overlay
      */
     public MapView setUserLocationEnabled(final boolean value) {
-        if (value) {
-            getOrCreateLocationOverlay().enableMyLocation();
-        } else if (mLocationOverlay != null) {
-            mLocationOverlay.disableMyLocation();
-            removeOverlay(mLocationOverlay);
-            mLocationOverlay = null;
-        }
+        getOrCreateLocationOverlay().enableMyLocation();
         return this;
     }
 
@@ -1865,6 +1859,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             return mLocationOverlay.getMyLocation();
         }
         return null;
+    }
+
+    public double getAccuracy() {
+        return mLocationOverlay.getAccuracy();
     }
 
     public boolean isUserLocationVisible() {

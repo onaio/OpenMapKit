@@ -6,12 +6,15 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.common.io.CountingInputStream;
 import com.spatialdev.osm.OSMMap;
 import com.spatialdev.osm.model.JTSModel;
+import com.spatialdev.osm.model.OSMDataSet;
+
+import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
@@ -24,18 +27,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.io.CountingInputStream;
-import com.spatialdev.osm.model.OSMDataSet;
-
-import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
-
 /**
  * Created by Nicholas Hallahan on 1/28/15.
  * nhallahan@spatialdev.com* 
  */
 public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
-    
-    private static final float MIN_VECTOR_RENDER_ZOOM = 18;
+    //Render vector tiles at any zoom.
+    private static final float MIN_VECTOR_RENDER_ZOOM = 0;
     private static final String PERSISTED_OSM_FILES = "org.redcross.openmapkit.PERSISTED_OSM_FILES";
 
     private static MapActivity mapActivity;
@@ -64,6 +62,8 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         mapActivity = ma;
         sharedPreferences = mapActivity.getPreferences(Context.MODE_PRIVATE);
         persistedOSMFiles = sharedPreferences.getStringSet(PERSISTED_OSM_FILES, loadedOSMFiles);
+        //Reload the OSM files
+        loadedOSMFiles.clear();
 
         // load the previously selected OSM files in OpenMapKit
         for (String absPath : persistedOSMFiles) {
@@ -287,8 +287,8 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
             totalFileSizes += fileSize;
         }
     }
-    
-    
+
+
 
     /**
      *  CUSTOM THREAD POOL THAT HAS A LARGER STACK SIZE TO HANDLE LARGER OSM XML FILES

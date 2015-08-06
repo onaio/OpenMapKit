@@ -134,7 +134,7 @@ public class ODKCollectTagActivity extends ActionBarActivity {
                 insertTagKeyAndValueForRow(row++, reqTag, initialTagVal);
             }
         }
-        
+
         private void insertTagKeyAndValueForRow(int row, ODKTag reqTag, String initialTagVal) {
             Activity activity = getActivity();
 
