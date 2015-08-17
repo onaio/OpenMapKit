@@ -9,9 +9,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -39,12 +36,16 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
+import org.redcross.openmapkit.mspray.TargetArea;
+import org.redcross.openmapkit.mspray.TargetAreasXmlDownloader;
+import org.redcross.openmapkit.mspray.TargetXmlParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public class MapActivity extends ActionBarActivity implements OSMSelectionListener {
@@ -298,6 +299,74 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         });
     }
 
+    private void presentTargetAreas() throws IOException, XmlPullParserException {
+        final List<TargetArea> targetAreas = TargetXmlParser.parseXML(getApplicationContext());
+        int size = targetAreas.size();
+        final String[] osmFilesUrl = new String[size];
+        final String[] osmFileNames = new String[size];
+        for (int i = 0; i < targetAreas.size(); i++) {
+            osmFilesUrl[i] = targetAreas.get(i).getUrl();
+            osmFileNames[i] = targetAreas.get(i).getName();
+        }
+        final boolean[] checkedOsmFiles = OSMMapBuilder.isFileArraySelected(osmFileNames);
+        final Set<String> fileNamesToAdd = new HashSet<>();
+        final Set<String> fileNamesToRemove = new HashSet<>();
+        final Set<TargetArea> filesToDownload = new HashSet<>();
+
+        if (osmFileNames.length > 0) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(getString(R.string.osmChooserDialogTitle));
+            builder.setMultiChoiceItems(osmFileNames, checkedOsmFiles, new DialogInterface.OnMultiChoiceClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i, boolean isChecked) {
+                    // load the file
+                    if (isChecked) {
+                        String fileToAdd = osmFileNames[i];
+                        filesToDownload.add(targetAreas.get(i));
+                        fileNamesToAdd.add(fileToAdd);
+                    }
+                    // remove the file
+                    else {
+                        String fileToRemove = osmFilesUrl[i];
+                        fileNamesToRemove.add(fileToRemove);
+                    }
+                }
+            });
+            //handle OK tap event of dialog
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    //Download the selected files.
+                    String[] downloadParams = new String[filesToDownload.size() * 2];
+                    int i = 0;
+                    for (TargetArea area : filesToDownload) {
+                        downloadParams[i * 2] = area.getName();
+                        downloadParams[(i * 2) + 1] = area.getUrl();
+                        i++;
+                    }
+                    startDownloader(fileNamesToRemove, fileNamesToAdd, downloadParams);
+                }
+            });
+
+            //handle cancel button tap event of dialog
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    //user clicked cancel
+                }
+            });
+            builder.show();
+        } else {
+            Toast prompt = Toast.makeText(getApplicationContext(), "Please press the download button to get the target areas ", Toast.LENGTH_LONG);
+            prompt.show();
+        }
+    }
+
+    private void startDownloader(Set<String> fileNamesToRemove, Set<String> fileNamesToAdd, String[] downloadParams) {
+        TargetAreasXmlDownloader downloader = new TargetAreasXmlDownloader(this, fileNamesToRemove, fileNamesToAdd);
+        downloader.execute(downloadParams);
+    }
+
     /**
      * For presenting a dialog to allow the user to choose which OSM XML files to use that have been uploaded to their device's openmapkit/osm folder
      */
@@ -355,6 +424,11 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         downloader.execute();
     }
 
+    private void downloadTargetsXml() {
+        TargetAreasXmlDownloader downloader = new TargetAreasXmlDownloader(this);
+        downloader.execute(TargetXmlParser.FILENAME, TargetXmlParser.URL);
+    }
+
     /**
      * For adding action items to the action bar
      */
@@ -378,13 +452,21 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         int id = item.getItemId();
 
         if (id == R.id.osmdownloader) {
-            downloadOSM();
+            //downloadOSM();
+            downloadTargetsXml();
             return true;
         } else if (id == R.id.mbtilessettings) {
             basemap.presentMBTilesOptions();
             return true;
         } else if (id == R.id.osmsettings) {
-            presentOSMOptions();
+            //presentOSMOptions();
+            try {
+                presentTargetAreas();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (XmlPullParserException e) {
+                e.printStackTrace();
+            }
             return true;
         }
         return false;

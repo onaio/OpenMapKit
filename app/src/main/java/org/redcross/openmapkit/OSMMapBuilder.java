@@ -125,6 +125,22 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         return isLoaded;
     }
 
+    /**
+     * Returns a boolean array of what files have been previously
+     * selected and persisted to be on the map.
+     * * * *
+     * @param fileNames
+     * @return
+     */
+    public static boolean[] isFileArraySelected(String[] fileNames) {
+        int len = fileNames.length;
+        boolean[] isLoaded = new boolean[len];
+        for (int i=0; i < len; ++i) {
+            isLoaded[i] = persistedOSMFiles.contains(ExternalStorage.OSM_DIR + fileNames[i]);
+        }
+        return isLoaded;
+    }
+
     public static void removeOSMFilesFromModel(Set<File> files) {
         if (files.size() < 1) {
             return;
