@@ -452,21 +452,21 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         int id = item.getItemId();
 
         if (id == R.id.osmdownloader) {
-            //downloadOSM();
-            downloadTargetsXml();
+            downloadOSM();
+            //downloadTargetsXml();
             return true;
         } else if (id == R.id.mbtilessettings) {
             basemap.presentMBTilesOptions();
             return true;
         } else if (id == R.id.osmsettings) {
-            //presentOSMOptions();
-            try {
-                presentTargetAreas();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (XmlPullParserException e) {
-                e.printStackTrace();
-            }
+            presentOSMOptions();
+//            try {
+//                presentTargetAreas();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (XmlPullParserException e) {
+//                e.printStackTrace();
+//            }
             return true;
         }
         return false;

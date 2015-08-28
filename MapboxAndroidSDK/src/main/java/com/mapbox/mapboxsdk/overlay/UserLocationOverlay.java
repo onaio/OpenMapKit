@@ -206,6 +206,8 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
             mCirclePaint.setAlpha(150);
             mCirclePaint.setStyle(Style.STROKE);
             canvas.drawCircle(mMapCoords.x, mMapCoords.y, radius, mCirclePaint);
+            //Refresh the MapView to redraw the circle.
+            mMapView.invalidate();
             LocationXMLParser.setProximityEnabled(true);
         } else {
             LocationXMLParser.setProximityEnabled(false);
