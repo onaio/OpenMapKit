@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -70,6 +71,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     protected TextView mTagTextView;
     protected Basemap basemap;
     protected TagListAdapter tagListAdapter;
+    protected Button saveToOdkButton;
 
 
     /**
@@ -198,6 +200,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
             @Override
             public void onClick(View v) {
                 proportionMapAndList(100, 0);
+                hideSaveToOdkButton();
             }
         });
 
@@ -246,12 +249,42 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         tagListAdapter = new TagListAdapter(this, osmElement);
 
         if(!tagListAdapter.isEmpty()) {
+            //show save to odk button
+            showSaveToOdkButton(osmElement);
             //set the ListView's adapter
             mTagListView.setAdapter(tagListAdapter);
 
             //show the ListView under the map
             proportionMapAndList(50, 50);
         }
+    }
+
+    protected void saveToOdkCollect(OSMElement osmElement) {
+        String osmXmlFileFullPath = ODKCollectHandler.saveXmlInODKCollect(osmElement);
+        String osmXmlFileName = ODKCollectHandler.getODKCollectData().getOSMFileName();
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("OSM_PATH", osmXmlFileFullPath);
+        resultIntent.putExtra("OSM_FILE_NAME", osmXmlFileName);
+        setResult(Activity.RESULT_OK, resultIntent);
+        finish();
+    }
+
+    protected void showSaveToOdkButton(final OSMElement osmElement) {
+        //instantiate save to odk button
+        saveToOdkButton = (Button) findViewById(R.id.saveToOdkButton);
+        saveToOdkButton.setVisibility(View.VISIBLE);
+
+        saveToOdkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveToOdkCollect(osmElement);
+            }
+        });
+    }
+
+    protected void hideSaveToOdkButton() {
+        saveToOdkButton = (Button) findViewById(R.id.saveToOdkButton);
+        saveToOdkButton.setVisibility(View.GONE);
     }
 
     /**
