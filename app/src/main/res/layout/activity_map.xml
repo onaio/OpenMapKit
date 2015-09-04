@@ -53,6 +53,18 @@
                 android:layout_alignParentEnd="true"
                 android:visibility="invisible" />
 
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/saveToOdkButton"
+                android:text="@string/save_to_odk_collect"
+                android:background="@color/osm_green"
+                android:textColor="@color/white"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:layout_centerHorizontal="true"
+                android:visibility="invisible" />
+
         </RelativeLayout>
 
     </LinearLayout>
