@@ -2,6 +2,7 @@ package org.redcross.openmapkit;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -70,7 +71,8 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     protected TextView mTagTextView;
     protected Basemap basemap;
     protected TagListAdapter tagListAdapter;
-
+    protected Dialog dialog;
+    protected int initialCountdownValue;
 
     /**
      * intent request codes
@@ -135,6 +137,10 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // Start GPS progress
+        initialCountdownValue = LocationXMLParser.getGPSTimeoutValue();
+        showProgressDialog();
     }
 
     @Override
@@ -497,7 +503,7 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
             }
         }
     }
-    
+
     private void addTagsForSelectedElement(OSMElement selectedElement) {
         //Add GPS data to selected element
         LatLng userPos = getUserLocation();
@@ -547,13 +553,51 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         return mapView.getUserLocation();
     }
 
-    /**
-     * For sending results from the 'create tag' or 'edit tag' activities back to a third party app (e.g. ODK Collect)
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
+    private void showProgressDialog() {
+        // custom dialog
+        dialog = new Dialog(this);
+        dialog.setContentView(R.layout.gps_progress);
+        dialog.setTitle("Fixing GPS...");
+        final TextView text = (TextView) dialog.findViewById(R.id.timer);
+        text.setText(String.valueOf(initialCountdownValue));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        if (initialCountdownValue-- == 0 || LocationXMLParser.isProximityEnabled()) {
+                            dismissProgressDialog();
+                            break;
+                        }
+                        text.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                text.setText(String.valueOf(initialCountdownValue));
+                            }
+                        });
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+        dialog.setCancelable(false);
+        dialog.show();
+    }
+
+    private void dismissProgressDialog(){
+        dialog.dismiss();
+    }
+
+
+        /**
+         * For sending results from the 'create tag' or 'edit tag' activities back to a third party app (e.g. ODK Collect)
+         *
+         * @param requestCode
+         * @param resultCode
+         * @param data
+         */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == ODK_COLLECT_TAG_ACTIVITY_CODE) {

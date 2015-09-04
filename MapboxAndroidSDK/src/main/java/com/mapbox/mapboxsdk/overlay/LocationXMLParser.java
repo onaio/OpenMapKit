@@ -25,6 +25,7 @@ public class LocationXMLParser {
     private static double radius = 50;
     public static boolean check = false;
     public static boolean proximityEnabled = false;
+    public static int GPSTimeoutValue = 60;
 
     public static XmlPullParser createPullParser(Context ctx) {
         XmlPullParserFactory pullParserFactory;
@@ -119,5 +120,9 @@ public class LocationXMLParser {
      */
     public static boolean isProximityEnabled() {
         return proximityEnabled;
+    }
+
+    public static int getGPSTimeoutValue() {
+        return GPSTimeoutValue;
     }
 }
