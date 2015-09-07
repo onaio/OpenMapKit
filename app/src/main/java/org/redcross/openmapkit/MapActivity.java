@@ -49,6 +49,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MapActivity extends ActionBarActivity implements OSMSelectionListener {
     public static final int EARTH_RADIUS = 6371000;
@@ -75,6 +77,11 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
     protected Dialog dialog;
     protected int initialCountdownValue;
     protected Button saveToOdkButton;
+    private Timer mTimer;
+    protected TimerTask timerTask;
+
+    // one second - used to update timer
+    private static final int TASK_INTERVAL_IN_MILLIS = 1000;
 
     /**
      * intent request codes
@@ -591,36 +598,35 @@ public class MapActivity extends ActionBarActivity implements OSMSelectionListen
         dialog = new Dialog(this);
         dialog.setContentView(R.layout.gps_progress);
         dialog.setTitle("Fixing GPS...");
-        final TextView text = (TextView) dialog.findViewById(R.id.timer);
-        text.setText(String.valueOf(initialCountdownValue));
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        if (initialCountdownValue-- == 0 || LocationXMLParser.isProximityEnabled()) {
-                            dismissProgressDialog();
-                            break;
-                        }
-                        text.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                text.setText(String.valueOf(initialCountdownValue));
-                            }
-                        });
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).start();
         dialog.setCancelable(false);
         dialog.show();
+
+        mTimer = new Timer();
+        doCountDown();
     }
 
-    private void dismissProgressDialog(){
-        dialog.dismiss();
+    private void doCountDown() {
+        if (initialCountdownValue-- == 0 || LocationXMLParser.isProximityEnabled()) {
+            dialog.dismiss();
+            return;
+        } else {
+            //Initialize timer textview
+            final TextView text = (TextView) dialog.findViewById(R.id.timer);
+            text.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            text.setText(String.valueOf(initialCountdownValue));
+                        }
+                    }
+            );
+            timerTask = new TimerTask() {
+                public void run() {
+                    doCountDown();
+                }
+            };
+            mTimer.schedule(timerTask, TASK_INTERVAL_IN_MILLIS);
+        }
     }
 
 

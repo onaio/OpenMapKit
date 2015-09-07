@@ -22,10 +22,11 @@ public class LocationXMLParser {
     public static final String FILENAME = "proximity_settings.xml";
     public static final String PROXIMITY_CHECK = "proximity_check";
     public static final String PROXIMITY_RADIUS = "proximity_radius";
+    public static final String MAX_GPS_FIX_TIME = "max_gps_fix_time";
     private static double radius = 50;
     public static boolean check = false;
     public static boolean proximityEnabled = false;
-    public static int GPSTimeoutValue = 60;
+    public static int GPSTimeoutValue = 0;
 
     public static XmlPullParser createPullParser(Context ctx) {
         XmlPullParserFactory pullParserFactory;
@@ -78,6 +79,13 @@ public class LocationXMLParser {
                         input = parser.nextText().trim();
                         try {
                             radius = Double.parseDouble(input);
+                        } catch (NumberFormatException e) {
+                            //e.printStackTrace();
+                        }
+                    } else if (name.equals(MAX_GPS_FIX_TIME)) {
+                        input = parser.nextText().trim();
+                        try {
+                            GPSTimeoutValue = Integer.parseInt(input);
                         } catch (NumberFormatException e) {
                             //e.printStackTrace();
                         }
