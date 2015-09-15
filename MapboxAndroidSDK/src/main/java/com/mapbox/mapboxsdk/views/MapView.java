@@ -2015,6 +2015,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         return null;
     }
 
+    public double getAccuracy() {
+        return mLocationOverlay.getAccuracy();
+    }
+
     public boolean isUserLocationVisible() {
         if (mLocationOverlay != null) {
             final Location pos = mLocationOverlay.getLastFix();

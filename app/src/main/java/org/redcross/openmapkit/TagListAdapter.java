@@ -101,61 +101,63 @@ public class TagListAdapter extends BaseAdapter {
 
         View view = convertView;
 
-        ViewHolder mViewHolder;
-        if(convertView == null) {
+        if (userVisibleTag(tagKeys.get(position))) {
+            ViewHolder mViewHolder;
+            if (convertView == null) {
 
-            view = inflater.inflate(R.layout.taglistviewitem, null);
+                view = inflater.inflate(R.layout.taglistviewitem, null);
 
-            mViewHolder = new ViewHolder();
-            mViewHolder.textViewTagKey = (TextView)view.findViewById(R.id.textViewTagKey); //left side tag key
-            mViewHolder.textViewTagValue = (TextView)view.findViewById(R.id.textViewTagValue); //left side tag value
+                mViewHolder = new ViewHolder();
+                mViewHolder.textViewTagKey = (TextView) view.findViewById(R.id.textViewTagKey); //left side tag key
+                mViewHolder.textViewTagValue = (TextView) view.findViewById(R.id.textViewTagValue); //left side tag value
 
-            view.setTag(mViewHolder);
-        }
-        else {
+                view.setTag(mViewHolder);
+            } else {
 
-            mViewHolder = (ViewHolder)view.getTag();
-        }
+                mViewHolder = (ViewHolder) view.getTag();
+            }
 
-        //tag key and value
-        String currentTagKey = tagKeys.get(position);
-        String currentTagValue = tagMap.get(currentTagKey);
+            //tag key and value
+            String currentTagKey = tagKeys.get(position);
+            String currentTagValue = tagMap.get(currentTagKey);
 
-        //labels for tag key and value
-        String currentTagKeyLabel = null;
-        String currentTagValueLabel = null;
+            //labels for tag key and value
+            String currentTagKeyLabel = null;
+            String currentTagValueLabel = null;
 
-        //attempt to assign labels for tag key and value if available from ODK Collect Mode
-        if(ODKCollectHandler.isODKCollectMode()) {
+            //attempt to assign labels for tag key and value if available from ODK Collect Mode
+            if (ODKCollectHandler.isODKCollectMode()) {
 
-            ODKCollectData odkCollectData = ODKCollectHandler.getODKCollectData();
+                ODKCollectData odkCollectData = ODKCollectHandler.getODKCollectData();
 
-            if(odkCollectData != null) {
+                if (odkCollectData != null) {
 
-                try {
+                    try {
 
-                    currentTagKeyLabel = odkCollectData.getTagKeyLabel(currentTagKey);
-                    currentTagValueLabel = odkCollectData.getTagValueLabel(currentTagKey, currentTagValue);
-                }
-                catch (Exception ex) {
+                        currentTagKeyLabel = odkCollectData.getTagKeyLabel(currentTagKey);
+                        currentTagValueLabel = odkCollectData.getTagValueLabel(currentTagKey, currentTagValue);
+                    } catch (Exception ex) {
 
-                    Log.e("error", "exception raised when calling getTagKeyLabel or getTagValueLabel with tag key: '" + currentTagKey + "' and tag value: '" + currentTagValue + "'") ;
+                        Log.e("error", "exception raised when calling getTagKeyLabel or getTagValueLabel with tag key: '" + currentTagKey + "' and tag value: '" + currentTagValue + "'");
+                    }
                 }
             }
-        }
 
-        //present tag key
-        if(currentTagKeyLabel != null) {
-            mViewHolder.textViewTagKey.setText(currentTagKeyLabel);
-        } else {
-            mViewHolder.textViewTagKey.setText(currentTagKey);
-        }
+            //present tag key
+            if (currentTagKeyLabel != null) {
+                mViewHolder.textViewTagKey.setText(currentTagKeyLabel);
+            } else {
+                mViewHolder.textViewTagKey.setText(currentTagKey);
+            }
 
-        //present tag value
-        if(currentTagValueLabel != null) {
-            mViewHolder.textViewTagValue.setText(currentTagValueLabel);
-        } else {
-            mViewHolder.textViewTagValue.setText(currentTagValue);
+            //present tag value
+            if (currentTagValueLabel != null) {
+                mViewHolder.textViewTagValue.setText(currentTagValueLabel);
+            } else {
+                mViewHolder.textViewTagValue.setText(currentTagValue);
+            }
+        } else {//Hide tags which should not be seen by user.
+            view = inflater.inflate(R.layout.taglistviewnull, null);
         }
 
         return view;
@@ -164,6 +166,14 @@ public class TagListAdapter extends BaseAdapter {
     static class ViewHolder{
         TextView textViewTagKey;
         TextView textViewTagValue;
+    }
+
+    private boolean userVisibleTag(String key) {
+        if (key.equals(MapActivity.USER_LNG) || key.equals(MapActivity.USER_LAT)
+                || key.equals(MapActivity.USER_ALT) || key.equals(MapActivity.GPS_ACCURACY)) {
+            return false;
+        }
+        return true;
     }
     
 }
