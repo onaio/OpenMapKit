@@ -1,0 +1,25 @@
+<target-areas>
+<target>
+  <name>Minengwe</name>
+  <code>678</code>
+  <url>https://ona.io/api/v1/data/28058/20.osm</url>
+</target>
+<target>
+  <name>Minengwe1</name>
+  <code>650</code>
+  <url>https://ona.io/api/v1/data/28058/21.osm</url>
+</target>
+<target>
+  <name>Minengwe2</name>
+  <code>678</code>
+  <url>https://ona.io/api/v1/data/28058/22.osm</url>
+</target>
+<target>
+  <name>Minengwe3</name>
+  <code>678</code>
+  <url>https://ona.io/api/v1/data/28058/23.osm</url>
+</target>
+</target-areas>
+
+
+
