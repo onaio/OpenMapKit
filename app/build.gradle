@@ -7,8 +7,8 @@ android {
         applicationId "org.redcross.openmapkit"
         minSdkVersion 16
         targetSdkVersion 21
-        versionCode 7
-        versionName "0.7"
+        versionCode 12
+        versionName "0.12"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
