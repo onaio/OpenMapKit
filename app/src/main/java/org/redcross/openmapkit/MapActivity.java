@@ -222,9 +222,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             LatLng c = new LatLng(lat, lng);
             mapView.setCenter(c);
             mapView.setZoom(z);
-            if (isGPSEnabled()) {
-                mapView.goToUserLocation(true);
-            }
         }
     }
 
@@ -410,15 +407,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         locationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean userLocationIsEnabled = mapView.getUserLocationEnabled();
-                if (userLocationIsEnabled) {
-                    mapView.setUserLocationEnabled(true);
-                    locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
-                } else {
-                    mapView.setUserLocationEnabled(true);
-                    mapView.goToUserLocation(true);
-                    locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_blue));
-                }
+                mapView.setUserLocationEnabled(true);
+                mapView.goToUserLocation(true);
+                locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_blue));
             }
         });
     }
@@ -829,7 +820,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void doCountDown() {
-        if (initialCountdownValue-- == 0 || LocationXMLParser.isProximityEnabled()) {
+        boolean foundGpsLocation = LocationXMLParser.isProximityEnabled();
+        if (initialCountdownValue-- == 0 || foundGpsLocation) {
+            if (foundGpsLocation) {
+                mapView.goToUserLocation(true);
+            }
             dialog.dismiss();
             return;
         } else {

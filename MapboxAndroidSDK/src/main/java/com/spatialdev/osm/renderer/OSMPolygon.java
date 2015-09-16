@@ -24,7 +24,7 @@ public class OSMPolygon extends OSMPath {
     private static List<ColorElement> colorElements = new ArrayList<>();
     private static boolean initializedColors = false;
     // ALPHA
-    private static final int DEFAULT_ALPHA = 40;
+    private static final int DEFAULT_ALPHA = 50;
     private static final int HEX_RADIX = 16;
 
     // GOLD
@@ -37,6 +37,8 @@ public class OSMPolygon extends OSMPath {
     private int r;
     private int g;
     private int b;
+
+    boolean foundColor = false;
     
     /**
      * This should only be constructed by
@@ -44,31 +46,35 @@ public class OSMPolygon extends OSMPath {
      * * * *
      * @param w
      */
-    protected OSMPolygon(OSMWay w, MapView mv) {
+    protected OSMPolygon(final OSMWay w, final MapView mv) {
         super(w, mv);
 
-        // color polygon according to values in tags.
-        Map<String, String> tags = w.getTags();
-        loadColorElements(mv);
-        String colorCode;
-        for (ColorElement el : colorElements) {
-            String key = el.getKey();
-            if (tags.containsKey(key)) {
-                if (tags.get(key).equals(el.getValue())) {
-                    //Choose highest priority coloring and exit loop.
-                    colorCode = el.getColorCode();
-                    a = DEFAULT_ALPHA;
-                    r = Integer.parseInt(colorCode.substring(1,3), HEX_RADIX);
-                    g = Integer.parseInt(colorCode.substring(3, 5), HEX_RADIX);
-                    b = Integer.parseInt(colorCode.substring(5,7), HEX_RADIX);
-                    System.out.println();
-                    break;
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // color polygon according to values in tags.
+                        Map<String, String> tags = w.getTags();
+                        loadColorElements(mv);
+                        String colorCode;
+                        for (ColorElement el : colorElements) {
+                            String key = el.getKey();
+                            if (tags.containsKey(key)) {
+                                if (tags.get(key).equals(el.getValue())) {
+                                    //Choose highest priority coloring and exit loop.
+                                    colorCode = el.getColorCode();
+                                    r = Integer.parseInt(colorCode.substring(1,3), HEX_RADIX);
+                                    g = Integer.parseInt(colorCode.substring(3, 5), HEX_RADIX);
+                                    b = Integer.parseInt(colorCode.substring(5,7), HEX_RADIX);
+                                    paint.setStyle(Paint.Style.FILL);
+                                    paint.setARGB(DEFAULT_ALPHA, r, g, b);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-        }
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setARGB(a, r, g, b);
+        ).start();
     }
 
     @Override

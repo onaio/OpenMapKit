@@ -145,7 +145,7 @@ public abstract class OSMPath {
         projectedPoint = projectedPoints[0];
         screenPoint = pj.toMapPixelsTranslated(projectedPoint, tempPoint);
         clipOrDrawPath(path, projectedPoint, null, screenPoint);
-        
+
         pathLineToReady = false;
         paint.setStrokeWidth(strokeWidth / mapView.getScale());
         c.drawPath(path, paint);
