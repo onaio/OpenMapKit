@@ -222,6 +222,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             LatLng c = new LatLng(lat, lng);
             mapView.setCenter(c);
             mapView.setZoom(z);
+            if (isGPSEnabled()) {
+                mapView.goToUserLocation(true);
+            }
         }
     }
 
