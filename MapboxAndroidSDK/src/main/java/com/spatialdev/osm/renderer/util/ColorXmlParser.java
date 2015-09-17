@@ -27,6 +27,8 @@ public class ColorXmlParser {
     public static final String VALUE = "value";
     public static final String COLOR_CODE = "color_code";
     public static final String PRIORITY = "priority";
+    public static final String OPACITY = "opacity";
+    public static final int DEFAULT_ALPHA = 50;
 
     public static XmlPullParser createPullParser(Context ctx) {
         XmlPullParserFactory pullParserFactory;
@@ -61,6 +63,8 @@ public class ColorXmlParser {
         }
         int eventType = parser.getEventType();
         ColorElement colorElement = new ColorElement();
+        // Set the opacity to default.
+        colorElement.setOpacity(DEFAULT_ALPHA);
 
         while (eventType != XmlPullParser.END_DOCUMENT) {
             String name = null;
@@ -84,6 +88,10 @@ public class ColorXmlParser {
                     } else if (name.equals(PRIORITY)) {
                         input = parser.nextText().trim();
                         colorElement.setPriority(Integer.parseInt(input));
+
+                    } else if (name.equals(OPACITY)) {
+                        input = parser.nextText().trim();
+                        colorElement.setOpacity(Integer.parseInt(input));
 
                     }
                     break;

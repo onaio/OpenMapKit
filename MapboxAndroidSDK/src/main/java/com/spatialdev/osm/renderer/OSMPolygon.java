@@ -57,11 +57,12 @@ public class OSMPolygon extends OSMPath {
                 if (tags.get(key).equals(el.getValue())) {
                     //Choose highest priority coloring and exit loop.
                     colorCode = el.getColorCode();
+                    a = el.getOpacity();
                     r = Integer.parseInt(colorCode.substring(1, 3), HEX_RADIX);
                     g = Integer.parseInt(colorCode.substring(3, 5), HEX_RADIX);
                     b = Integer.parseInt(colorCode.substring(5, 7), HEX_RADIX);
                     paint.setStyle(Paint.Style.FILL);
-                    paint.setARGB(DEFAULT_ALPHA, r, g, b);
+                    paint.setARGB(a, r, g, b);
                     break;
                 }
             }

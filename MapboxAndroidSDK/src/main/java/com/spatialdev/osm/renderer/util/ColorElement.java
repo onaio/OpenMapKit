@@ -8,6 +8,7 @@ public class ColorElement implements Comparable<ColorElement> {
     private String value;
     private String colorCode;
     private int priority;
+    private int opacity;
 
     public ColorElement() {}
 
@@ -41,6 +42,14 @@ public class ColorElement implements Comparable<ColorElement> {
 
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    public int getOpacity() {
+        return opacity;
+    }
+
+    public void setOpacity(int opacity) {
+        this.opacity = opacity;
     }
 
     @Override
