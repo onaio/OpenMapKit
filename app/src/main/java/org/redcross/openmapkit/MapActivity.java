@@ -822,10 +822,10 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private void doCountDown() {
         boolean foundGpsLocation = LocationXMLParser.isProximityEnabled();
         if (initialCountdownValue-- == 0 || foundGpsLocation) {
-            if (foundGpsLocation) {
-                mapView.goToUserLocation(true);
-            }
             dialog.dismiss();
+            if (foundGpsLocation) {
+                mapView.goToUserLocation(false);
+            }
             return;
         } else {
             //Initialize timer textview
