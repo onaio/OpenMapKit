@@ -824,7 +824,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         if (initialCountdownValue-- == 0 || foundGpsLocation) {
             dialog.dismiss();
             if (foundGpsLocation) {
-                mapView.goToUserLocation(true);
+                mapView.goToUserLocation(false);
             }
             return;
         } else {
