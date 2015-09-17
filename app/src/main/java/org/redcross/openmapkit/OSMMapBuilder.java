@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
     //Render vector tiles at any zoom.
-    private static final float MIN_VECTOR_RENDER_ZOOM = 22;
+    private static final float MIN_VECTOR_RENDER_ZOOM = 18;
     private static final String PERSISTED_OSM_FILES = "org.redcross.openmapkit.PERSISTED_OSM_FILES";
 
     private static MapActivity mapActivity;
