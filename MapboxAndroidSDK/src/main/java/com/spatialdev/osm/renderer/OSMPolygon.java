@@ -5,15 +5,6 @@ import android.graphics.Path;
 
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.model.OSMWay;
-import com.spatialdev.osm.renderer.util.ColorElement;
-import com.spatialdev.osm.renderer.util.ColorXmlParser;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Nicholas Hallahan on 1/22/15.
@@ -21,11 +12,11 @@ import java.util.Map;
  */
 public class OSMPolygon extends OSMPath {
 
-    private static List<ColorElement> colorElements = new ArrayList<>();
-    private static boolean initializedColors = false;
-    // ALPHA
-    private static final int DEFAULT_ALPHA = 50;
-    private static final int HEX_RADIX = 16;
+    // OSM LAVENDER
+    private static final int DEFAULT_A = 50;
+    private static final int DEFAULT_R = 62;
+    private static final int DEFAULT_G = 107;
+    private static final int DEFAULT_B = 255;
 
     // GOLD
     private static final int DEFAULT_SELECTED_A = 180;
@@ -33,48 +24,41 @@ public class OSMPolygon extends OSMPath {
     private static final int DEFAULT_SELECTED_G = 140;
     private static final int DEFAULT_SELECTED_B = 0;
 
+    // MAROON
+    private static final int DEFAULT_EDITED_A = 100;
+    private static final int DEFAULT_EDITED_R = 245;
+    private static final int DEFAULT_EDITED_G = 17;
+    private static final int DEFAULT_EDITED_B = 135;
+
     private int a;
     private int r;
     private int g;
     private int b;
 
-    boolean foundColor = false;
-    
     /**
      * This should only be constructed by
      * OSMPath.createOSMPath
      * * * *
      * @param w
      */
-    protected OSMPolygon(final OSMWay w, final MapView mv) {
+    protected OSMPolygon(OSMWay w, MapView mv) {
         super(w, mv);
 
-//        new Thread(
-//                new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        // color polygon according to values in tags.
-//                        Map<String, String> tags = w.getTags();
-//                        loadColorElements(mv);
-//                        String colorCode;
-//                        for (ColorElement el : colorElements) {
-//                            String key = el.getKey();
-//                            if (tags.containsKey(key)) {
-//                                if (tags.get(key).equals(el.getValue())) {
-//                                    //Choose highest priority coloring and exit loop.
-//                                    colorCode = el.getColorCode();
-//                                    r = Integer.parseInt(colorCode.substring(1,3), HEX_RADIX);
-//                                    g = Integer.parseInt(colorCode.substring(3, 5), HEX_RADIX);
-//                                    b = Integer.parseInt(colorCode.substring(5,7), HEX_RADIX);
-//                                    paint.setStyle(Paint.Style.FILL);
-//                                    paint.setARGB(DEFAULT_ALPHA, r, g, b);
-//                                    break;
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//        ).start();
+        // color polygon according to if it has been edited before
+        if (w.isModified()) {
+            this.a = DEFAULT_EDITED_A;
+            this.r = DEFAULT_EDITED_R;
+            this.g = DEFAULT_EDITED_G;
+            this.b = DEFAULT_EDITED_B;
+        } else {
+            this.a = DEFAULT_A;
+            this.r = DEFAULT_R;
+            this.g = DEFAULT_G;
+            this.b = DEFAULT_B;
+        }
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setARGB(a, r, g, b);
     }
 
     @Override
@@ -86,15 +70,15 @@ public class OSMPolygon extends OSMPath {
     public void deselect() {
         paint.setARGB(a, r, g, b);
     }
-    
+
 
 
     /**
      * For now, we are drawing all of the polygons, even those outside of the canvas.
-     * 
+     *
      * This isn't too much of a problem for now, because the Spatial Index will give us
      * only polygons that intersect.
-     * 
+     *
      * This can be problematic for very large polygons.
      * * * * * * * * 
      * @param path
@@ -109,19 +93,6 @@ public class OSMPolygon extends OSMPath {
         } else {
             path.moveTo( (float) screenPoint[0], (float) screenPoint[1] );
             pathLineToReady = true;
-        }
-    }
-
-    private static void loadColorElements(MapView mv) {
-        if (!initializedColors) {
-            try {
-                colorElements = ColorXmlParser.parseXML(mv.getContext());
-                initializedColors = true;
-            } catch (XmlPullParserException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 }
