@@ -760,6 +760,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             } else {
                 //If GPS is disabled, user can select any point.
                 clearTagsForSelectedElement(tappedOSMElement);
+                if (isGPSEnabled()) {
+                    addTagsForSelectedElement(tappedOSMElement);
+                }
                 identifyOSMFeature(tappedOSMElement);
             }
         }
