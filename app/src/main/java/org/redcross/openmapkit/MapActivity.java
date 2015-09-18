@@ -771,10 +771,12 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private void addGpsTagsForSelectedElement(OSMElement selectedElement) {
         //Add GPS data to selected element
         LatLng userPos = getUserLocation();
-        selectedElement.addOrEditTag(USER_LAT, Double.toString(userPos.getLatitude()));
-        selectedElement.addOrEditTag(USER_LNG, Double.toString(userPos.getLongitude()));
-        selectedElement.addOrEditTag(USER_ALT, Double.toString(userPos.getAltitude()));
-        selectedElement.addOrEditTag(GPS_ACCURACY, Double.toString(mapView.getAccuracy()));
+        if (userPos != null) {
+            selectedElement.addOrEditTag(USER_LAT, Double.toString(userPos.getLatitude()));
+            selectedElement.addOrEditTag(USER_LNG, Double.toString(userPos.getLongitude()));
+            selectedElement.addOrEditTag(USER_ALT, Double.toString(userPos.getAltitude()));
+            selectedElement.addOrEditTag(GPS_ACCURACY, Double.toString(mapView.getAccuracy()));
+        }
     }
 
     private void clearGpsTagsForSelectedElement(OSMElement selectedElement) {
@@ -792,13 +794,17 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     public boolean isWithinDistance(Geometry tappedElementGeometry) {
         GeometryFactory geometryFactory = new GeometryFactory();
         LatLng userPos = getUserLocation();
-        double userLat = userPos.getLatitude();
-        double userLong = userPos.getLongitude();
-        Coordinate cord = new Coordinate(userLong, userLat);
-        Geometry userLocGeo = geometryFactory.createPoint(cord);
-        double proximityRadius = getProximityRadius();
-        double angleDist = getCentralAngleDegreeDistance(proximityRadius);
-        return userLocGeo.isWithinDistance(tappedElementGeometry, angleDist);
+        if (userPos != null) {
+            double userLat = userPos.getLatitude();
+            double userLong = userPos.getLongitude();
+            Coordinate cord = new Coordinate(userLong, userLat);
+            Geometry userLocGeo = geometryFactory.createPoint(cord);
+            double proximityRadius = getProximityRadius();
+            double angleDist = getCentralAngleDegreeDistance(proximityRadius);
+            return userLocGeo.isWithinDistance(tappedElementGeometry, angleDist);
+        } else {
+            return true;
+        }
     }
 
     /**
