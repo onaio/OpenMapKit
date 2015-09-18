@@ -750,7 +750,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 //Checks whether tappedElement is within select range.
                 Geometry tappedElementGeometry = tappedOSMElement.getJTSGeom();
                 if (isWithinDistance(tappedElementGeometry)) {
-                    addTagsForSelectedElement(tappedOSMElement);
+                    addGpsTagsForSelectedElement(tappedOSMElement);
                     //present OSM Feature tags in bottom ListView
                     identifyOSMFeature(tappedOSMElement);
                 } else {
@@ -759,16 +759,16 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 }
             } else {
                 //If GPS is disabled, user can select any point.
-                clearTagsForSelectedElement(tappedOSMElement);
+                clearGpsTagsForSelectedElement(tappedOSMElement);
                 if (isGPSEnabled()) {
-                    addTagsForSelectedElement(tappedOSMElement);
+                    addGpsTagsForSelectedElement(tappedOSMElement);
                 }
                 identifyOSMFeature(tappedOSMElement);
             }
         }
     }
 
-    private void addTagsForSelectedElement(OSMElement selectedElement) {
+    private void addGpsTagsForSelectedElement(OSMElement selectedElement) {
         //Add GPS data to selected element
         LatLng userPos = getUserLocation();
         selectedElement.addOrEditTag(USER_LAT, Double.toString(userPos.getLatitude()));
@@ -777,7 +777,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         selectedElement.addOrEditTag(GPS_ACCURACY, Double.toString(mapView.getAccuracy()));
     }
 
-    private void clearTagsForSelectedElement(OSMElement selectedElement) {
+    private void clearGpsTagsForSelectedElement(OSMElement selectedElement) {
         //Remove GPS data of selected element
         selectedElement.deleteTag(USER_LAT);
         selectedElement.deleteTag(USER_LNG);
