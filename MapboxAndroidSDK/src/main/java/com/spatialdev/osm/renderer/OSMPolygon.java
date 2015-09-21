@@ -23,8 +23,6 @@ public class OSMPolygon extends OSMPath {
 
     private static List<ColorElement> colorElements = new ArrayList<>();
     private static boolean initializedColors = false;
-    // ALPHA
-    private static final int DEFAULT_ALPHA = 50;
     private static final int HEX_RADIX = 16;
 
     // GOLD
