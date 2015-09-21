@@ -61,12 +61,6 @@ public class GpsLocationProvider implements LocationListener {
         for (final String provider : mLocationManager.getProviders(true)) {
             if (LocationManager.GPS_PROVIDER.equals(provider)) {
                 result = true;
-                if (mLocation == null) {
-                    mLocation = mLocationManager.getLastKnownLocation(provider);
-                    if (mLocation != null) {
-                        mMyLocationConsumer.onLocationChanged(mLocation, this);
-                    }
-                }
                 mLocationManager.requestLocationUpdates(provider, mLocationUpdateMinTime,
                         mLocationUpdateMinDistance, this);
             }
