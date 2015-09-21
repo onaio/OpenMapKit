@@ -24,6 +24,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -48,15 +49,13 @@ import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.io.File;
 import java.util.Collection;
-import org.redcross.openmapkit.mspray.TargetArea;
+
 import org.redcross.openmapkit.mspray.TargetAreasXmlDownloader;
-import org.redcross.openmapkit.mspray.TargetXmlParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -68,6 +67,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected static final String PREVIOUS_LAT = "org.redcross.openmapkit.PREVIOUS_LAT";
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
+
+    public static final String OSM_ENDPOINT = "http://ona....";
 
     public static final String USER_LAT = "user latitude";
     public static final String USER_LNG = "user longitude";
@@ -173,9 +174,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         //Initialize location settings.
         try {
             LocationXMLParser.parseXML(this);
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (XmlPullParserException | IOException e) {
             e.printStackTrace();
         }
 
@@ -534,72 +533,39 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         mapView.invalidate();
     }
 
-    private void presentTargetAreas() throws IOException, XmlPullParserException {
-        final List<TargetArea> targetAreas = TargetXmlParser.parseXML(getApplicationContext());
-        int size = targetAreas.size();
-        final String[] osmFilesUrl = new String[size];
-        final String[] osmFileNames = new String[size];
-        for (int i = 0; i < targetAreas.size(); i++) {
-            osmFilesUrl[i] = targetAreas.get(i).getUrl();
-            osmFileNames[i] = targetAreas.get(i).getName();
-        }
-        final boolean[] checkedOsmFiles = OSMMapBuilder.isFileArraySelected(osmFileNames);
-        final Set<String> fileNamesToAdd = new HashSet<>();
-        final Set<String> fileNamesToRemove = new HashSet<>();
-        final Set<TargetArea> filesToDownload = new HashSet<>();
+    private void presentTargetAreas() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.inputTargetArea));
+        final EditText inputTargetAreas = new EditText(this);
+        builder.setView(inputTargetAreas);
+        //handle OK tap event of dialog
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                //Download the selected files.
+                String[] targetAreas = inputTargetAreas.getText().toString().replace(" ", "").split(",");
+                String[] targetAreasUrls = new String[targetAreas.length];
+                int index = 0;
+                for (String areaCode : targetAreas) {
+                    targetAreasUrls[index++] = OSM_ENDPOINT + areaCode;
+                }
+                downloadTargetAreasOSM(targetAreas, targetAreasUrls);
+            }
+        });
 
-        if (osmFileNames.length > 0) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(getString(R.string.osmChooserDialogTitle));
-            builder.setMultiChoiceItems(osmFileNames, checkedOsmFiles, new DialogInterface.OnMultiChoiceClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i, boolean isChecked) {
-                    // load the file
-                    if (isChecked) {
-                        String fileToAdd = osmFileNames[i];
-                        filesToDownload.add(targetAreas.get(i));
-                        fileNamesToAdd.add(fileToAdd);
-                    }
-                    // remove the file
-                    else {
-                        String fileToRemove = osmFilesUrl[i];
-                        fileNamesToRemove.add(fileToRemove);
-                    }
-                }
-            });
-            //handle OK tap event of dialog
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int id) {
-                    //Download the selected files.
-                    String[] downloadParams = new String[filesToDownload.size() * 2];
-                    int i = 0;
-                    for (TargetArea area : filesToDownload) {
-                        downloadParams[i * 2] = area.getName();
-                        downloadParams[(i * 2) + 1] = area.getUrl();
-                        i++;
-                    }
-                    startDownloader(fileNamesToRemove, fileNamesToAdd, downloadParams);
-                }
-            });
-
-            //handle cancel button tap event of dialog
-            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int id) {
-                    //user clicked cancel
-                }
-            });
-            builder.show();
-        } else {
-            Toast prompt = Toast.makeText(getApplicationContext(), "Please press the download button to get the target areas ", Toast.LENGTH_LONG);
-            prompt.show();
-        }
+        //handle cancel button tap event of dialog
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                //user clicked cancel
+            }
+        });
+        builder.show();
     }
 
-    private void startDownloader(Set<String> fileNamesToRemove, Set<String> fileNamesToAdd, String[] downloadParams) {
-        TargetAreasXmlDownloader downloader = new TargetAreasXmlDownloader(this, fileNamesToRemove, fileNamesToAdd);
-        downloader.execute(downloadParams);
+    private void downloadTargetAreasOSM(String[] targetAreas, String[] targetAreasUrls) {
+        TargetAreasXmlDownloader downloader = new TargetAreasXmlDownloader(this, targetAreas);
+        downloader.execute(targetAreasUrls);
     }
 
     /**
@@ -678,11 +644,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         downloader.execute();
     }
 
-    private void downloadTargetsXml() {
-        TargetAreasXmlDownloader downloader = new TargetAreasXmlDownloader(this);
-        downloader.execute(TargetXmlParser.FILENAME, TargetXmlParser.URL);
-    }
-
     /**
      * OSMMapBuilder sets a reference to OSMMap in this class.
      *
@@ -715,22 +676,13 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         int id = item.getItemId();
 
         if (id == R.id.osmdownloader) {
-            askIfDownloadOSM();
-            //downloadTargetsXml();
-
+            presentTargetAreas();
             return true;
         } else if (id == R.id.mbtilessettings) {
             basemap.presentMBTilesOptions();
             return true;
         } else if (id == R.id.osmsettings) {
             presentOSMOptions();
-//            try {
-//                presentTargetAreas();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } catch (XmlPullParserException e) {
-//                e.printStackTrace();
-//            }
             return true;
         } else if (id == R.id.action_save_to_odk_collect) {
             saveToODKCollectAndExit();
@@ -835,7 +787,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             if (foundGpsLocation) {
                 mapView.goToUserLocation(false);
             }
-            return;
         } else {
             //Initialize timer textview
             final TextView text = (TextView) dialog.findViewById(R.id.timer);

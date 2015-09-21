@@ -24,20 +24,14 @@ import java.util.Set;
  */
 public class TargetAreasXmlDownloader extends AsyncTask<String, Integer, String> {
     String filename;
-    Set<String> fileNamesToRemove = null;
-    Set<String> fileNamesToAdd = null;
 
     private ProgressDialog progressDialog;
     private Context context;
+    private String[] targetAreas;
 
-    public TargetAreasXmlDownloader(Context context) {
+    public TargetAreasXmlDownloader(Context context, String[] targetAreas) {
         this.context = context;
-    }
-
-    public TargetAreasXmlDownloader(Context context, Set<String> filesToRemove, Set<String> filesToAdd) {
-        this.context = context;
-        this.fileNamesToRemove = filesToRemove;
-        this.fileNamesToAdd = filesToAdd;
+        this.targetAreas = targetAreas;
     }
 
     @Override
@@ -50,16 +44,11 @@ public class TargetAreasXmlDownloader extends AsyncTask<String, Integer, String>
         InputStream input = null;
         OutputStream output = null;
         HttpURLConnection connection = null;
-        for (int i = 0; i < sUrl.length/2; i++) {
+        for (int i = 0; i < sUrl.length; i++) {
             try {
-                // Name for the file being downloaded.
-                filename = sUrl[i * 2];
-                if (fileNamesToAdd == null && fileNamesToRemove == null) { //Download target areas xml file
-                    filename = ExternalStorage.getSettingsDir() + filename;
-                } else {// Download selected OSM files
-                    filename = ExternalStorage.getOSMDir() + filename;
-                }
-                URL url = new URL(sUrl[(i * 2) + 1]);
+                // Full filepath for selected OSM file
+                filename = ExternalStorage.getOSMDir() + targetAreas[i];
+                URL url = new URL(sUrl[i]);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
 
@@ -115,29 +104,6 @@ public class TargetAreasXmlDownloader extends AsyncTask<String, Integer, String>
     protected void onPostExecute(String result) {
         if(progressDialog.isShowing()) {
             progressDialog.dismiss();
-        }
-
-        if (fileNamesToAdd != null && fileNamesToRemove != null) {
-            Set<File> filesToAdd = new HashSet<>();
-            Set<File> filesToRemove = new HashSet<>();
-            for (String filename : fileNamesToRemove) {
-                addFileToDir(filesToRemove, filename);
-            }
-            for (String filename : fileNamesToAdd) {
-                addFileToDir(filesToAdd, filename);
-            }
-            OSMMapBuilder.removeOSMFilesFromModel(filesToRemove);
-            OSMMapBuilder.addOSMFilesToModel(filesToAdd);
-        }
-    }
-
-    private void addFileToDir(Set<File> set, String filename) {
-        try {
-            File file = new File(ExternalStorage.getOSMDir() + filename);
-            set.add(file);
-        } catch (Exception e) {
-            // Cannot add file.
-            Log.d("ERROR", "File cannot be added" + filename);
         }
     }
 
