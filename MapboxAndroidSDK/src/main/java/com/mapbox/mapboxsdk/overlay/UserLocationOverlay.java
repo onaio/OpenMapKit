@@ -176,11 +176,13 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
 
         // Counteract any scaling that may be happening so the icon stays the same size
         float radius = (float) LocationXMLParser.getProximityRadius();
-        float gpsThresholdAccuracy = (float) LocationXMLParser.getGpsThresholdAccuracy();
+        float gpsThresholdAccuracy = LocationXMLParser.getGpsThresholdAccuracy();
 
-        //If proximity check is true and the GPS is not enabled, don't show user location else
-        //draw circle of provided radius around the user.
-        if (mMapView.getAccuracy() < gpsThresholdAccuracy && (!LocationXMLParser.getProximityCheck() || isGPSEnabled())) {
+        // Draws proximity circle if user location is found.
+        if (mMapView.getAccuracy() < gpsThresholdAccuracy
+                && mMapView.getUserLocation() != null
+                && mMapView.getAccuracy() != 0.0
+                && (!LocationXMLParser.getProximityCheck() || isGPSEnabled())) {
             radius = radius / (float) Projection.groundResolution(
                     lastFix.getLatitude(), mapView.getZoomLevel()) * mapView.getScale();
             canvas.save();
@@ -195,9 +197,10 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
             mCirclePaint.setAlpha(150);
             mCirclePaint.setStyle(Style.STROKE);
             canvas.drawCircle(mMapCoords.x, mMapCoords.y, radius, mCirclePaint);
-            //Refresh the MapView to redraw the circle.
             canvas.restore();
             LocationXMLParser.setProximityEnabled(true);
+
+            //Refresh the MapView to redraw the circle.
             mMapView.invalidate();
         } else {
             LocationXMLParser.setProximityEnabled(false);

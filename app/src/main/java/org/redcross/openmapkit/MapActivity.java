@@ -178,6 +178,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             e.printStackTrace();
         }
 
+        // Proximity is disabled until there is a GPS fix.
+        LocationXMLParser.setProximityEnabled(false);
+
         if (isGPSEnabled()) {
             // Start GPS progress
             initialCountdownValue = LocationXMLParser.getGPSTimeoutValue();

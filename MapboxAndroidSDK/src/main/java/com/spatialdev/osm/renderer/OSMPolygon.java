@@ -42,7 +42,7 @@ public class OSMPolygon extends OSMPath {
      * * * *
      * @param w
      */
-    protected OSMPolygon(final OSMWay w, final MapView mv) {
+    protected OSMPolygon(OSMWay w, MapView mv) {
         super(w, mv);
 
         // color polygon according to values in tags.
