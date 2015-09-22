@@ -826,7 +826,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         dialog.setTitle("Fixing GPS...");
         dialog.setCancelable(false);
         dialog.show();
-        System.out.println("showdialog");
 
         mTimer = new Timer();
         doCountDown();
@@ -835,9 +834,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private void doCountDown() {
         boolean foundGpsLocation = LocationXMLParser.isProximityEnabled();
         if (initialCountdownValue-- == 0 || foundGpsLocation) {
-            if (foundGpsLocation) {
-                System.out.println("dismissdialogFP");
-            }
             dialog.dismiss();
             if (foundGpsLocation) {
                 mapView.goToUserLocation(false);

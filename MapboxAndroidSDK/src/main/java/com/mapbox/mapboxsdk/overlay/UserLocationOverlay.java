@@ -178,7 +178,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         float radius = (float) LocationXMLParser.getProximityRadius();
         float gpsThresholdAccuracy = LocationXMLParser.getGpsThresholdAccuracy();
 
-        //
+        // Draws proximity circle if user location is found.
         if (mMapView.getAccuracy() < gpsThresholdAccuracy
                 && mMapView.getUserLocation() != null
                 && mMapView.getAccuracy() != 0.0
