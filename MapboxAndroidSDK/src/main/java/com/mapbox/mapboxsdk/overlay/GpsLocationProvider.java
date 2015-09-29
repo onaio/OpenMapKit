@@ -60,8 +60,8 @@ public class GpsLocationProvider implements LocationListener {
         boolean result = false;
         for (final String provider : mLocationManager.getProviders(true)) {
             if (LocationManager.GPS_PROVIDER.equals(provider)
-                    || LocationManager.NETWORK_PROVIDER.equals(provider)
-                    || LocationManager.PASSIVE_PROVIDER.equals(provider)) {
+                    || LocationManager.PASSIVE_PROVIDER.equals(provider)
+                    || LocationManager.NETWORK_PROVIDER.equals(provider)) {
                 result = true;
                 mLocationManager.requestLocationUpdates(provider, mLocationUpdateMinTime,
                         mLocationUpdateMinDistance, this);
