@@ -6,12 +6,15 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.common.io.CountingInputStream;
 import com.spatialdev.osm.OSMMap;
 import com.spatialdev.osm.model.JTSModel;
+import com.spatialdev.osm.model.OSMDataSet;
+
+import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
@@ -24,17 +27,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.io.CountingInputStream;
-import com.spatialdev.osm.model.OSMDataSet;
-
-import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
-
 /**
  * Created by Nicholas Hallahan on 1/28/15.
  * nhallahan@spatialdev.com* 
  */
 public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
-    
     private static final float MIN_VECTOR_RENDER_ZOOM = 18;
     private static final String PERSISTED_OSM_FILES = "org.redcross.openmapkit.PERSISTED_OSM_FILES";
 
@@ -64,6 +61,8 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         mapActivity = ma;
         sharedPreferences = mapActivity.getPreferences(Context.MODE_PRIVATE);
         persistedOSMFiles = sharedPreferences.getStringSet(PERSISTED_OSM_FILES, loadedOSMFiles);
+        //Reload the OSM files
+        loadedOSMFiles.clear();
 
         // load the previously selected OSM files in OpenMapKit
         for (String absPath : persistedOSMFiles) {
@@ -89,6 +88,9 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
 
         if (totalFiles > 0) {
             setupProgressDialog(mapActivity);
+        } else {
+            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), jtsModel, mapActivity, MIN_VECTOR_RENDER_ZOOM);
+            mapActivity.setOSMMap(osmMap);
         }
     }
 
@@ -121,6 +123,22 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         for (int i=0; i < len; ++i) {
             String absPath = files[i].getAbsolutePath();
             isLoaded[i] = persistedOSMFiles.contains(absPath);
+        }
+        return isLoaded;
+    }
+
+    /**
+     * Returns a boolean array of what files have been previously
+     * selected and persisted to be on the map.
+     * * * *
+     * @param fileNames
+     * @return
+     */
+    public static boolean[] isFileArraySelected(String[] fileNames) {
+        int len = fileNames.length;
+        boolean[] isLoaded = new boolean[len];
+        for (int i=0; i < len; ++i) {
+            isLoaded[i] = persistedOSMFiles.contains(ExternalStorage.OSM_DIR + fileNames[i]);
         }
         return isLoaded;
     }
@@ -234,7 +252,8 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         // do this when everything is done loading
         if (completedFiles == totalFiles) {
             finishAndResetStaticState();
-            new OSMMap(mapActivity.getMapView(), model, mapActivity, MIN_VECTOR_RENDER_ZOOM);
+            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), model, mapActivity, MIN_VECTOR_RENDER_ZOOM);
+            mapActivity.setOSMMap(osmMap);
         }
     }
     
@@ -287,8 +306,8 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
             totalFileSizes += fileSize;
         }
     }
-    
-    
+
+
 
     /**
      *  CUSTOM THREAD POOL THAT HAS A LARGER STACK SIZE TO HANDLE LARGER OSM XML FILES

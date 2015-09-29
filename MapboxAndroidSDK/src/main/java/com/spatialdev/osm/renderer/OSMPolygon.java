@@ -5,6 +5,15 @@ import android.graphics.Path;
 
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.model.OSMWay;
+import com.spatialdev.osm.renderer.util.ColorElement;
+import com.spatialdev.osm.renderer.util.ColorXmlParser;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Nicholas Hallahan on 1/22/15.
@@ -12,23 +21,15 @@ import com.spatialdev.osm.model.OSMWay;
  */
 public class OSMPolygon extends OSMPath {
 
-    // OSM LAVENDER
-    private static final int DEFAULT_A = 50;
-    private static final int DEFAULT_R = 62;
-    private static final int DEFAULT_G = 107;
-    private static final int DEFAULT_B = 255;
-    
+    private static List<ColorElement> colorElements = new ArrayList<>();
+    private static boolean initializedColors = false;
+    private static final int HEX_RADIX = 16;
+
     // GOLD
     private static final int DEFAULT_SELECTED_A = 180;
     private static final int DEFAULT_SELECTED_R = 255;
     private static final int DEFAULT_SELECTED_G = 140;
     private static final int DEFAULT_SELECTED_B = 0;
-
-    // MAROON
-    private static final int DEFAULT_EDITED_A = 100;
-    private static final int DEFAULT_EDITED_R = 245;
-    private static final int DEFAULT_EDITED_G = 17;
-    private static final int DEFAULT_EDITED_B = 135;
 
     private int a;
     private int r;
@@ -44,19 +45,24 @@ public class OSMPolygon extends OSMPath {
     protected OSMPolygon(OSMWay w, MapView mv) {
         super(w, mv);
 
-        // color polygon according to if it has been edited before
-        if (w.isModified()) {
-            this.a = DEFAULT_EDITED_A;
-            this.r = DEFAULT_EDITED_R;
-            this.g = DEFAULT_EDITED_G;
-            this.b = DEFAULT_EDITED_B;
-        } else {
-            this.a = DEFAULT_A;
-            this.r = DEFAULT_R;
-            this.g = DEFAULT_G;
-            this.b = DEFAULT_B;
+        // color polygon according to values in tags.
+        Map<String, String> tags = w.getTags();
+        loadColorElements(mv);
+        String colorCode;
+        for (ColorElement el : colorElements) {
+            String key = el.getKey();
+            if (tags.containsKey(key)) {
+                if (tags.get(key).equals(el.getValue())) {
+                    //Choose highest priority coloring and exit loop.
+                    colorCode = el.getColorCode();
+                    this.a = el.getOpacity();
+                    this.r = Integer.parseInt(colorCode.substring(1, 3), HEX_RADIX);
+                    this.g = Integer.parseInt(colorCode.substring(3, 5), HEX_RADIX);
+                    this.b = Integer.parseInt(colorCode.substring(5, 7), HEX_RADIX);
+                    break;
+                }
+            }
         }
-
         paint.setStyle(Paint.Style.FILL);
         paint.setARGB(a, r, g, b);
     }
@@ -93,6 +99,19 @@ public class OSMPolygon extends OSMPath {
         } else {
             path.moveTo( (float) screenPoint[0], (float) screenPoint[1] );
             pathLineToReady = true;
+        }
+    }
+
+    private static void loadColorElements(MapView mv) {
+        if (!initializedColors) {
+            try {
+                colorElements = ColorXmlParser.parseXML(mv.getContext());
+                initializedColors = true;
+            } catch (XmlPullParserException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

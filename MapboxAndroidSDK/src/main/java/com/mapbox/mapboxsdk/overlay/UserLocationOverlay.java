@@ -21,17 +21,12 @@ import com.mapbox.mapboxsdk.events.ZoomEvent;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.Overlay.Snappable;
-import com.mapbox.mapboxsdk.proximity.LocationXMLParser;
 import com.mapbox.mapboxsdk.util.constants.UtilConstants;
 import com.mapbox.mapboxsdk.views.MapController;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.mapbox.mapboxsdk.views.safecanvas.ISafeCanvas;
 import com.mapbox.mapboxsdk.views.safecanvas.SafePaint;
 import com.mapbox.mapboxsdk.views.util.Projection;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
 import java.util.LinkedList;
 
 /**
@@ -57,6 +52,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
 
     private Location mLocation;
     private LatLng mLatLng;
+    private double accuracy;
     private boolean mIsLocationEnabled = false;
     private boolean mDrawAccuracyEnabled = true;
     private TrackingMode mTrackingMode = TrackingMode.NONE;
@@ -118,15 +114,6 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
 
         setMyLocationProvider(myLocationProvider);
         setOverlayIndex(USERLOCATIONOVERLAY_INDEX);
-
-        //Load location settings if location changed.
-        try {
-            LocationXMLParser.parseXML(mContext);
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public UserLocationOverlay(GpsLocationProvider myLocationProvider, MapView mapView) {
@@ -187,16 +174,22 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
 
         canvas.scale(mapScale, mapScale, mMapCoords.x, mMapCoords.y);
 
-        canvas.save();
-        // Rotate the icon
-        canvas.rotate(lastFix.getBearing(), mMapCoords.x, mMapCoords.y);
         // Counteract any scaling that may be happening so the icon stays the same size
         float radius = (float) LocationXMLParser.getProximityRadius();
-        //If proximity check is true and the GPS is not enabled, don't show user location else
-        //draw circle of provided radius around the user.
-        if (!(LocationXMLParser.getProximityCheck() && !isGPSEnabled())) {
+        float gpsThresholdAccuracy = LocationXMLParser.getGpsThresholdAccuracy();
+
+        // Draws proximity circle if user location is found.
+        if (mMapView.getAccuracy() < gpsThresholdAccuracy
+                && mMapView.getUserLocation() != null
+                && mMapView.getAccuracy() != 0.0
+                && (!LocationXMLParser.getProximityCheck() || isGPSEnabled())) {
             radius = radius / (float) Projection.groundResolution(
                     lastFix.getLatitude(), mapView.getZoomLevel()) * mapView.getScale();
+            canvas.save();
+            // Rotate the icon
+            canvas.rotate(lastFix.getBearing(), mMapCoords.x, mMapCoords.y);
+            // Counteract any scaling that may be happening so the icon stays the same size
+
             mCirclePaint.setAlpha(50);
             mCirclePaint.setStyle(Style.FILL);
             canvas.drawCircle(mMapCoords.x, mMapCoords.y, radius, mCirclePaint);
@@ -204,11 +197,14 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
             mCirclePaint.setAlpha(150);
             mCirclePaint.setStyle(Style.STROKE);
             canvas.drawCircle(mMapCoords.x, mMapCoords.y, radius, mCirclePaint);
+            canvas.restore();
             LocationXMLParser.setProximityEnabled(true);
+
+            //Refresh the MapView to redraw the circle.
+            mMapView.invalidate();
         } else {
             LocationXMLParser.setProximityEnabled(false);
         }
-        canvas.restore();
 
         if (UtilConstants.DEBUGMODE) {
             final float tx = (mMapCoords.x + 50);
@@ -350,6 +346,13 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         return mLatLng;
     }
 
+    /**
+     * Return a LatLng of the last known location, or null if not known.
+     */
+    public double getAccuracy() {
+        return accuracy;
+    }
+
     public Location getLastFix() {
         return mLocation;
     }
@@ -488,9 +491,11 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         mLocation = location;
         if (mLocation == null) {
             mLatLng = null;
+            accuracy = 100;
             return;
         }
         mLatLng = new LatLng(mLocation);
+        accuracy = mLocation.getAccuracy();
         //if goToMyPosition return false, it means we are already there
         //which means we have to invalidate ourselves to make sure we are redrawn
         if (!isFollowLocationEnabled() || !goToMyPosition(true)) {
@@ -586,7 +591,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
      */
     private boolean isGPSEnabled() {
         LocationManager manager = (LocationManager) mContext.getSystemService( Context.LOCATION_SERVICE );
-        if ( manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+        if ( manager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
             return true;
         }
         return false;

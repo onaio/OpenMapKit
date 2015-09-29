@@ -1,8 +1,9 @@
-package com.mapbox.mapboxsdk.proximity;
+package com.mapbox.mapboxsdk.overlay;
 
 import android.content.Context;
-import android.os.Environment;
 import android.widget.Toast;
+
+import com.mapbox.mapboxsdk.util.ExternalStorage;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -14,18 +15,20 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Created by @imwongela on 7/10/15.
+ * Created by coder on 7/10/15.
  */
 
 public class LocationXMLParser {
     public static final String FILENAME = "proximity_settings.xml";
     public static final String PROXIMITY_CHECK = "proximity_check";
     public static final String PROXIMITY_RADIUS = "proximity_radius";
-    public static final String APP_DIR = "openmapkit";
-    public static final String SETTINGS_DIR = "settings";
+    public static final String MAX_GPS_FIX_TIME = "max_gps_timer_delay";
+    public static final String GPS_THRESHOLD_ACCURACY = "gps_proximity_accuracy";
     private static double radius = 50;
     public static boolean check = false;
     public static boolean proximityEnabled = false;
+    public static int GPSTimeoutValue = 0;
+    private static float gpsThresholdAccuracy = 25f;
 
     public static XmlPullParser createPullParser(Context ctx) {
         XmlPullParserFactory pullParserFactory;
@@ -34,7 +37,7 @@ public class LocationXMLParser {
             pullParserFactory = XmlPullParserFactory.newInstance();
             XmlPullParser parser = pullParserFactory.newPullParser();
 
-            final File file = new File(getSettingsDir()+FILENAME);
+            final File file = new File(ExternalStorage.getSettingsDir()+FILENAME);
             InputStream in_s = new FileInputStream(file);
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             parser.setInput(in_s, null);
@@ -46,7 +49,7 @@ public class LocationXMLParser {
             // TODO Auto-generated catch block
             //e.printStackTrace();
         }
-        Toast.makeText(ctx, "Add the file " + FILENAME + " in the dir " + getSettingsDir(), Toast.LENGTH_LONG).show();
+        Toast.makeText(ctx, "Add the file " + FILENAME + " in the dir " + ExternalStorage.getSettingsDir(), Toast.LENGTH_LONG).show();
         return null;
     }
 
@@ -78,6 +81,20 @@ public class LocationXMLParser {
                         input = parser.nextText().trim();
                         try {
                             radius = Double.parseDouble(input);
+                        } catch (NumberFormatException e) {
+                            //e.printStackTrace();
+                        }
+                    } else if (name.equals(MAX_GPS_FIX_TIME)) {
+                        input = parser.nextText().trim();
+                        try {
+                            GPSTimeoutValue = Integer.parseInt(input);
+                        } catch (NumberFormatException e) {
+                            //e.printStackTrace();
+                        }
+                    } else if (name.equals(GPS_THRESHOLD_ACCURACY)) {
+                        input = parser.nextText().trim();
+                        try {
+                            gpsThresholdAccuracy = Float.parseFloat(input);
                         } catch (NumberFormatException e) {
                             //e.printStackTrace();
                         }
@@ -122,29 +139,11 @@ public class LocationXMLParser {
         return proximityEnabled;
     }
 
-    /**
-     *
-     * @return the path to the settings directory.
-     */
-    public static String getSettingsDir() {
-        createSettingsDir();
-        return Environment.getExternalStorageDirectory() + "/"
-                + APP_DIR + "/"
-                + SETTINGS_DIR + "/";
+    public static int getGPSTimeoutValue() {
+        return GPSTimeoutValue;
     }
 
-    /**
-     * Create settings dir if it does not exist.
-     * @return true if successfully created.
-     */
-    public static boolean createSettingsDir() {
-        File folder = new File(Environment.getExternalStorageDirectory() + "/"
-                + APP_DIR + "/"
-                + SETTINGS_DIR);
-        boolean createStatus = true;
-        if (!folder.exists()) {
-            createStatus = folder.mkdirs() ? true : false;
-        }
-        return createStatus;
+    public static float getGpsThresholdAccuracy() {
+        return gpsThresholdAccuracy;
     }
 }
