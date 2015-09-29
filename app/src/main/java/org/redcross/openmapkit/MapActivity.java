@@ -48,6 +48,7 @@ import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.redcross.openmapkit.mspray.TargetAreasXmlDownloader;
@@ -577,6 +578,20 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private void presentOSMOptions() {
         final File[] osmFiles = ExternalStorage.fetchOSMXmlFiles();
         String[] osmFileNames = ExternalStorage.fetchOSMXmlFileNames();
+
+        //Sort the files alphabetically
+        int fileSize = osmFiles.length;
+        FileHolder[] fileHolders = new FileHolder[fileSize];
+        for (int i = 0; i < fileSize; i++) {
+            FileHolder holder = new FileHolder(osmFileNames[i], osmFiles[i]);
+            fileHolders[i] = holder;
+        }
+        Arrays.sort(fileHolders);
+        for (int i = 0; i < fileSize; i++) {
+            osmFiles[i] = fileHolders[i].file;
+            osmFileNames[i] = fileHolders[i].name;
+        }
+
         final boolean[] checkedOsmFiles = OSMMapBuilder.isFileArraySelected(osmFiles);
         final Set<File> filesToAdd = new HashSet<>();
         final Set<File> filesToRemove = new HashSet<>();
