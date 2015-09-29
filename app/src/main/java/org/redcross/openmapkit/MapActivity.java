@@ -314,8 +314,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         int tagCount = osmElement.getTags().size();
 
         if (tagCount > 0 || numRequiredTags > 0) {
-            //show save to odk button
-            showSaveToOdkButton(osmElement);
+            // show save to odk button
+            // showSaveToOdkButton(osmElement);
             mTagListView.setVisibility(View.VISIBLE);
             addTagsButton.setVisibility(View.GONE);
         } else {

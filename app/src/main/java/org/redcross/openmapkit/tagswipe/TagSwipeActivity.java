@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import org.redcross.openmapkit.R;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
@@ -94,9 +95,13 @@ public class TagSwipeActivity extends ActionBarActivity {
     }
 
     public void saveToODKCollect() {
-        TagEdit.saveToODKCollect();
-        setResult(Activity.RESULT_OK);
-        finish();
+        boolean result = TagEdit.saveToODKCollect();
+        if (result) {
+            setResult(Activity.RESULT_OK);
+            finish();
+        } else {
+            Toast.makeText(this, "Select Spray Status before saving to ODK.", Toast.LENGTH_LONG).show();
+        }
     }
     
     public void cancel() {

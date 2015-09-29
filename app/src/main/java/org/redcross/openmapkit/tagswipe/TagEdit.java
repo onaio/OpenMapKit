@@ -4,6 +4,7 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 
 import com.spatialdev.osm.model.OSMElement;
+import com.spatialdev.osm.renderer.util.ColorXmlParser;
 
 import org.redcross.openmapkit.odkcollect.ODKCollectData;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
@@ -94,9 +95,15 @@ public class TagEdit {
         return 0;
     }
     
-    public static void saveToODKCollect() {
+    public static boolean saveToODKCollect() {
         updateTagsInOSMElement();
+
+        String sprayStatus = osmElement.getTags().get("spray_status");
+        if (sprayStatus == null) {
+            return false;
+        }
         ODKCollectHandler.saveXmlInODKCollect(osmElement);
+        return true;
     }
     
     private static void updateTagsInOSMElement() {
