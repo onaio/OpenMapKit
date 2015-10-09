@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.redcross.openmapkit" >
+    package="org.ona.openmapkit" >
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -38,7 +38,7 @@
             android:windowSoftInputMode="stateHidden" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.redcross.openmapkit.MapActivity" />
+                android:value="org.ona.openmapkit.MapActivity" />
         </activity>
         <activity
             android:name=".tagswipe.TagSwipeActivity"
@@ -46,7 +46,7 @@
             android:parentActivityName=".MapActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.redcross.openmapkit.MapActivity" />
+                android:value="org.ona.openmapkit.MapActivity" />
         </activity>
     </application>
 

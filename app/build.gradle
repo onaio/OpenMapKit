@@ -4,10 +4,10 @@ android {
     buildToolsVersion "21.1.2"
 
     defaultConfig {
-        applicationId "org.redcross.openmapkit"
+        applicationId "org.ona.openmapkit"
         minSdkVersion 16
         targetSdkVersion 21
-        versionCode 12
+        versionCode 13
         versionName "0.12"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
