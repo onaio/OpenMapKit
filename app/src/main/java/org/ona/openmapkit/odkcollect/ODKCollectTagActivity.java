@@ -1,4 +1,4 @@
-package org.ona.openmapkit.odkcollect;
+package io.ona.openmapkit.odkcollect;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -15,8 +15,8 @@ import android.widget.TextView;
 
 import com.spatialdev.osm.model.OSMElement;
 
-import org.ona.openmapkit.R;
-import org.ona.openmapkit.odkcollect.tag.ODKTag;
+import io.ona.openmapkit.R;
+import io.ona.openmapkit.odkcollect.tag.ODKTag;
 
 import java.util.Collection;
 import java.util.HashMap;

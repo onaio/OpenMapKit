@@ -1,4 +1,4 @@
-package org.ona.openmapkit;
+package io.ona.openmapkit;
 
 import android.os.Environment;
 

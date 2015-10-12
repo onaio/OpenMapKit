@@ -1,4 +1,4 @@
-package org.ona.openmapkit;
+package io.ona.openmapkit;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -11,7 +11,7 @@ import com.spatialdev.osm.OSMMap;
 import com.spatialdev.osm.model.JTSModel;
 import com.spatialdev.osm.model.OSMDataSet;
 
-import org.ona.openmapkit.odkcollect.ODKCollectHandler;
+import io.ona.openmapkit.odkcollect.ODKCollectHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
     private static final float MIN_VECTOR_RENDER_ZOOM = 18;
-    private static final String PERSISTED_OSM_FILES = "org.ona.openmapkit.PERSISTED_OSM_FILES";
+    private static final String PERSISTED_OSM_FILES = "io.ona.openmapkit.PERSISTED_OSM_FILES";
 
     private static MapActivity mapActivity;
     private static SharedPreferences sharedPreferences;

@@ -1,4 +1,4 @@
-package org.ona.openmapkit.tagswipe;
+package io.ona.openmapkit.tagswipe;
 
 import java.util.List;
 import java.util.Locale;
@@ -20,8 +20,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.ona.openmapkit.R;
-import org.ona.openmapkit.odkcollect.ODKCollectHandler;
+import io.ona.openmapkit.R;
+import io.ona.openmapkit.odkcollect.ODKCollectHandler;
 
 public class TagSwipeActivity extends ActionBarActivity {
 

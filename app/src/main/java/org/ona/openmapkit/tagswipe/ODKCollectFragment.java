@@ -1,4 +1,4 @@
-package org.ona.openmapkit.tagswipe;
+package io.ona.openmapkit.tagswipe;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,7 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.ona.openmapkit.R;
+import io.ona.openmapkit.R;
 
 /**
  * A simple {@link Fragment} subclass.

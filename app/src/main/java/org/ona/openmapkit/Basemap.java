@@ -1,4 +1,4 @@
-package org.ona.openmapkit;
+package io.ona.openmapkit;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
  */
 public class Basemap {
     
-    private static final String PREVIOUS_BASEMAP = "org.ona.openmapkit.PREVIOUS_BASEMAP";
+    private static final String PREVIOUS_BASEMAP = "io.ona.openmapkit.PREVIOUS_BASEMAP";
     
     private MapActivity mapActivity;
     private MapView mapView;

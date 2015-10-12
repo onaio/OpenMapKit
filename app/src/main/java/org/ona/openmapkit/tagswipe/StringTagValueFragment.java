@@ -1,4 +1,4 @@
-package org.ona.openmapkit.tagswipe;
+package io.ona.openmapkit.tagswipe;
 
 import android.content.Context;
 import android.net.Uri;
@@ -11,7 +11,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.ona.openmapkit.R;
+import io.ona.openmapkit.R;
 
 
 public class StringTagValueFragment extends Fragment {

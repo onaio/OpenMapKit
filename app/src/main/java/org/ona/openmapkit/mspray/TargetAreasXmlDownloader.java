@@ -1,4 +1,4 @@
-package org.ona.openmapkit.mspray;
+package io.ona.openmapkit.mspray;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -6,8 +6,8 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.ona.openmapkit.ExternalStorage;
-import org.ona.openmapkit.OSMMapBuilder;
+import io.ona.openmapkit.ExternalStorage;
+import io.ona.openmapkit.OSMMapBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;

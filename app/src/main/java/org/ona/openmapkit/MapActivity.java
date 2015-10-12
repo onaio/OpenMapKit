@@ -1,4 +1,4 @@
-package org.ona.openmapkit;
+package io.ona.openmapkit;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -43,15 +43,15 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
-import org.ona.openmapkit.odkcollect.ODKCollectHandler;
-import org.ona.openmapkit.odkcollect.tag.ODKTag;
-import org.ona.openmapkit.tagswipe.TagSwipeActivity;
+import io.ona.openmapkit.odkcollect.ODKCollectHandler;
+import io.ona.openmapkit.odkcollect.tag.ODKTag;
+import io.ona.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.ona.openmapkit.mspray.TargetAreasXmlDownloader;
+import io.ona.openmapkit.mspray.TargetAreasXmlDownloader;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -65,9 +65,9 @@ import java.util.TimerTask;
 public class MapActivity extends AppCompatActivity implements OSMSelectionListener {
     public static final int EARTH_RADIUS = 6371000;
 
-    protected static final String PREVIOUS_LAT = "org.ona.openmapkit.PREVIOUS_LAT";
-    protected static final String PREVIOUS_LNG = "org.ona.openmapkit.PREVIOUS_LNG";
-    protected static final String PREVIOUS_ZOOM = "org.ona.openmapkit.PREVIOUS_ZOOM";
+    protected static final String PREVIOUS_LAT = "io.ona.openmapkit.PREVIOUS_LAT";
+    protected static final String PREVIOUS_LNG = "io.ona.openmapkit.PREVIOUS_LNG";
+    protected static final String PREVIOUS_ZOOM = "io.ona.openmapkit.PREVIOUS_ZOOM";
 
     public static final String OSM_ENDPOINT = "http://ona....";
 

@@ -1,4 +1,4 @@
-package org.ona.openmapkit;
+package io.ona.openmapkit;
 
 import com.spatialdev.osm.model.OSMDataSet;
 import com.spatialdev.osm.model.OSMXmlParser;

@@ -1,14 +1,14 @@
-package org.ona.openmapkit.odkcollect;
+package io.ona.openmapkit.odkcollect;
 
 import android.os.Environment;
 
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMXmlWriter;
 
-import org.ona.openmapkit.ExternalStorage;
-import org.ona.openmapkit.MapActivity;
-import org.ona.openmapkit.odkcollect.tag.ODKTag;
-import org.ona.openmapkit.odkcollect.tag.ODKTagItem;
+import io.ona.openmapkit.ExternalStorage;
+import io.ona.openmapkit.MapActivity;
+import io.ona.openmapkit.odkcollect.tag.ODKTag;
+import io.ona.openmapkit.odkcollect.tag.ODKTagItem;
 
 import java.io.File;
 import java.io.FileOutputStream;

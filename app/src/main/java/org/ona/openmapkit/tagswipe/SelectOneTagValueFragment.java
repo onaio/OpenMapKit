@@ -1,4 +1,4 @@
-package org.ona.openmapkit.tagswipe;
+package io.ona.openmapkit.tagswipe;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,9 +12,9 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import org.ona.openmapkit.R;
-import org.ona.openmapkit.odkcollect.tag.ODKTag;
-import org.ona.openmapkit.odkcollect.tag.ODKTagItem;
+import io.ona.openmapkit.R;
+import io.ona.openmapkit.odkcollect.tag.ODKTag;
+import io.ona.openmapkit.odkcollect.tag.ODKTagItem;
 
 import java.util.Collection;
 

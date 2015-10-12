@@ -1,4 +1,4 @@
-package org.ona.openmapkit.tagswipe;
+package io.ona.openmapkit.tagswipe;
 
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -6,10 +6,10 @@ import android.widget.RadioGroup;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.renderer.util.ColorXmlParser;
 
-import org.ona.openmapkit.odkcollect.ODKCollectData;
-import org.ona.openmapkit.odkcollect.ODKCollectHandler;
-import org.ona.openmapkit.odkcollect.tag.ODKTag;
-import org.ona.openmapkit.odkcollect.tag.ODKTagItem;
+import io.ona.openmapkit.odkcollect.ODKCollectData;
+import io.ona.openmapkit.odkcollect.ODKCollectHandler;
+import io.ona.openmapkit.odkcollect.tag.ODKTag;
+import io.ona.openmapkit.odkcollect.tag.ODKTagItem;
 
 import java.util.ArrayList;
 import java.util.Collection;

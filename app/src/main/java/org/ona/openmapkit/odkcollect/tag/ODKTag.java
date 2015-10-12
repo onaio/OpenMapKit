@@ -1,4 +1,4 @@
-package org.ona.openmapkit.odkcollect.tag;
+package io.ona.openmapkit.odkcollect.tag;
 
 import android.app.Activity;
 import android.widget.EditText;

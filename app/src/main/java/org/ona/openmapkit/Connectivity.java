@@ -1,4 +1,4 @@
-package org.ona.openmapkit;
+package io.ona.openmapkit;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

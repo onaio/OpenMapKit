@@ -1,4 +1,4 @@
-package org.ona.openmapkit.odkcollect.tag;
+package io.ona.openmapkit.odkcollect.tag;
 
 /**
  *	Structure defining possible tag values that can be selected.
