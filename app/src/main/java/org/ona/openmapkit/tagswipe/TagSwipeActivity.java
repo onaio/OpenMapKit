@@ -91,13 +91,7 @@ public class TagSwipeActivity extends ActionBarActivity {
         if (id == R.id.action_save_to_odk_collect) {
             saveToODKCollect();
         }
-
-        // Return to the MapActivity
-        if (id == android.R.id.home) {
-            NavUtils.navigateUpFromSameTask(this);
-            return true;
-        }
-
+        
         return super.onOptionsItemSelected(item);
     }
 
