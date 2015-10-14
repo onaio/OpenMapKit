@@ -91,7 +91,7 @@ public class TagSwipeActivity extends ActionBarActivity {
         if (id == R.id.action_save_to_odk_collect) {
             saveToODKCollect();
         }
-        
+
         return super.onOptionsItemSelected(item);
     }
 
