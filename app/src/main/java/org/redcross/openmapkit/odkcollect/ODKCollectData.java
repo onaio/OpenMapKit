@@ -164,7 +164,7 @@ public class ODKCollectData {
     }
 
     public String getOSMFileName() {
-        return osmClassName + osmId + "_" + instanceId + ".osm";
+        return osmClassName + osmId + "_" + System.currentTimeMillis() + ".osm";
     }
     
     public String getOSMFileFullPath() {
