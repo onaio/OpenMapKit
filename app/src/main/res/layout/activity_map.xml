@@ -88,7 +88,7 @@
                 android:background="@drawable/roundedbutton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="+  Add Node"
+                android:text="+  Add Structure"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:id="@+id/addNodeBtn"
                 android:layout_above="@+id/addNodeMarkerBtn"
