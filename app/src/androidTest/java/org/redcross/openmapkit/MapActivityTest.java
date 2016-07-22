@@ -35,6 +35,8 @@ public class MapActivityTest {
         }
     }
 
+    private static final String ROUNDED_BUTTON_LABEL = "+  Add Structure";
+
     @Rule
     public ActivityTestRule<MapActivity> mActivityRule = new ActivityTestRule<>(MapActivity.class);
 
@@ -50,5 +52,14 @@ public class MapActivityTest {
         Espresso.onView(ViewMatchers.withId(R.id.locationButton))
                 .check(PositionAssertions
                         .isRightAlignedWith(ViewMatchers.withId(R.id.nodeModeButton)));
+    }
+
+    @Test
+    public void roundedButtonLabel() {
+        //show the add structure marker by clicking the '+' button
+        Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
+
+        //perform check
+        Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).check(ViewAssertions.matches(ViewMatchers.withText(ROUNDED_BUTTON_LABEL)));
     }
 }
