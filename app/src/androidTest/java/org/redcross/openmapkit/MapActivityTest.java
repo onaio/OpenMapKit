@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 
 import org.hamcrest.Matcher;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,6 +25,8 @@ public class MapActivityTest {
     private static final String TAG = "OMK.MapActivityTest";
     private static final long INITIAL_SLEEP_TIME = 5000l;
 
+    private static final String ROUNDED_BUTTON_LABEL = "+  Add Structure";
+
     @Before
     public void waitForSomeTime() {
         Log.d(TAG, "Sleeping for 5 seconds before running tests");
@@ -34,8 +37,6 @@ public class MapActivityTest {
             e.printStackTrace();
         }
     }
-
-    private static final String ROUNDED_BUTTON_LABEL = "+  Add Structure";
 
     @Rule
     public ActivityTestRule<MapActivity> mActivityRule = new ActivityTestRule<>(MapActivity.class);
@@ -59,7 +60,6 @@ public class MapActivityTest {
         //show the add structure marker by clicking the '+' button
         Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
 
-        //perform check
         Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).check(ViewAssertions.matches(ViewMatchers.withText(ROUNDED_BUTTON_LABEL)));
     }
 }
