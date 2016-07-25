@@ -4,12 +4,17 @@ import java.util.List;
 import java.util.Set;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
@@ -20,6 +25,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,8 +39,16 @@ public class TagSwipeActivity extends ActionBarActivity {
 
     private List<TagEdit> tagEdits;
     private SharedPreferences userNamePref;
+    private LocationListener locationListener;
+    private LocationManager locationManager;
+    /*
+    Which GPS provider should be used to get the User's current location
+     */
+    private static final String PREFERRED_LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
+    private AlertDialog gpsProviderAlertDialog;
+    private ProgressDialog gpsSearchingProgressDialog;
 
-    
+
     private void setupModel() {
         tagEdits = TagEdit.buildTagEdits();
         TagEdit.setTagSwipeActivity(this);
@@ -65,6 +79,125 @@ public class TagSwipeActivity extends ActionBarActivity {
         mViewPager.setAdapter(mSectionsPagerAdapter);
     
         pageToCorrectTag();
+        initLocationManager();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(locationManager != null) {
+            locationManager.removeUpdates(locationListener);
+        }
+        super.onDestroy();
+    }
+
+    private void initLocationManager() {
+        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                TagEdit.updateUserLocationTags(location);
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+                checkLocationProviderEnabled();
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+                updateUsersLocation();
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+                TagEdit.cleanUserLocationTags();
+                checkLocationProviderEnabled();
+            }
+        };
+
+        locationManager.requestLocationUpdates(PREFERRED_LOCATION_PROVIDER, 30000, 10, locationListener);
+        updateUsersLocation();
+    }
+
+    /**
+     * This method updates the user's location (and osm location tags)
+     *
+     * @return TRUE if location was successfully updated
+     */
+    public boolean updateUsersLocation() {
+        if(checkLocationProviderEnabled()) {
+            Location location = locationManager.getLastKnownLocation(PREFERRED_LOCATION_PROVIDER);
+            TagEdit.updateUserLocationTags(location);
+            return true;
+        } else {
+            Log.w("UserLocationTags", "LocationManager is null");
+        }
+        return false;
+    }
+
+    /**
+     * This method checks whether the preferred location provider is enabled in the device and shows
+     * the gpsProviderAlertDialog if not
+     *
+     * @return TRUE if the preferred location provider is enabled
+     */
+    private boolean checkLocationProviderEnabled() {
+        if(getLocationProviderStatus() == true) {
+            if(gpsProviderAlertDialog != null) {
+                gpsProviderAlertDialog.dismiss();
+            }
+            return true;
+        }
+
+        //if we've reached this point, it means the location provider is not enabled
+        //show the enable location provider dialog
+        if(gpsProviderAlertDialog == null) {
+            gpsProviderAlertDialog = new AlertDialog.Builder(TagSwipeActivity.this)
+                    .setMessage(getResources().getString(R.string.enable_gps))
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (getLocationProviderStatus() == true) {
+                                dialogInterface.dismiss();
+                            } else {
+                                TagSwipeActivity.this.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                            }
+                        }
+                    })
+                    .setCancelable(false)
+                    .create();
+        }
+        gpsProviderAlertDialog.show();
+
+        return false;
+    }
+
+    /**
+     * This method checks whether the preferred location provider is available
+     *
+     * @return  TRUE if the preferred location provider is available
+     */
+    private boolean getLocationProviderStatus() {
+        if(locationManager != null) {
+            if(locationManager.isProviderEnabled(PREFERRED_LOCATION_PROVIDER)){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private void showGpsSearchingProgressDialog() {
+        if(gpsSearchingProgressDialog == null) {
+            gpsSearchingProgressDialog = ProgressDialog.show(TagSwipeActivity.this, "", getResources().getString(R.string.waiting_for_user_location), true, false);
+        } else {
+            gpsSearchingProgressDialog.show();
+        }
+    }
+
+    public void hideGpsSearchingProgressDialog() {
+        if(gpsSearchingProgressDialog != null) {
+            gpsSearchingProgressDialog.dismiss();
+        }
     }
 
     private void pageToCorrectTag() {
@@ -171,6 +304,13 @@ public class TagSwipeActivity extends ActionBarActivity {
                 })
                 .setActionTextColor(Color.rgb(126, 188, 111))
                 .show();
+    }
+
+    public void notifyMissingUserLocation() {
+        showGpsSearchingProgressDialog();
+        int index = TagEdit.getIndexForTagKey(TagEdit.TAG_KEY_USER_LOCATION);
+        updateUsersLocation();
+        mViewPager.setCurrentItem(index);
     }
 
     private String missingTagsText(Set<String> missingTags) {

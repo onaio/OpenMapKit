@@ -7,6 +7,7 @@ import com.spatialdev.osm.model.OSMElement;
 
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.odkcollect.tag.ODKTagItem;
+import org.redcross.openmapkit.tagswipe.TagEdit;
 
 import java.io.File;
 import java.io.IOException;
@@ -110,6 +111,30 @@ public class ODKCollectHandler {
                 }
             }
         }
+
+        tags = addUserLocationTags(tags);
+
+        return tags;
+    }
+
+    /**
+     * This method adds the user location tags
+     *
+     * @param tags  All the tags without the user location tags
+     * @return  List of all the tags, including the user location tags
+     */
+    private static LinkedHashMap<String, ODKTag> addUserLocationTags(LinkedHashMap<String, ODKTag> tags) {
+        //TODO: add test for checking whether user location tags are always returned to ODK
+        ODKTag userLocation = new ODKTag();
+        userLocation.setKey(TagEdit.TAG_KEY_USER_LOCATION);
+        userLocation.setLabel(TagEdit.TAG_LABEL_USER_LOCATION);
+        tags.put(TagEdit.TAG_KEY_USER_LOCATION, userLocation);
+
+        ODKTag userLocationAccuracy = new ODKTag();
+        userLocationAccuracy.setKey(TagEdit.TAG_KEY_USER_LOCATION_ACCURACY);
+        userLocationAccuracy.setLabel(TagEdit.TAG_LABEL_USER_LOCATION_ACCURACY);
+        tags.put(TagEdit.TAG_KEY_USER_LOCATION_ACCURACY, userLocationAccuracy);
+
         return tags;
     }
 }
