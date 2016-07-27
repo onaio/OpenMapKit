@@ -41,6 +41,7 @@ public class ExternalStorage {
     public static final String DEPLOYMENTS_DIR = "deployments";
     public static final String CONSTRAINTS_DIR = "constraints";
     public static final String DEFAULT_CONSTRAINT = "default.json";
+    public static final String SETTINGS_DIR = "settings";
 
     /**
      * Creating the application directory structure.
@@ -444,6 +445,16 @@ public class ExternalStorage {
     public static File getSDCardDirWithExternalFallback() {
         String[] dirs = getStorageDirectories();
         return new File(dirs[dirs.length-1]);
+    }
+
+    /**
+     *
+     * @return the settings directory of the app.
+     */
+    public static String getSettingsDir() {
+        return Environment.getExternalStorageDirectory() + "/"
+                + APP_DIR + "/"
+                + SETTINGS_DIR + "/";
     }
 }
 

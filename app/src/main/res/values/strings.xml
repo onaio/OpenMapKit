@@ -80,5 +80,7 @@
     <string name="deploymentDownloadCanceled">Deployment download canceled!</string>
     <string name="deploymentDownloadComplete">Deployment download complete!</string>
     <string name="add_node">+  Add Structure</string>
+    <string name="enable_gps">Please enable GPS before continuing</string>
+    <string name="getting_gps_fix">"Getting a GPS Fix..."</string>
 
 </resources>
