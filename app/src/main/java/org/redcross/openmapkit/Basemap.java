@@ -89,7 +89,7 @@ public class Basemap {
         if (basemaps.size() == 0) {
             Toast prompt = Toast.makeText(context, "No basemap downloaded yet. You may 1) download a deployment, 2) connect to the internet, or 3) add .mbtiles file to " + ExternalStorage.getMBTilesDir() + ".", Toast.LENGTH_LONG);
             prompt.show();
-            return;
+            return null;
         }
 
         //create dialog of mbtiles choices
@@ -165,7 +165,6 @@ public class Basemap {
 
         //present dialog to user
         mapActivity.setMbtilesDialog(builder.show());
-
     }
 
     private void selectOnlineBasemap() {

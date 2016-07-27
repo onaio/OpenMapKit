@@ -104,6 +104,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * Which GPS provider should be used to get the User's current location
      */
     private String preferredLocationProvider = LocationManager.GPS_PROVIDER;
+    private boolean isTesting;//whether the activity has been launched in testing mode
+
     /**
      * intent request codes
      */
@@ -117,6 +119,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
          * We are waiting to enable this until we need it for a new map renderer.
          */
 //        initializeMBTilesServer();
+        isTesting = false;
+        Intent launchIntent = getIntent();
+        if(launchIntent != null) {
+            Bundle extras = launchIntent.getExtras();
+            if(extras != null && extras.containsKey(BUNDLE_KEY_IS_TESTING)) {
+                isTesting = extras.getBoolean(BUNDLE_KEY_IS_TESTING);
+            }
+        }
 
         determineVersion();
         
@@ -373,6 +383,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 if (ODKCollectHandler.isODKCollectMode()) {
                     //launch the TagSwipeActivity
                     Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
+                    tagSwipe.putExtra(TagSwipeActivity.BUNDLE_KEY_IS_TESTING, isTesting);
                     startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
                 } else {
                     launchODKCollectSnackbar();
@@ -394,6 +405,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 if (ODKCollectHandler.isODKCollectMode()) {
                     String tappedKey = tagListAdapter.getTagKeyForIndex(position);
                     Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
+                    tagSwipe.putExtra(TagSwipeActivity.BUNDLE_KEY_IS_TESTING, isTesting);
                     tagSwipe.putExtra("TAG_KEY", tappedKey);
                     startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
                 } else {

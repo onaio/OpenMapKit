@@ -1,6 +1,7 @@
 package org.redcross.openmapkit.odkcollect;
 
 import android.os.Environment;
+import android.util.Log;
 
 import com.spatialdev.osm.OSMUtil;
 import com.spatialdev.osm.model.OSMElement;
@@ -61,6 +62,7 @@ public class ODKCollectData {
         if (formFileName == null) {
             return;
         }
+        Log.d("ODKCollectData", "instanceDir = "+instanceDir);
         String instances = new File(instanceDir).getParent();
         File[] instancesDirs = new File(instances).listFiles();
         for (int i = 0; i < instancesDirs.length; ++i) {

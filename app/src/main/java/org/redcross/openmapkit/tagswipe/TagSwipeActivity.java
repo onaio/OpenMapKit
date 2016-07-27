@@ -1,5 +1,6 @@
 package org.redcross.openmapkit.tagswipe;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +15,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -31,11 +33,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import org.redcross.openmapkit.R;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 public class TagSwipeActivity extends ActionBarActivity {
+    /*
+    Intent bundle key used to determine whether the activity has been started for testing purposes
+     */
+    public static final String BUNDLE_KEY_IS_TESTING = "is_testing";
 
     private List<TagEdit> tagEdits;
     private SharedPreferences userNamePref;
@@ -44,10 +51,13 @@ public class TagSwipeActivity extends ActionBarActivity {
     /*
     Which GPS provider should be used to get the User's current location
      */
-    private static final String PREFERRED_LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
+    private String preferredLocationProvider = LocationManager.GPS_PROVIDER;
     private AlertDialog gpsProviderAlertDialog;
     private ProgressDialog gpsSearchingProgressDialog;
-
+    private boolean forTesting;
+    private AlertDialog insertOsmUsernameDialog;
+    private EditText osmUsernameEditText;
+    private String osmFilePath;
 
     private void setupModel() {
         tagEdits = TagEdit.buildTagEdits();
@@ -67,6 +77,16 @@ public class TagSwipeActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tag_swipe);
+        forTesting = false;
+        Intent startActivityIntent = getIntent();
+        if(startActivityIntent != null) {
+            Bundle extras = startActivityIntent.getExtras();
+            if(extras != null) {
+                if(extras.containsKey(BUNDLE_KEY_IS_TESTING)){
+                    forTesting = extras.getBoolean(BUNDLE_KEY_IS_TESTING);
+                }
+            }
+        }
 
         setupModel();
         
@@ -86,38 +106,115 @@ public class TagSwipeActivity extends ActionBarActivity {
     protected void onDestroy() {
         if(locationManager != null) {
             locationManager.removeUpdates(locationListener);
+            if(forTesting) {
+                Log.d("GPSTest", "removing the test provider");
+                locationManager.removeTestProvider(preferredLocationProvider);
+            }
         }
         super.onDestroy();
     }
 
     private void initLocationManager() {
+        if(forTesting) {
+            preferredLocationProvider = "test_provider_"+String.valueOf(Calendar.getInstance().getTimeInMillis());
+        }
+
         locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
+                Log.d("GPSTest", "onLocationChanged called");
                 TagEdit.updateUserLocationTags(location);
             }
 
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
+                Log.d("GPSTest", "onStatusChanged called");
                 checkLocationProviderEnabled();
             }
 
             @Override
             public void onProviderEnabled(String s) {
+                Log.d("GPSTest", "onProviderEnabled called");
                 updateUsersLocation();
             }
 
             @Override
             public void onProviderDisabled(String s) {
+                Log.d("GPSTest", "onProviderDisabled called");
                 TagEdit.cleanUserLocationTags();
                 checkLocationProviderEnabled();
             }
         };
 
-        locationManager.requestLocationUpdates(PREFERRED_LOCATION_PROVIDER, 30000, 10, locationListener);
+        if(forTesting == false) {
+            Toast.makeText(this, "Is not for testing", Toast.LENGTH_LONG).show();
+        } else {
+            locationManager.addTestProvider(preferredLocationProvider, false, false,
+                    false, false, true, true, true, 0, 5);
+            changeTestProviderEnabled(true);
+        }
+
+        locationManager.requestLocationUpdates(preferredLocationProvider, 0, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, locationListener);
+
+        Log.d("GPSTest", "requestLocationUpdates called");
         updateUsersLocation();
     }
+
+    /**
+     * This method changes the state of the test provider initialized in this activity.
+     * This method is intended to only be used in tests.
+     *
+     * @param enable    TRUE of you want to enable the test provider
+     */
+    public void changeTestProviderEnabled(boolean enable) {
+        if(locationManager != null) {
+            Log.d("GPSTest", "Provider status changed to "+String.valueOf(enable));
+            locationManager.setTestProviderEnabled(preferredLocationProvider, enable);
+        } else {
+            Log.w("TagSwipeActivity", "Location manager is null, cannot enable/disable the test provider");
+        }
+    }
+
+    /**
+     * This method changes the status of the test provider for the locationManager initialized in
+     * this activity.
+     * This method is intended to only be used in tests.
+     *
+     * @param status    Status similar to those provided in android.location.LocationProvider
+     * @see android.location.LocationProvider
+     */
+    public void changeTestProviderStatus(int status) {
+        if(locationManager != null) {
+            locationManager.setTestProviderStatus(
+                    preferredLocationProvider,
+                    status,
+                    null,
+                    Calendar.getInstance().getTimeInMillis());
+        } else {
+            Log.w("TagSwipeActivity", "Location manager is null, cannot change the status of the test provider");
+        }
+    }
+
+    /**
+     * This method changes the location passed by the test provider registered in the
+     * locationManager initialized in this activity.
+     * This method is intended to only be used in tests.
+     *
+     * @param location  The location to be provided by the locationManager
+     */
+    public void changeTestProviderLocation(Location location) {
+        if(locationManager != null) {
+            locationManager.setTestProviderLocation(preferredLocationProvider, location);
+            Log.d("GPSTest", "changeTestProviderLocation called");
+        } else {
+            Log.w("TagSwipeActivity", "Location manager is null, cannot change the location in the test provider");
+        }
+    }
+
 
     /**
      * This method updates the user's location (and osm location tags)
@@ -126,11 +223,16 @@ public class TagSwipeActivity extends ActionBarActivity {
      */
     public boolean updateUsersLocation() {
         if(checkLocationProviderEnabled()) {
-            Location location = locationManager.getLastKnownLocation(PREFERRED_LOCATION_PROVIDER);
+            Log.w("GPSTest", "LocationManager is not null");
+            Location location = locationManager.getLastKnownLocation(preferredLocationProvider);
+            if(location == null) {
+                Log.w("GPSTest", "Last location is null");
+                Log.w("GPSTest", "Location providers = "+locationManager.getProviders(true).toString());
+            }
             TagEdit.updateUserLocationTags(location);
             return true;
         } else {
-            Log.w("UserLocationTags", "LocationManager is null");
+            Log.w("GPSTest", "LocationManager is null");
         }
         return false;
     }
@@ -141,7 +243,7 @@ public class TagSwipeActivity extends ActionBarActivity {
      *
      * @return TRUE if the preferred location provider is enabled
      */
-    private boolean checkLocationProviderEnabled() {
+    public boolean checkLocationProviderEnabled() {
         if(getLocationProviderStatus() == true) {
             if(gpsProviderAlertDialog != null) {
                 gpsProviderAlertDialog.dismiss();
@@ -172,6 +274,19 @@ public class TagSwipeActivity extends ActionBarActivity {
         return false;
     }
 
+    public boolean isGpsProviderAlertDialogShowing() {
+        if(gpsProviderAlertDialog != null) {
+            if(gpsProviderAlertDialog.isShowing()) {
+                Log.d("DialogTest", "gpsProviderAlertDialog is showing");
+            } else {
+                Log.d("DialogTest", "gpsProviderAlertDialog is not showing");
+            }
+            Log.d("DialogTest", "gpsProviderAlertDialog is showing");
+            return gpsProviderAlertDialog.isShowing();
+        }
+        return false;
+    }
+
     /**
      * This method checks whether the preferred location provider is available
      *
@@ -179,13 +294,28 @@ public class TagSwipeActivity extends ActionBarActivity {
      */
     private boolean getLocationProviderStatus() {
         if(locationManager != null) {
-            if(locationManager.isProviderEnabled(PREFERRED_LOCATION_PROVIDER)){
+            if(locationManager.isProviderEnabled(preferredLocationProvider)){
                 return true;
             }
         }
         return false;
     }
-    
+
+    public void setOsmFilePath(String path) {
+        osmFilePath = path;
+    }
+
+    public String getOsmFilePath() {
+        return osmFilePath;
+    }
+
+    public void setOsmUsername(String username) {
+        if(insertOsmUsernameDialog != null && osmUsernameEditText != null) {
+            osmUsernameEditText.setText(username);
+            insertOsmUsernameDialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+        }
+    }
+
     private void showGpsSearchingProgressDialog() {
         if(gpsSearchingProgressDialog == null) {
             gpsSearchingProgressDialog = ProgressDialog.show(TagSwipeActivity.this, "", getResources().getString(R.string.waiting_for_user_location), true, false);
@@ -271,7 +401,8 @@ public class TagSwipeActivity extends ActionBarActivity {
                 }
             }
         });
-        builder.show();
+        insertOsmUsernameDialog = builder.show();
+        osmUsernameEditText = input;
     }
 
     public void updateUI(String activeTagKey) {
