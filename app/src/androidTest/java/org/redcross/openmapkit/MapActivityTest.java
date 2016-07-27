@@ -50,29 +50,5 @@ public class MapActivityTest {
         Espresso.onView(ViewMatchers.withId(R.id.locationButton))
                 .check(PositionAssertions
                         .isRightAlignedWith(ViewMatchers.withId(R.id.nodeModeButton)));
-
-        //check position when adding a new node
-        /*TODO: test whether locate-me button is above moveNodeModeBtn after sequence for creating
-         TODO: new node is started*/
-        /*Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
-        Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).perform(ViewActions.click());
-
-        try {
-            Thread.sleep(200);
-            Espresso.onView(ViewMatchers.withId(R.id.locationButton))
-                    .check(PositionAssertions
-                            .isAbove(ViewMatchers.withId(R.id.moveNodeModeBtn)));
-            Espresso.onView(ViewMatchers.withId(R.id.locationButton))
-                    .check(PositionAssertions
-                            .isRightAlignedWith(ViewMatchers.withId(R.id.moveNodeModeBtn)));
-            Espresso.onView(ViewMatchers.withId(R.id.locationButton))
-                    .check(PositionAssertions
-                            .isAbove(ViewMatchers.withId(R.id.nodeModeButton)));
-            Espresso.onView(ViewMatchers.withId(R.id.locationButton))
-                    .check(PositionAssertions
-                            .isRightAlignedWith(ViewMatchers.withId(R.id.nodeModeButton)));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
     }
 }
