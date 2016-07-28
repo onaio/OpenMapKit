@@ -314,7 +314,7 @@ public class ExternalStorage {
         }
     }
 
-    private static void copyAssetsFileOrDirToExternalStorage(Context context, String path) {
+    public static void copyAssetsFileOrDirToExternalStorage(Context context, String path) {
         AssetManager assetManager = context.getAssets();
         String assets[] = null;
         try {

@@ -1,7 +1,6 @@
 package org.redcross.openmapkit;
 
 import android.content.Context;
-import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -22,11 +21,17 @@ public class LocationXMLParser {
     public static final String PROXIMITY_RADIUS = "proximity_radius";
     public static final String MAX_GPS_FIX_TIME = "max_gps_timer_delay";
     public static final String GPS_THRESHOLD_ACCURACY = "gps_proximity_accuracy";
-    private static double radius = 50;
-    private static boolean proximityCheck = false;
-    private static boolean proximityEnabled = false;
-    private static int gpsTimeoutValue = 0;
-    private static float gpsThresholdAccuracy = 25f;
+    public static final double DEFAULT_PROXIMITY_RADIUS = 50d;
+    public static final boolean DEFAULT_PROXIMITY_CHECK = false;
+    public static final int DEFAULT_GPS_TIMER_DELAY = 0;
+    public static final float DEFAULT_GPS_PROXIMITY_ACCURACY = 25f;
+    public static final boolean DEFAULT_PROXIMITY_ENABLED = false;
+
+    private static double proximityRadius = DEFAULT_PROXIMITY_RADIUS;
+    private static boolean proximityCheck = DEFAULT_PROXIMITY_CHECK;
+    private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
+    private static int gpsTimerDelay = DEFAULT_GPS_TIMER_DELAY;
+    private static float gpsProximityAccuracy = DEFAULT_GPS_PROXIMITY_ACCURACY;
 
     public static XmlPullParser createPullParser(Context ctx) {
         XmlPullParserFactory pullParserFactory;
@@ -47,7 +52,6 @@ public class LocationXMLParser {
             // TODO Auto-generated catch block
             //e.printStackTrace();
         }
-        Toast.makeText(ctx, "Add the file " + FILENAME + " in the dir " + ExternalStorage.getSettingsDir(), Toast.LENGTH_LONG).show();
         return null;
     }
 
@@ -78,21 +82,21 @@ public class LocationXMLParser {
                     } else if (name.equals(PROXIMITY_RADIUS)) {
                         input = parser.nextText().trim();
                         try {
-                            radius = Double.parseDouble(input);
+                            proximityRadius = Double.parseDouble(input);
                         } catch (NumberFormatException e) {
                             //e.printStackTrace();
                         }
                     } else if (name.equals(MAX_GPS_FIX_TIME)) {
                         input = parser.nextText().trim();
                         try {
-                            gpsTimeoutValue = Integer.parseInt(input);
+                            gpsTimerDelay = Integer.parseInt(input);
                         } catch (NumberFormatException e) {
                             //e.printStackTrace();
                         }
                     } else if (name.equals(GPS_THRESHOLD_ACCURACY)) {
                         input = parser.nextText().trim();
                         try {
-                            gpsThresholdAccuracy = Float.parseFloat(input);
+                            gpsProximityAccuracy = Float.parseFloat(input);
                         } catch (NumberFormatException e) {
                             //e.printStackTrace();
                         }
@@ -107,10 +111,10 @@ public class LocationXMLParser {
 
     /**
      *
-     * @return proximity radius around user location.
+     * @return proximity proximityRadius around user location.
      */
     public static double getProximityRadius() {
-        return radius;
+        return proximityRadius;
     }
 
     /**
@@ -137,11 +141,11 @@ public class LocationXMLParser {
         return proximityEnabled;
     }
 
-    public static int getGpsTimeoutValue() {
-        return gpsTimeoutValue;
+    public static int getGpsTimerDelay() {
+        return gpsTimerDelay;
     }
 
-    public static float getGpsThresholdAccuracy() {
-        return gpsThresholdAccuracy;
+    public static float getGpsProximityAccuracy() {
+        return gpsProximityAccuracy;
     }
 }

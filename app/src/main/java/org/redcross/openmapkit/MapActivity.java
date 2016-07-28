@@ -11,6 +11,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -53,7 +54,6 @@ import org.redcross.openmapkit.deployments.DeploymentsActivity;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.server.MBTilesServer;
-import org.redcross.openmapkit.tagswipe.TagEdit;
 import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -97,7 +97,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private boolean nodeMode = false;
     private boolean moveNodeMode = false;
     private Dialog gpsCountdownDialog;
-    private static final int TASK_INTERVAL_IN_MILLIS = 1000;
+    public static final int TASK_INTERVAL_IN_MILLIS = 1000;
     private Timer mTimer;
     protected TimerTask timerTask;
     protected int initialCountdownValue;
@@ -218,64 +218,58 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         LocationXMLParser.setProximityEnabled(false);
 
         if (isGPSEnabled()) {
-            Log.d("GpsTest", "GPS is enabled");
             // Start GPS progress
-            initialCountdownValue = LocationXMLParser.getGpsTimeoutValue();
-            Log.d("GpsTest", "initialCountdownValue = "+String.valueOf(initialCountdownValue));
+            initialCountdownValue = LocationXMLParser.getGpsTimerDelay();
             showProgressDialog();
-        } else {
-            Log.d("GpsTest", "GPS is disabled");
         }
     }
 
     private void initLocationManager() {
+        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         if(forTesting) {
             preferredLocationProvider = "test_provider_"+String.valueOf(Calendar.getInstance().getTimeInMillis());
+            if(locationManager.getProvider(preferredLocationProvider) != null) {
+                locationManager.removeTestProvider(preferredLocationProvider);
+            }
         }
 
-        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                Log.d("GPSTest", "onLocationChanged called");
-                Log.d("GPSTest", "Location accuracy = "+String.valueOf(location.getAccuracy()));
-                if(location.getAccuracy() <= LocationXMLParser.getGpsThresholdAccuracy()) {
+                if(location.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
                     LocationXMLParser.setProximityEnabled(true);
                 }
             }
 
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
-                Log.d("GPSTest", "onStatusChanged called");
                 checkLocationProviderEnabled();
             }
 
             @Override
             public void onProviderEnabled(String s) {
-                Log.d("GPSTest", "onProviderEnabled called");
             }
 
             @Override
             public void onProviderDisabled(String s) {
-                Log.d("GPSTest", "onProviderDisabled called");
                 checkLocationProviderEnabled();
             }
         };
 
         if(forTesting == false) {
-            Toast.makeText(this, "Is not for testing", Toast.LENGTH_LONG).show();
+            locationManager.requestLocationUpdates(preferredLocationProvider, 30000, 4, locationListener);
         } else {
-            locationManager.addTestProvider(preferredLocationProvider, false, false,
-                    false, false, true, true, true, 0, 5);
+            Toast.makeText(this, "App launched for automated tests", Toast.LENGTH_LONG).show();
+            locationManager.addTestProvider(preferredLocationProvider
+                    , true, false, false, false, true, true, true,
+                    Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
             changeTestProviderEnabled(true);
+            locationManager.requestLocationUpdates(preferredLocationProvider, 0, 0, locationListener);
         }
+    }
 
-        locationManager.requestLocationUpdates(preferredLocationProvider, 0, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, locationListener);
-
-        Log.d("GPSTest", "requestLocationUpdates called");
+    public String getPreferredLocationProvider() {
+        return preferredLocationProvider;
     }
 
     /**
@@ -286,10 +280,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      */
     public void changeTestProviderEnabled(boolean enable) {
         if(locationManager != null) {
-            Log.d("GPSTest", "Provider status changed to "+String.valueOf(enable));
             locationManager.setTestProviderEnabled(preferredLocationProvider, enable);
-        } else {
-            Log.w("TagSwipeActivity", "Location manager is null, cannot enable/disable the test provider");
         }
     }
 
@@ -1065,6 +1056,21 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 }
             };
             mTimer.schedule(timerTask, TASK_INTERVAL_IN_MILLIS);
+        }
+    }
+
+    /**
+     * This method changes the location passed by the test provider registered in the
+     * locationManager initialized in this activity.
+     * This method is intended to only be used in tests.
+     *
+     * @param location  The location to be provided by the locationManager
+     */
+    public void changeTestProviderLocation(Location location) {
+        if(locationManager != null) {
+            locationManager.setTestProviderLocation(preferredLocationProvider, location);
+        } else {
+            Log.w("TagSwipeActivity", "Location manager is null, cannot change the location in the test provider");
         }
     }
 }
