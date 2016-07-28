@@ -60,7 +60,7 @@ public class Basemap {
                 selectMBTilesBasemap(selectedBasemap);
             }
         } else {
-            presentBasemapsOptions();
+            mapActivity.setMbtilesDialog(presentBasemapsOptions());
         }
     }
     

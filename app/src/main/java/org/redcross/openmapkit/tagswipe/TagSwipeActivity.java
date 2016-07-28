@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -107,7 +108,6 @@ public class TagSwipeActivity extends ActionBarActivity {
         if(locationManager != null) {
             locationManager.removeUpdates(locationListener);
             if(forTesting) {
-                Log.d("GPSTest", "removing the test provider");
                 locationManager.removeTestProvider(preferredLocationProvider);
             }
         }
@@ -115,52 +115,48 @@ public class TagSwipeActivity extends ActionBarActivity {
     }
 
     private void initLocationManager() {
+        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         if(forTesting) {
             preferredLocationProvider = "test_provider_"+String.valueOf(Calendar.getInstance().getTimeInMillis());
+            if(locationManager.getProvider(preferredLocationProvider) != null) {
+                locationManager.removeTestProvider(preferredLocationProvider);
+            }
         }
 
-        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                Log.d("GPSTest", "onLocationChanged called");
                 TagEdit.updateUserLocationTags(location);
             }
 
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
-                Log.d("GPSTest", "onStatusChanged called");
                 checkLocationProviderEnabled();
             }
 
             @Override
             public void onProviderEnabled(String s) {
-                Log.d("GPSTest", "onProviderEnabled called");
                 updateUsersLocation();
             }
 
             @Override
             public void onProviderDisabled(String s) {
-                Log.d("GPSTest", "onProviderDisabled called");
                 TagEdit.cleanUserLocationTags();
                 checkLocationProviderEnabled();
             }
         };
 
         if(forTesting == false) {
-            Toast.makeText(this, "Is not for testing", Toast.LENGTH_LONG).show();
+            locationManager.requestLocationUpdates(preferredLocationProvider, 30000, 4, locationListener);
         } else {
-            locationManager.addTestProvider(preferredLocationProvider, false, false,
-                    false, false, true, true, true, 0, 5);
+            Toast.makeText(this, "App launched for automated tests", Toast.LENGTH_LONG).show();
+            locationManager.addTestProvider(preferredLocationProvider
+                    , true, false, false, false, true, true, true,
+                    Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
             changeTestProviderEnabled(true);
+            locationManager.requestLocationUpdates(preferredLocationProvider, 0, 0, locationListener);
         }
 
-        locationManager.requestLocationUpdates(preferredLocationProvider, 0, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, locationListener);
-
-        Log.d("GPSTest", "requestLocationUpdates called");
         updateUsersLocation();
     }
 
@@ -172,7 +168,6 @@ public class TagSwipeActivity extends ActionBarActivity {
      */
     public void changeTestProviderEnabled(boolean enable) {
         if(locationManager != null) {
-            Log.d("GPSTest", "Provider status changed to "+String.valueOf(enable));
             locationManager.setTestProviderEnabled(preferredLocationProvider, enable);
         } else {
             Log.w("TagSwipeActivity", "Location manager is null, cannot enable/disable the test provider");
@@ -209,12 +204,14 @@ public class TagSwipeActivity extends ActionBarActivity {
     public void changeTestProviderLocation(Location location) {
         if(locationManager != null) {
             locationManager.setTestProviderLocation(preferredLocationProvider, location);
-            Log.d("GPSTest", "changeTestProviderLocation called");
         } else {
             Log.w("TagSwipeActivity", "Location manager is null, cannot change the location in the test provider");
         }
     }
 
+    public String getPreferredLocationProvider() {
+        return preferredLocationProvider;
+    }
 
     /**
      * This method updates the user's location (and osm location tags)
@@ -276,12 +273,6 @@ public class TagSwipeActivity extends ActionBarActivity {
 
     public boolean isGpsProviderAlertDialogShowing() {
         if(gpsProviderAlertDialog != null) {
-            if(gpsProviderAlertDialog.isShowing()) {
-                Log.d("DialogTest", "gpsProviderAlertDialog is showing");
-            } else {
-                Log.d("DialogTest", "gpsProviderAlertDialog is not showing");
-            }
-            Log.d("DialogTest", "gpsProviderAlertDialog is showing");
             return gpsProviderAlertDialog.isShowing();
         }
         return false;

@@ -70,10 +70,11 @@ public class TagSwipeActivityTest {
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
-                TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
+                final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
 
                 //test to see if dialog is shown when GPS is disabled
                 tagSwipeActivity.changeTestProviderEnabled(false);
+
                 try {
                     Thread.sleep(UI_LONG_WAIT_TIME);
                     Assert.assertTrue(tagSwipeActivity.isGpsProviderAlertDialogShowing());
@@ -90,7 +91,6 @@ public class TagSwipeActivityTest {
      * provider is on
      */
     @Test
-    @Ignore
     public void testCheckLocationProviderEnabled() {
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
@@ -115,7 +115,6 @@ public class TagSwipeActivityTest {
      * the TagEdit hash map
      */
     @Test
-    @Ignore
     public void testUpdateUserLocation() {
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
@@ -123,7 +122,7 @@ public class TagSwipeActivityTest {
                 final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
                 try {
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
-                    Location location = new Location("test_location");
+                    Location location = new Location(tagSwipeActivity.getPreferredLocationProvider());
                     location.setLatitude(-0.3212321d);
                     location.setLongitude(36.324324d);
                     location.setAccuracy(30.0f);
@@ -135,12 +134,6 @@ public class TagSwipeActivityTest {
                     tagSwipeActivity.changeTestProviderLocation(location);
 
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
-                    tagSwipeActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            tagSwipeActivity.updateUsersLocation();//locationManager still has a null last location
-                        }
-                    });
 
                     TagEdit userLocationTag = TagEdit.getTag(TagEdit.TAG_KEY_USER_LOCATION);
                     Assert.assertTrue(TagEdit.locationToString(location).equals(userLocationTag.getTagVal()));
@@ -165,6 +158,7 @@ public class TagSwipeActivityTest {
             @Override
             public void run(Activity activity) {
                 final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
+                tagSwipeActivity.changeTestProviderEnabled(false);
                 TagEdit.cleanUserLocationTags();
                 Espresso.onView(ViewMatchers.withText(R.string.save_to_odk_collect))
                         .perform(ViewActions.click());
@@ -224,6 +218,7 @@ public class TagSwipeActivityTest {
                         }
                     });
 
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
                     String osmFilePath = tagSwipeActivity.getOsmFilePath();
                     if(osmFilePath != null) {
                         try {
@@ -337,8 +332,14 @@ public class TagSwipeActivityTest {
             Thread.sleep(UI_LONG_WAIT_TIME);
             Activity activity1 = getActivityInstance();
             if(activity1 instanceof MapActivity) {
-                MapActivity mapActivity = (MapActivity) activity1;
-                mapActivity.clickMbtilesPositiveButton();
+                final MapActivity mapActivity = (MapActivity) activity1;
+                mapActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mapActivity.clickMbtilesPositiveButton();
+                        mapActivity.zoomToRecommendedLevel();
+                    }
+                });
 
                 //launch the TagSwipeActivity by trying to add a new node
                 Thread.sleep(UI_STANDARD_WAIT_TIME);
