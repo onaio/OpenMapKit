@@ -41,9 +41,10 @@ public class OSMNode extends OSMElement {
                    String changesetStr,
                    String uidStr,
                    String userStr,
-                   String action) {
+                   String action,
+                   OSMColorConfig osmColorConfig) {
 
-        super(idStr, versionStr, timestampStr, changesetStr, uidStr, userStr, action);
+        super(idStr, versionStr, timestampStr, changesetStr, uidStr, userStr, action, osmColorConfig);
 
         lat = Double.valueOf(latStr);
         lng = Double.valueOf(lonStr);
@@ -54,8 +55,8 @@ public class OSMNode extends OSMElement {
      * such as when a new Node is created. This constructor assumes
      * that we are creating a NEW element in the current survey.
      */
-    public OSMNode(LatLng latLng) {
-        super(); // super sets the element to be modified
+    public OSMNode(LatLng latLng, OSMColorConfig osmColorConfig) {
+        super(osmColorConfig); // super sets the element to be modified
         lat = latLng.getLatitude();
         lng = latLng.getLongitude();
     }
@@ -174,14 +175,14 @@ public class OSMNode extends OSMElement {
     public void select() {
         super.select();
         if (marker != null) {
-            marker.setMarker(marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange));
+            marker.setMarker(OSMColorConfig.getFocusInDrawable(this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange)));
         } else {
             // Very wretched hack. Something is wrong with Mapbox Android SDK (Deprecated). Satisfies #98
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
                     if (marker != null) {
-                        marker.setMarker(marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange));
+                        marker.setMarker(OSMColorConfig.getFocusInDrawable(OSMNode.this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange)));
                     }
                 }
             }, 100);
@@ -192,7 +193,7 @@ public class OSMNode extends OSMElement {
     public void deselect() {
         super.deselect();
         if (marker != null) {
-            marker.setMarker(marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_blue));
+            marker.setMarker(OSMColorConfig.getFocusOutDrawable(this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_blue)));
         }
     }
 }

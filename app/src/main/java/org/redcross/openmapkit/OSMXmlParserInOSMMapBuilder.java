@@ -35,7 +35,7 @@ public class OSMXmlParserInOSMMapBuilder extends OSMXmlParser {
     }
 
     private OSMXmlParserInOSMMapBuilder(OSMMapBuilder osmMapBuilder) {
-        super();
+        super(osmMapBuilder.getOsmColorConfig());
         this.osmMapBuilder = osmMapBuilder;
     }
 

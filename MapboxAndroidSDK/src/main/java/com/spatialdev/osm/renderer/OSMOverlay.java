@@ -15,6 +15,7 @@ import com.mapbox.mapboxsdk.overlay.Overlay;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.marker.OSMMarker;
 import com.spatialdev.osm.model.JTSModel;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMNode;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMWay;
@@ -127,7 +128,7 @@ public class OSMOverlay extends Overlay {
         viewPortNodes.add(node);
         if (node.getMarker() == null) {
             OSMMarker marker = new OSMMarker(mapView, node);
-            marker.setMarker(mapView.getContext().getResources().getDrawable(R.mipmap.maki_star_blue));
+            marker.setMarker(OSMColorConfig.getFocusOutDrawable(node, mapView.getContext().getResources().getDrawable(R.mipmap.maki_star_blue)));
             /**
              * Issue #81
              * setMarker doesn't position bitmaps in the same way as setIcon.

@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.io.CountingInputStream;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMDataSet;
 
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
@@ -55,6 +57,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
     private CountingInputStream countingInputStream;
     private long fileSize = 0;
     private long fileBytesLoaded = 0;
+    private OSMColorConfig osmColorConfig;
     
     // Should be set to true if we are loading edited OSM XML
     private boolean isOSMEdit = false;
@@ -92,7 +95,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         if (totalFiles > 0) {
             setupProgressDialog(mapActivity);
         } else {
-            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), jtsModel, mapActivity, MIN_VECTOR_RENDER_ZOOM);
+            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), jtsModel, mapActivity, MIN_VECTOR_RENDER_ZOOM, Constraints.singleton().getFirstColorConfig());
             mapActivity.setOSMMap(osmMap);
         }
     }
@@ -221,6 +224,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         super();
         this.isOSMEdit = isOSMEdit;
         activeBuilders.add(this);
+        osmColorConfig = Constraints.singleton().getFirstColorConfig();
     }
 
     protected static void setupProgressDialog(MapActivity mapActivity) {
@@ -282,7 +286,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         // do this when everything is done loading
         if (completedFiles == totalFiles) {
             finishAndResetStaticState();
-            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), model, mapActivity, MIN_VECTOR_RENDER_ZOOM);
+            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), model, mapActivity, MIN_VECTOR_RENDER_ZOOM, osmColorConfig);
             mapActivity.setOSMMap(osmMap);
         }
     }
@@ -323,6 +327,10 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
     
     private long getFileBytesLoaded() {
         return fileBytesLoaded;
+    }
+
+    public OSMColorConfig getOsmColorConfig() {
+        return osmColorConfig;
     }
     
     

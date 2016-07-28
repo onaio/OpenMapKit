@@ -23,6 +23,7 @@ import com.mapbox.mapboxsdk.views.MapViewListener;
 import com.spatialdev.osm.events.OSMSelectionListener;
 import com.spatialdev.osm.marker.OSMMarker;
 import com.spatialdev.osm.model.JTSModel;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
 import com.spatialdev.osm.renderer.OSMOverlay;
@@ -37,6 +38,7 @@ public class OSMMap implements MapViewListener, MapListener {
     // DEBUG MODE - SHOW ENVELOPE AROUND TAP ON MAP
     private static final boolean DEBUG = false;
 
+    private final OSMColorConfig osmColorConfig;
     private MapView mapView;
     private JTSModel jtsModel;
     private OSMSelectionListener selectionListener;
@@ -44,18 +46,18 @@ public class OSMMap implements MapViewListener, MapListener {
 
     private PathOverlay debugTapEnvelopePath;
 
-    public OSMMap(MapView mapView, JTSModel jtsModel, OSMSelectionListener selectionListener) {
-        this(mapView, jtsModel);
+    public OSMMap(MapView mapView, JTSModel jtsModel, OSMSelectionListener selectionListener, OSMColorConfig osmColorConfig) {
+        this(mapView, jtsModel, osmColorConfig);
         this.selectionListener = selectionListener;
     }
 
-    public OSMMap(MapView mapView, JTSModel jtsModel, OSMSelectionListener selectionListener, float minVectorRenderZoom) {
-        this(mapView, jtsModel, minVectorRenderZoom);
+    public OSMMap(MapView mapView, JTSModel jtsModel, OSMSelectionListener selectionListener, float minVectorRenderZoom, OSMColorConfig osmColorConfig) {
+        this(mapView, jtsModel, minVectorRenderZoom, osmColorConfig);
         this.selectionListener = selectionListener;
     }
 
     // Only paint and render vectors at zoom levels greater than or equal to this level.
-    public OSMMap(MapView mapView, JTSModel jtsModel, float minVectorRenderZoom) {
+    public OSMMap(MapView mapView, JTSModel jtsModel, float minVectorRenderZoom, OSMColorConfig osmColorConfig) {
         if (minVectorRenderZoom > 0) {
             osmOverlay = new OSMOverlay(jtsModel, minVectorRenderZoom);
         } else {
@@ -69,9 +71,10 @@ public class OSMMap implements MapViewListener, MapListener {
         mapView.addListener(this);
         mapView.getOverlays().add(osmOverlay);
         mapView.invalidate();
+        this.osmColorConfig = osmColorConfig;
     }
     
-    public OSMMap(MapView mapView, JTSModel jtsModel) {
+    public OSMMap(MapView mapView, JTSModel jtsModel, OSMColorConfig osmColorConfig) {
         this.mapView = mapView;
         this.jtsModel = jtsModel;
         osmOverlay = new OSMOverlay(jtsModel);
@@ -80,6 +83,7 @@ public class OSMMap implements MapViewListener, MapListener {
         mapView.addListener(this);
         mapView.getOverlays().add(osmOverlay);
         mapView.invalidate();
+        this.osmColorConfig = osmColorConfig;
     }
 
     public void setSelectionListener(OSMSelectionListener selectionListener) {
@@ -215,7 +219,7 @@ public class OSMMap implements MapViewListener, MapListener {
 
     public OSMNode addNode() {
         LatLng center = mapView.getCenter();
-        OSMNode node = new OSMNode(center);
+        OSMNode node = new OSMNode(center, osmColorConfig);
         jtsModel.addOSMStandaloneNode(node);
         mapView.invalidate();
         return node;

@@ -33,7 +33,8 @@ public abstract class OSMElement {
      * the dataset. This should only be access by OSMElement#getUniqueNegativeId().
      */
     private static long negativeId = -1;
-    
+
+    protected final OSMColorConfig osmColorConfig;
     protected long id;
     protected long version;
     protected String timestamp;
@@ -123,7 +124,8 @@ public abstract class OSMElement {
                       String changesetStr,
                       String uidStr,
                       String userStr,
-                      String action) {
+                      String action,
+                      OSMColorConfig osmColorConfig) {
         try {
             id = Long.valueOf(idStr);
         } catch (Exception e) {
@@ -157,6 +159,7 @@ public abstract class OSMElement {
         if (action != null && action.equals("modify")) {
             setAsModified();
         }
+        this.osmColorConfig = osmColorConfig;
     }
 
     /**
@@ -164,9 +167,10 @@ public abstract class OSMElement {
      * such as when a new Node is created. This constructor assumes
      * that we are creating a NEW element in the current survey.
      */
-    public OSMElement() {
+    public OSMElement(OSMColorConfig osmColorConfig) {
         id = getUniqueNegativeId();
         setAsModifiedInInstance();
+        this.osmColorConfig = osmColorConfig;
     }
 
     protected static long getUniqueNegativeId() {
@@ -374,6 +378,10 @@ public abstract class OSMElement {
 
     public boolean isSelected() {
         return selected;
+    }
+
+    public OSMColorConfig getOsmColorConfig() {
+        return this.osmColorConfig;
     }
 
 }
