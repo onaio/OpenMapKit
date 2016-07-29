@@ -67,6 +67,15 @@ public class OSMColorConfig {
     }
 
     /**
+     * This method returns a configuration where coloring of features based on tag values is disabled
+     *
+     * @return  Non NULL configuration where coloring of features based on tag values is disabled
+     */
+    public static OSMColorConfig getDefaultConfig() {
+        return new OSMColorConfig(false, "", new HashMap<String, String>());
+    }
+
+    /**
      * This method determines the color corresponding to the provided OSMElement. If no custom color
      * is found, the default color is returned
      *

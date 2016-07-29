@@ -1,12 +1,9 @@
 package org.redcross.openmapkit;
 
-import android.util.Log;
-
 import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMElement;
 
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
@@ -182,7 +179,7 @@ public class Constraints {
      *          that will trigger turning off color coding based on tag values
      */
     public OSMColorConfig getFirstColorConfig() {
-        OSMColorConfig defaultConfig = new OSMColorConfig(false, "", new HashMap<String, String>());
+        OSMColorConfig defaultConfig = OSMColorConfig.getDefaultConfig();
         //start with the form's constraints file
         if(formConstraintsJson != null) {
             OSMColorConfig formColorConfig = getFirstColorConfig(formConstraintsJson);
