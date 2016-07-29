@@ -79,5 +79,6 @@
     <string name="serverUrl">OpenMapKit Server URL</string>
     <string name="deploymentDownloadCanceled">Deployment download canceled!</string>
     <string name="deploymentDownloadComplete">Deployment download complete!</string>
+    <string name="add_node">+  Add Structure</string>
 
 </resources>
