@@ -39,6 +39,22 @@ public class OSMColorConfig {
         }
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public String getOsmTagKey() {
+        return osmTagKey;
+    }
+
+    public ARGB getDefaultArgb() {
+        return defaultArgb;
+    }
+
+    public HashMap<String, String> getValueColors() {
+        return valueColors;
+    }
+
     /**
      * This method checks whether the OSMColorConfig data is correct to warrant for the config to
      * qualify to be enabled

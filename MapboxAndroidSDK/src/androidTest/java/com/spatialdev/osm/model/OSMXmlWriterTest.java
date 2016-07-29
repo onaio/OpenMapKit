@@ -38,7 +38,8 @@ public class OSMXmlWriterTest extends InstrumentationTestCase {
     @Suppress
     public void testReadAndWriteBallardNodes() throws Exception {
         InputStream in = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/ballard_relation.osm");
-        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in);
+        OSMColorConfig osmColorConfig = OSMColorConfig.getDefaultConfig();
+        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in, osmColorConfig);
         Collection<OSMNode> nodes = ds.getNodes().values();
         LinkedList<OSMElement> nodesList = new LinkedList<>();
         for (OSMNode n : nodes) {
@@ -51,7 +52,8 @@ public class OSMXmlWriterTest extends InstrumentationTestCase {
     @Suppress
     public void testReadAndWriteBallardRelations() throws Exception {
         InputStream in = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/ballard_relation.osm");
-        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in);
+        OSMColorConfig osmColorConfig = OSMColorConfig.getDefaultConfig();
+        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in, osmColorConfig);
         Collection<OSMRelation> relations = ds.getRelations().values();
         LinkedList<OSMElement> relationsList = new LinkedList<>();
         for (OSMRelation r : relations) {
@@ -64,7 +66,8 @@ public class OSMXmlWriterTest extends InstrumentationTestCase {
     @Suppress
     public void testModifyingTagsFourBs() throws Exception {
         InputStream in = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/ballard_relation.osm");
-        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in);
+        OSMColorConfig osmColorConfig = OSMColorConfig.getDefaultConfig();
+        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in, osmColorConfig);
 
         Map<Long, OSMWay> wayMap = ds.getWays();
         OSMWay fourBs = wayMap.get((long)234714287);
@@ -79,7 +82,8 @@ public class OSMXmlWriterTest extends InstrumentationTestCase {
     @Suppress
     public void testModifyingTagsSpatialDev() throws Exception {
         InputStream in = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/spatialdev_small.osm");
-        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in);
+        OSMColorConfig osmColorConfig = OSMColorConfig.getDefaultConfig();
+        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in, osmColorConfig);
 
         Map<Long, OSMNode> nodeMap = ds.getNodes();
         OSMNode spdv = nodeMap.get(Long.valueOf("3203542408"));

@@ -30,6 +30,7 @@ dependencies {
     compile 'com.jakewharton:disklrucache:2.0.2'
     compile 'commons-codec:commons-codec:1.10'
     compile 'commons-io:commons-io:2.4'
+    androidTestCompile 'com.android.support.test:runner:0.5'
 }
 
 android {
@@ -39,6 +40,7 @@ android {
     defaultConfig {
         minSdkVersion Integer.parseInt(project.ANDROID_MIN_SDK)
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {

@@ -7,10 +7,6 @@ package com.spatialdev.osm.model;
 
 import android.test.InstrumentationTestCase;
 
-import com.spatialdev.osm.model.OSMDataSet;
-import com.spatialdev.osm.model.OSMWay;
-import com.spatialdev.osm.model.OSMXmlParser;
-
 import java.io.InputStream;
 
 public class OSMXmlParserTest extends InstrumentationTestCase {
@@ -20,8 +16,9 @@ public class OSMXmlParserTest extends InstrumentationTestCase {
 
     public void setUp() throws Exception {
         super.setUp();
+        OSMColorConfig osmColorConfig = OSMColorConfig.getDefaultConfig();
         in = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/spatialdev_small.osm");
-        ds = OSMXmlParser.parseFromInputStream(in);
+        ds = OSMXmlParser.parseFromInputStream(in, osmColorConfig);
     }
 
     public void tearDown() throws Exception {

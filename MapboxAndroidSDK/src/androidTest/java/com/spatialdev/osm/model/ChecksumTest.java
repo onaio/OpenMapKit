@@ -17,16 +17,17 @@ public class ChecksumTest extends InstrumentationTestCase {
 
     public void setUp() throws Exception {
         super.setUp();
+        OSMColorConfig osmColorConfig = OSMColorConfig.getDefaultConfig();
         InputStream in = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/checksum_way.osm");
-        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in);
+        OSMDataSet ds = OSMXmlParser.parseFromInputStream(in, osmColorConfig);
         way = ds.getClosedWays().get(0);
 
         InputStream in2 = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/checksum_way2.osm");
-        OSMDataSet ds2 = OSMXmlParser.parseFromInputStream(in2);
+        OSMDataSet ds2 = OSMXmlParser.parseFromInputStream(in2, osmColorConfig);
         way2 = ds2.getClosedWays().get(0);
 
         InputStream in3 = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/donut_happy.osm");
-        OSMDataSet ds3 = OSMXmlParser.parseFromInputStream(in3);
+        OSMDataSet ds3 = OSMXmlParser.parseFromInputStream(in3, osmColorConfig);
         donutHappy = ds3.getStandaloneNodes().get(0);
     }
 
