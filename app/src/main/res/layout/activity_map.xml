@@ -48,12 +48,11 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Large"
                 android:background="@drawable/roundedbutton"
                 android:padding="10dp"
-                android:layout_alignParentBottom="true"
+                android:layout_alignParentTop="true"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true"
-                android:layout_marginBottom="75dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"/>
 
             <Button
                 android:layout_width="wrap_content"
@@ -135,8 +134,9 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="75dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginEnd="8dp"
                 android:visibility="gone"/>
 
         </RelativeLayout>
