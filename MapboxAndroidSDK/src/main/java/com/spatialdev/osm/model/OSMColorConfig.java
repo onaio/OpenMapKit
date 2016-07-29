@@ -11,16 +11,50 @@ import java.util.Map;
  * Created by Jason Rogena - jrogena@ona.io on 7/28/16.
  */
 public class OSMColorConfig {
+    public static final String DEFAULT_VALUE = "";
     private final boolean enabled;
     private final String osmTagKey;
+    /**
+     * Color that should be used if the tag value does not match any of the ones provided
+     * The difference between the defaultArgb and the nonEnabledArgb is the defaultArgb is what is
+     * used in an enabled configuration when no color is found for a tag value. The nonEnabledArgb
+     * is the color used in cases where the configuration is not enabled
+     */
+    private final ARGB defaultArgb;
     private final HashMap<String, String> valueColors;
-    private static final int FOCUS_OUT_ALPHA_DELTA = 100;
-    public static final ARGB DEFAULT_ARGB = new ARGB(255, 6, 21, 57);
+    public static final int FOCUS_OUT_ALPHA_DELTA = 100;
 
     public OSMColorConfig(boolean enabled, String osmTagKey, HashMap<String, String> valueColors) {
-        this.enabled = enabled;
+        if(enabled == true) {
+            this.enabled = check(osmTagKey, valueColors);
+        } else {
+            this.enabled = enabled;
+        }
         this.osmTagKey = osmTagKey.trim();
         this.valueColors = valueColors;
+        if(this.enabled == true) {
+            defaultArgb = new ARGB(valueColors.get(DEFAULT_VALUE));
+        } else {
+            defaultArgb = null;
+        }
+    }
+
+    /**
+     * This method checks whether the OSMColorConfig data is correct to warrant for the config to
+     * qualify to be enabled
+     *
+     * @param osmTagKey     The OSM tag key
+     * @param valueColors   Value colors corresponding to the tag
+     * @return  TRUE if the data is correct
+     */
+    private boolean check(String osmTagKey, HashMap<String, String> valueColors) {
+        if(osmTagKey == null || osmTagKey.length() == 0) {
+            return false;
+        }
+        if(valueColors == null || !valueColors.containsKey(DEFAULT_VALUE)) {
+            return false;
+        }
+        return true;
     }
 
     public static ARGB getFocusInARGB(OSMElement osmElement, ARGB nonEnabledColor) {
@@ -46,24 +80,29 @@ public class OSMColorConfig {
         return nonEnabledColor;
     }
 
-    public static Drawable getFocusInDrawable(OSMElement osmElement, Drawable defaultDrawable) {
+    public static Drawable getFocusInDrawable(OSMElement osmElement, Drawable originalDrawable) {
         if(osmElement != null && osmElement.getOsmColorConfig() != null) {
             if(osmElement.getOsmColorConfig().enabled) {
-                ARGB argb = getFocusInARGB(osmElement, DEFAULT_ARGB);
-                defaultDrawable.setColorFilter(argb.getIntValue(), PorterDuff.Mode.MULTIPLY);
+                ARGB argb = getFocusInARGB(osmElement, osmElement.getOsmColorConfig().defaultArgb);
+                originalDrawable = applyColorFilterToDrawable(originalDrawable, argb);
             }
         }
-        return defaultDrawable;
+        return originalDrawable;
     }
 
-    public static Drawable getFocusOutDrawable(OSMElement osmElement, Drawable defaultDrawable) {
+    public static Drawable getFocusOutDrawable(OSMElement osmElement, Drawable originalDrawable) {
         if(osmElement != null && osmElement.getOsmColorConfig() != null) {
             if(osmElement.getOsmColorConfig().enabled) {
-                ARGB argb = getFocusOutARGB(osmElement, DEFAULT_ARGB);
-                defaultDrawable.setColorFilter(argb.getIntValue(), PorterDuff.Mode.MULTIPLY);
+                ARGB argb = getFocusOutARGB(osmElement, osmElement.getOsmColorConfig().defaultArgb);
+                originalDrawable = applyColorFilterToDrawable(originalDrawable, argb);
             }
         }
-        return defaultDrawable;
+        return originalDrawable;
+    }
+
+    public static Drawable applyColorFilterToDrawable(Drawable drawable, ARGB argb) {
+        drawable.setColorFilter(argb.getIntValue(), PorterDuff.Mode.MULTIPLY);
+        return drawable;
     }
 
     /**
@@ -87,33 +126,17 @@ public class OSMColorConfig {
             Map<String, String> osmTags = osmElement.getTags();
             if(osmTags.containsKey(osmTagKey)) {
                 String tagValue = osmTags.get(osmTagKey);
-                if(valueColors.containsKey(tagValue)) {
+                if(tagValue != null && valueColors.containsKey(tagValue)) {
                     String hexColor = valueColors.get(tagValue);
-                    ARGB color = hexToARGB(hexColor);
+                    ARGB color = new ARGB(hexColor);
                     if(color != null) {
                         return color;
                     }
                 }
             }
-        }
-        return DEFAULT_ARGB;
-    }
 
-    /**
-     * This method converts hex color codes to an ARGB color code
-     *
-     * @param hexCode   The hexadecimal representation of the color
-     * @return  ARGB object representing the color or NULL if
-     */
-    public static ARGB hexToARGB(String hexCode) {
-        try {
-            int intColor = Color.parseColor(hexCode);
-            return new ARGB(Color.alpha(intColor),
-                    Color.red(intColor),
-                    Color.green(intColor),
-                    Color.blue(intColor));
-        } catch (Exception e) {
-            e.printStackTrace();
+            //no color for value gotten
+            return osmElement.getOsmColorConfig().defaultArgb;
         }
         return null;
     }
@@ -129,6 +152,14 @@ public class OSMColorConfig {
             this.r = r;
             this.g = g;
             this.b = b;
+        }
+
+        public ARGB(String hexCode) {
+            int intColor = Color.parseColor(hexCode);
+            this.a = Color.alpha(intColor);
+            this.r = Color.red(intColor);
+            this.g = Color.green(intColor);
+            this.b = Color.green(intColor);
         }
 
         public int getIntValue() {
