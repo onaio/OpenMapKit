@@ -9,6 +9,7 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.location.Location;
+import android.location.LocationListener;
 import android.os.Build;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -180,6 +181,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     private ClusterMarker.OnDrawClusterListener mOnDrawClusterListener = null;
     private float mMinZoomForClustering = 22;
     private boolean mShouldDisplayBubble = true;
+    private final ArrayList<LocationListener> locationListeners;
 
     /**
      * Constructor for XML layout calls. Should not be used programmatically.
@@ -251,6 +253,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             Log.d(TAG, "zoomLevel is not specified in XML.");
         }
         a.recycle();
+        this.locationListeners = new ArrayList<>();
     }
 
     public MapView(final Context aContext) {
@@ -263,6 +266,12 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     protected MapView(Context aContext, int tileSizePixels, MapTileLayerBase aTileProvider) {
         this(aContext, tileSizePixels, aTileProvider, null, null);
+    }
+
+    public void addLocationListener(final LocationListener listener) {
+        if(!locationListeners.contains(listener)) {
+            locationListeners.add(listener);
+        }
     }
 
     /**
@@ -1931,7 +1940,9 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     private UserLocationOverlay getOrCreateLocationOverlay() {
         if (mLocationOverlay == null) {
-            mLocationOverlay = new UserLocationOverlay(new GpsLocationProvider(getContext()), this);
+            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext());
+            gpsLocationProvider.addLocationListeners(locationListeners);
+            mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this);
             addOverlay(mLocationOverlay);
         }
         return mLocationOverlay;
