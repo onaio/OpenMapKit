@@ -220,16 +220,11 @@ public class TagSwipeActivity extends ActionBarActivity {
      */
     public boolean updateUsersLocation() {
         if(checkLocationProviderEnabled()) {
-            Log.w("GPSTest", "LocationManager is not null");
             Location location = locationManager.getLastKnownLocation(preferredLocationProvider);
-            if(location == null) {
-                Log.w("GPSTest", "Last location is null");
-                Log.w("GPSTest", "Location providers = "+locationManager.getProviders(true).toString());
-            }
             TagEdit.updateUserLocationTags(location);
             return true;
         } else {
-            Log.w("GPSTest", "LocationManager is null");
+            Log.w("TagSwipeActivity", "LocationManager is null");
         }
         return false;
     }
