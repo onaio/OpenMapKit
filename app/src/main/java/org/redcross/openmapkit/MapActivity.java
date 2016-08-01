@@ -237,6 +237,12 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onLocationChanged(Location location) {
                 if(location.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
+                    if(LocationXMLParser.isProximityEnabled() == false) {
+                        //means this is the first time a location fix for the user has been gotten
+                        if(isUserLocationEnabled() == false) {
+                            toggleUserLocation();//zoom into the user's current position
+                        }
+                    }
                     LocationXMLParser.setProximityEnabled(true);
                 }
             }
