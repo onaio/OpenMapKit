@@ -63,7 +63,6 @@ import com.mapbox.mapboxsdk.views.util.TilesLoadedListener;
 import com.mapbox.mapboxsdk.views.util.constants.MapViewConstants;
 import com.mapbox.mapboxsdk.views.util.constants.MapViewLayouts;
 import com.spatialdev.osm.marker.OSMItemizedIconOverlay;
-import com.spatialdev.osm.marker.OSMMarker;
 import com.spatialdev.osm.renderer.OSMOverlay;
 
 import org.json.JSONException;
@@ -114,6 +113,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     protected float mRequestedMinimumZoomLevel = 0;
     private float mMinimumZoomLevel = 0;
     private float mMaximumZoomLevel = 22;
+    private boolean interactionEnabled = true;
 
     /**
      * The MapView listener
@@ -182,6 +182,8 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     private float mMinZoomForClustering = 22;
     private boolean mShouldDisplayBubble = true;
     private final ArrayList<LocationListener> locationListeners;
+    private GpsLocationProvider gpsLocationProvider;
+    private boolean forTesting;
 
     /**
      * Constructor for XML layout calls. Should not be used programmatically.
@@ -196,6 +198,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
                       final AttributeSet attrs) {
         super(aContext, attrs);
         setWillNotDraw(false);
+        forTesting = false;
         mLayedOut = false;
         mConstraintRegionFit = false;
         this.mController = new MapController(this);
@@ -268,6 +271,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         this(aContext, tileSizePixels, aTileProvider, null, null);
     }
 
+    public void setForTesting(boolean forTesting) {
+        this.forTesting = forTesting;
+    }
+
     public void addLocationListener(final LocationListener listener) {
         if(!locationListeners.contains(listener)) {
             locationListeners.add(listener);
@@ -283,6 +290,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         if (!mListeners.contains(listener)) {
             mListeners.add(listener);
         }
+    }
+
+    public void setInteractionEnabled(boolean interactionEnabled) {
+        this.interactionEnabled = interactionEnabled;
     }
 
     /**
@@ -1696,6 +1707,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 //        Log.i(TAG, "onTouchEvent with event = " + event);
+        if(interactionEnabled == false) {
+            return false;
+        }
+
         // If map rotation is enabled, propagate onTouchEvent to the rotate gesture detector
         if (mMapRotationEnabled) {
 //            Log.i(TAG, "onTouchEvent with Rotation Enabled so passing it along to RotationGestureDetector.onTouchEvent()");
@@ -1940,8 +1955,9 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     private UserLocationOverlay getOrCreateLocationOverlay() {
         if (mLocationOverlay == null) {
-            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext());
+            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext(), forTesting);
             gpsLocationProvider.addLocationListeners(locationListeners);
+            this.gpsLocationProvider = gpsLocationProvider;
             mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this);
             addOverlay(mLocationOverlay);
         }
@@ -2178,5 +2194,9 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     public void setBubbleEnabled(boolean enable) {
         closeCurrentTooltip();
         mShouldDisplayBubble = enable;
+    }
+
+    public GpsLocationProvider getGpsLocationProvider() {
+        return gpsLocationProvider;
     }
 }

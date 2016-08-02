@@ -16,6 +16,7 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.Stage;
+import android.util.Log;
 import android.widget.Button;
 
 import org.junit.Before;
@@ -95,6 +96,18 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 MapActivity mapActivity = (MapActivity) activity;
+                //set a location with a good accuracy so that if add node button is clicked, the add
+                //node views show
+                Location location = new Location(mapActivity.getTestLocationProvider());
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                mapActivity.changeTestProviderLocation(location);
+
                 //show the add structure marker by clicking the '+' button
                 try {
                     Thread.sleep(GPS_DIALOG_TIMEOUT);
@@ -119,7 +132,7 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 MapActivity mapActivity = (MapActivity) activity;
-                Location location = new Location("test_location");
+                Location location = new Location(mapActivity.getTestLocationProvider());
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(30.0f);//accuracy in settings set to 10
@@ -146,7 +159,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
 
-                Location location = new Location(mapActivity.getPreferredLocationProvider());
+                Location location = new Location(mapActivity.getTestLocationProvider());
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(9f);//accuracy in settings set to 10
@@ -177,7 +190,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
 
-                Location location = new Location(mapActivity.getPreferredLocationProvider());
+                Location location = new Location(mapActivity.getTestLocationProvider());
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(20f);//accuracy in settings set to 10
@@ -203,6 +216,14 @@ public class MapActivityTest {
         mapActivityTR.launchActivity(intent);
         Activity activity = getActivityInstance();
         if(activity instanceof MapActivity) {
+            final MapActivity mapActivity = (MapActivity) activity;
+            mapActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mapActivity.clickMbtilesPositiveButton();
+                    mapActivity.zoomToRecommendedLevel();
+                }
+            });
             onPostLaunchActivity.run(activity);
         } else {
             assertTrue("Current activity is not the MapActivity", false);
