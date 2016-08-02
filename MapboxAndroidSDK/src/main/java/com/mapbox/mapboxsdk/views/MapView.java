@@ -183,7 +183,6 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     private boolean mShouldDisplayBubble = true;
     private final ArrayList<LocationListener> locationListeners;
     private GpsLocationProvider gpsLocationProvider;
-    private boolean forTesting;
 
     /**
      * Constructor for XML layout calls. Should not be used programmatically.
@@ -198,7 +197,6 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
                       final AttributeSet attrs) {
         super(aContext, attrs);
         setWillNotDraw(false);
-        forTesting = false;
         mLayedOut = false;
         mConstraintRegionFit = false;
         this.mController = new MapController(this);
@@ -269,10 +267,6 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     protected MapView(Context aContext, int tileSizePixels, MapTileLayerBase aTileProvider) {
         this(aContext, tileSizePixels, aTileProvider, null, null);
-    }
-
-    public void setForTesting(boolean forTesting) {
-        this.forTesting = forTesting;
     }
 
     public void addLocationListener(final LocationListener listener) {
@@ -1959,7 +1953,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     private UserLocationOverlay getOrCreateLocationOverlay() {
         if (mLocationOverlay == null) {
-            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext(), forTesting);
+            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext());
             gpsLocationProvider.addLocationListeners(locationListeners);
             this.gpsLocationProvider = gpsLocationProvider;
             mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this);

@@ -39,6 +39,7 @@ import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.OSMMap;
@@ -66,11 +67,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MapActivity extends AppCompatActivity implements OSMSelectionListener, FPListener {
-    /**
-     * Intent bundle key used to determine whether the activity has been started for testing purposes
-     */
-    public static final String BUNDLE_KEY_IS_TESTING = "is_testing";
-
     protected static final String PREVIOUS_LAT = "org.redcross.openmapkit.PREVIOUS_LAT";
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
@@ -103,7 +99,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private LocationListener locationListener;
     private android.support.v7.app.AlertDialog gpsProviderAlertDialog;
     private Location lastLocation;
-    private boolean forTesting;
 
     /**
      * Which GPS provider should be used to get the User's current location
@@ -117,13 +112,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        forTesting = false;
-        if(getIntent() != null) {
-            Bundle bundle = getIntent().getExtras();
-            if(bundle != null) {
-                forTesting = bundle.getBoolean(BUNDLE_KEY_IS_TESTING, false);
-            }
-        }
         // Turn on MBTiles HTTP server.
         /**
          * We are waiting to enable this until we need it for a new map renderer.
@@ -177,7 +165,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         //get map from layout
         mapView = (MapView)findViewById(R.id.mapView);
-        mapView.setForTesting(forTesting);
 
         // get Field Papers Message
         fieldPapersMsg = (TextView)findViewById(R.id.fieldPapersMsg);
@@ -258,13 +245,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         mapView.addLocationListener(locationListener);
     }
 
-    public String getTestLocationProvider() {
-        String testProvider = null;
-        if(mapView.getGpsLocationProvider() != null) {
-            testProvider = mapView.getGpsLocationProvider().getTestProvider();
-        }
-        return testProvider;
-    }
 
     /**
      * This method checks whether the preferred location provider is enabled in the device and shows
@@ -1065,17 +1045,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         }
     }
 
-    /**
-     * This method changes the location passed by the test provider registered in the
-     * locationManager initialized in this activity.
-     * This method is intended to only be used in tests.
-     *
-     * @param location  The location to be provided by the locationManager
-     */
-    public void changeTestProviderLocation(Location location) {
+    public GpsLocationProvider getGpsLocationProvider() {
         if(mapView.getGpsLocationProvider() != null) {
-            mapView.getGpsLocationProvider().setTestProviderLocation(location);
+            return mapView.getGpsLocationProvider();
         }
+        return null;
     }
 
     public void setMbtilesDialog(AlertDialog mbtilesDialog) {

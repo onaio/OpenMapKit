@@ -1,5 +1,7 @@
 package org.redcross.openmapkit;
 
+import android.location.Criteria;
+import android.location.LocationManager;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.assertion.PositionAssertions;
@@ -19,6 +21,8 @@ import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
 import android.widget.Button;
 
+import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
+
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -27,6 +31,7 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 
 import static org.junit.Assert.*;
@@ -101,9 +106,12 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
+
                 //set a location with a good accuracy so that if add node button is clicked, the add
                 //node views show
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(9f);//accuracy in settings set to 10
@@ -111,7 +119,8 @@ public class MapActivityTest {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
-                mapActivity.changeTestProviderLocation(location);
+
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 //show the add structure marker by clicking the '+' button
                 try {
@@ -123,6 +132,7 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -137,7 +147,10 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 MapActivity mapActivity = (MapActivity) activity;
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
+
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(30.0f);//accuracy in settings set to 10
@@ -146,9 +159,11 @@ public class MapActivityTest {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
 
-                mapActivity.changeTestProviderLocation(location);
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
                 Espresso.onView(ViewMatchers.withText(R.string.getting_gps_fix))
                         .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -163,8 +178,10 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
 
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(9f);//accuracy in settings set to 10
@@ -172,7 +189,7 @@ public class MapActivityTest {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
-                mapActivity.changeTestProviderLocation(location);
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 try {
                     Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
@@ -181,6 +198,7 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -194,8 +212,10 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
 
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(20f);//accuracy in settings set to 10
@@ -203,7 +223,7 @@ public class MapActivityTest {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
-                mapActivity.changeTestProviderLocation(location);
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 try {
                     Thread.sleep(GPS_DIALOG_TIMEOUT);//wait for 10s timeout to expire
@@ -212,6 +232,8 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -227,10 +249,12 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(9f);//accuracy in settings set to 10
@@ -238,7 +262,7 @@ public class MapActivityTest {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
-                mapActivity.changeTestProviderLocation(location);
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
@@ -253,6 +277,8 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -268,10 +294,12 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(20f);//accuracy in settings set to 10
@@ -279,7 +307,7 @@ public class MapActivityTest {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
-                mapActivity.changeTestProviderLocation(location);
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 try {
                     //wait for the searching gps dialog times out
@@ -294,6 +322,8 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -308,10 +338,12 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(9f);//accuracy in settings set to 10
@@ -319,7 +351,7 @@ public class MapActivityTest {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
-                mapActivity.changeTestProviderLocation(location);
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
@@ -337,6 +369,8 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -351,10 +385,12 @@ public class MapActivityTest {
             @Override
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(gpsLocationProvider);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
-                Location location = new Location(mapActivity.getTestLocationProvider());
+                Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
                 location.setAccuracy(9f);//accuracy in settings set to 10
@@ -362,7 +398,7 @@ public class MapActivityTest {
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                 }
-                mapActivity.changeTestProviderLocation(location);
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
@@ -381,6 +417,8 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -422,6 +460,34 @@ public class MapActivityTest {
     }
 
     /**
+     * This method creates a test provider and attaches it to the LocationManager initialized in the
+     * provided gpsLocationProvider
+     *
+     * @param gpsLocationProvider   Object containing the LocationManager to attach the test provider
+     * @return  The name of the test provider created
+     *
+     * @see android.location.LocationManager
+     * @see com.mapbox.mapboxsdk.overlay.GpsLocationProvider
+     */
+    private String createTestLocationProvider(GpsLocationProvider gpsLocationProvider) {
+        if(gpsLocationProvider != null) {
+            LocationManager locationManager = gpsLocationProvider.getLocationManager();
+            String providerName = "test_provider" + String.valueOf(Calendar.getInstance().getTimeInMillis());
+            if(locationManager.getProvider(providerName) == null) {//provider has not yet been created
+                locationManager.addTestProvider(providerName, true, false, false, false, true, true,
+                        true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
+                locationManager.setTestProviderEnabled(providerName, true);
+                locationManager.requestLocationUpdates(providerName,
+                        gpsLocationProvider.getLocationUpdateMinTime(),
+                        gpsLocationProvider.getLocationUpdateMinDistance(),
+                        gpsLocationProvider);
+            }
+            return providerName;
+        }
+        return null;
+    }
+
+    /**
      * This method creates an intent similar to the one used to launch OpenMapKit from OpenDataKit
      *
      * @return  Intent similar to the one used to launch OpenMapKit from OpenDataKit
@@ -445,7 +511,6 @@ public class MapActivityTest {
         intent.putExtra("TAG_VALUE_LABEL.spray_status.undefined", "Undefined");
         intent.putExtra("TAG_VALUE_LABEL.spray_status.yes", "Yes");
         intent.putExtra("TAG_VALUE_LABEL.spray_status.no", "No");
-        intent.putExtra(MapActivity.BUNDLE_KEY_IS_TESTING, true);
 
         return intent;
     }

@@ -22,19 +22,10 @@ public class GpsLocationProvider implements LocationListener {
     private float mLocationUpdateMinDistance = 0.0f;
     private final NetworkLocationIgnorer mIgnorer = new NetworkLocationIgnorer();
     private final ArrayList<LocationListener> locationListeners;
-    private boolean testMode;
-    private String testProvider;
 
     public GpsLocationProvider(Context context) {
         mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         locationListeners = new ArrayList<>();
-        testMode = false;
-    }
-
-    public GpsLocationProvider(Context context, boolean testMode) {
-        mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        locationListeners = new ArrayList<>();
-        this.testMode = testMode;
     }
 
     public void addLocationListener(final LocationListener locationListener) {
@@ -88,30 +79,19 @@ public class GpsLocationProvider implements LocationListener {
     public boolean startLocationProvider(UserLocationOverlay myLocationConsumer) {
         mMyLocationConsumer = myLocationConsumer;
         boolean result = false;
-        if(testMode == true) {
-            result = true;
-            testProvider = "test_provider"+String.valueOf(Calendar.getInstance().getTimeInMillis());
-            mLocationManager.addTestProvider(testProvider
-                    , true, false, false, false, true, true, true,
-                    Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
-            mLocationManager.setTestProviderEnabled(testProvider, true);
-            mLocationManager.requestLocationUpdates(testProvider, mLocationUpdateMinTime,
-                    mLocationUpdateMinDistance, this);
-        } else {
-            for (final String provider : mLocationManager.getProviders(true)) {
-                if (LocationManager.GPS_PROVIDER.equals(provider)
-                        || LocationManager.PASSIVE_PROVIDER.equals(provider)
-                        || LocationManager.NETWORK_PROVIDER.equals(provider)) {
-                    result = true;
-                    if (mLocation == null) {
-                        mLocation = mLocationManager.getLastKnownLocation(provider);
-                        if (mLocation != null) {
-                            mMyLocationConsumer.onLocationChanged(mLocation, this);
-                        }
+        for (final String provider : mLocationManager.getProviders(true)) {
+            if (LocationManager.GPS_PROVIDER.equals(provider)
+                    || LocationManager.PASSIVE_PROVIDER.equals(provider)
+                    || LocationManager.NETWORK_PROVIDER.equals(provider)) {
+                result = true;
+                if (mLocation == null) {
+                    mLocation = mLocationManager.getLastKnownLocation(provider);
+                    if (mLocation != null) {
+                        mMyLocationConsumer.onLocationChanged(mLocation, this);
                     }
-                    mLocationManager.requestLocationUpdates(provider, mLocationUpdateMinTime,
-                            mLocationUpdateMinDistance, this);
                 }
+                mLocationManager.requestLocationUpdates(provider, mLocationUpdateMinTime,
+                        mLocationUpdateMinDistance, this);
             }
         }
         return result;
@@ -120,9 +100,6 @@ public class GpsLocationProvider implements LocationListener {
     public void stopLocationProvider() {
         mMyLocationConsumer = null;
         mLocationManager.removeUpdates(this);
-        if(testMode == true && testProvider != null) {
-            mLocationManager.removeTestProvider(testProvider);
-        }
     }
 
     public Location getLastKnownLocation() {
@@ -171,20 +148,7 @@ public class GpsLocationProvider implements LocationListener {
         }
     }
 
-    /**
-     * This method changes the location passed by the test provider registered in the
-     * locationManager initialized in this class
-     * This method is intended to only be used in tests.
-     *
-     * @param location  The location to be provided by the locationManager
-     */
-    public void setTestProviderLocation(Location location) {
-        if(mLocationManager != null) {
-            mLocationManager.setTestProviderLocation(testProvider, location);
-        }
-    }
-
-    public String getTestProvider() {
-        return testProvider;
+    public LocationManager getLocationManager() {
+        return mLocationManager;
     }
 }
