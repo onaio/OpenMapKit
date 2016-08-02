@@ -19,6 +19,7 @@ import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
 import android.widget.Button;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +38,7 @@ import static org.junit.Assert.*;
 public class MapActivityTest {
     private static final String ROUNDED_BUTTON_LABEL = "Add Structure";
     private static final long GPS_DIALOG_TIMEOUT = 10100l;
+    private static final long UI_STANDARD_WAIT_TIME = 100l;//standard time to wait for a UI update
     private Activity currentActivity;
     /*
     Launch the MapActivity with touch mode set to true (nothing is in focus and nothing is initially
@@ -90,6 +92,9 @@ public class MapActivityTest {
         });
     }
 
+    /**
+     * This method tests whether the text on the 'add node' button corresponds to ROUNDED_BUTTON_LABEL
+     */
     @Test
     public void roundedButtonLabel() {
         startMapActivity(new OnPostLaunchActivity() {
@@ -112,7 +117,7 @@ public class MapActivityTest {
                 try {
                     Thread.sleep(GPS_DIALOG_TIMEOUT);
                     Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
-                    Button addNodeButton = (Button)mapActivity.findViewById(R.id.addNodeBtn);
+                    Button addNodeButton = (Button) mapActivity.findViewById(R.id.addNodeBtn);
                     assertTrue(addNodeButton.getText().toString().contains(ROUNDED_BUTTON_LABEL));
 
                 } catch (InterruptedException e) {
@@ -170,7 +175,7 @@ public class MapActivityTest {
                 mapActivity.changeTestProviderLocation(location);
 
                 try {
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS+100);
+                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
                     Espresso.onView(ViewMatchers.withText(R.string.getting_gps_fix))
                             .check(ViewAssertions.doesNotExist());
                 } catch (InterruptedException e) {
@@ -204,6 +209,175 @@ public class MapActivityTest {
                     Thread.sleep(GPS_DIALOG_TIMEOUT);//wait for 10s timeout to expire
                     Espresso.onView(ViewMatchers.withText(R.string.getting_gps_fix))
                             .check(ViewAssertions.doesNotExist());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * This method test whether a user is allowed to add a new location with an accurate location
+     * and proximity_settings enabled
+     */
+    @Test
+    public void testAddNode() {
+        Log.d("MapActivityTest", "Running testAddNode");
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(mapActivity.getTestLocationProvider());
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                mapActivity.changeTestProviderLocation(location);
+
+                try {
+                    //wait until after the next time the GPS dialog timer runs
+                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+
+                    //click the '+' button and check whether views responsible for adding a new
+                    //node show (shouldn't be the case)
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * This method test whether a user is allowed to add a new location with an inaccurate location
+     * and proximity_settings enabled (shouldn't be the case)
+     */
+    @Test
+    public void testAddNode_InaccurateLocation() {
+        Log.d("MapActivityTest", "Running testAddNodeInaccurateLocation");
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(mapActivity.getTestLocationProvider());
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(20f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                mapActivity.changeTestProviderLocation(location);
+
+                try {
+                    //wait for the searching gps dialog times out
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
+
+                    //click the '+' button and check whether views responsible for adding a new
+                    //node show (shouldn't be the case)
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn))
+                            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * This method tests whether a user is able to interact with the map (pan around or zoom in and
+     * out) when proximity_settings are enabled and they press the '+' button
+     */
+    @Test
+    public void testMapInteraction_AddingNewNode() {
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(mapActivity.getTestLocationProvider());
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                mapActivity.changeTestProviderLocation(location);
+
+                try {
+                    //wait until after the next time the GPS dialog timer runs
+                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+
+                    //click the '+' button and check whether map interactions are enabled (shouldn't be)
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    assertFalse(mapActivity.isMapInteractionEnabled());
+
+                    //click the add node button and check whether map interactions re-enabled
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    assertTrue(mapActivity.isMapInteractionEnabled());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * This method tests whether a user is able to move the node when adding a new node and
+     * proximity_settings is turned on (shouldn't be able to)
+     */
+    @Test
+    public void moveNode_AddingNewNode() {
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(mapActivity.getTestLocationProvider());
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                mapActivity.changeTestProviderLocation(location);
+
+                try {
+                    //wait until after the next time the GPS dialog timer runs
+                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+
+                    //click the '+' button and then add node button
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+
+                    //click the move node button and check if moveNodeBtn is made visible (shouldn't be)
+                    Espresso.onView(ViewMatchers.withId(R.id.moveNodeModeBtn)).perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.moveNodeBtn))
+                            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

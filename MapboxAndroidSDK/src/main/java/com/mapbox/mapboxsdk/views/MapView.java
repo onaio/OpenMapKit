@@ -296,6 +296,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         this.interactionEnabled = interactionEnabled;
     }
 
+    public boolean isInteractionEnabled() {
+        return interactionEnabled;
+    }
+
     /**
      * Remove a listener object that observed changes in this map.
      *

@@ -1081,4 +1081,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     public void setMbtilesDialog(AlertDialog mbtilesDialog) {
         this.mbtilesDialog = mbtilesDialog;
     }
+
+    public boolean isMapInteractionEnabled () {
+        return mapView.isInteractionEnabled();
+    }
 }
