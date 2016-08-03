@@ -5,8 +5,13 @@ import android.content.Intent;
 import android.os.Environment;
 import android.test.ApplicationTestCase;
 
+import org.apache.commons.io.FileUtils;
+import org.json.JSONObject;
+import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
@@ -33,16 +38,31 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         intent.putExtra("INSTANCE_ID", "uuid:6004201f-9942-429d-bfa4-e65b683da37b");
         intent.putExtra("INSTANCE_DIR", sdcardPath + "/odk/instances/omk_functional_test");
         intent.putExtra("OSM_EDIT_FILE_NAME", "omk_functional_test.osm");
-        ArrayList<String> tagKeys = new ArrayList<>();
-        tagKeys.add("spray_status");
-
-        intent.putExtra("TAG_KEYS", tagKeys);
-        intent.putExtra("TAG_LABEL.spray_status", "Spray Status");
-        intent.putExtra("TAG_VALUES.spray_status", "null");
-        intent.putExtra("TAG_VALUE_LABEL.spray_status.undefined", "Undefined");
-        intent.putExtra("TAG_VALUE_LABEL.spray_status.yes", "Yes");
-        intent.putExtra("TAG_VALUE_LABEL.spray_status.no", "No");
+        addTagsToIntent(intent);
 
         return intent;
+    }
+
+    private static void addTagsToIntent(Intent intent) {
+        ODKCollectHandler.registerIntent(intent);
+        String formFileName = ODKCollectHandler.getODKCollectData().getFormFileName();
+        try {
+            File formConstraintsFile = ExternalStorage.fetchConstraintsFile(formFileName);
+            String formConstraintsStr = FileUtils.readFileToString(formConstraintsFile);
+            JSONObject formConstraintsJson = new JSONObject(formConstraintsStr);
+            ArrayList<String> tagKeys = new ArrayList<>();
+
+            Iterator<String> keyIterator = formConstraintsJson.keys();
+            while (keyIterator.hasNext()) {
+                String key = keyIterator.next();
+                tagKeys.add(key);
+                intent.putExtra("TAG_LABEL." + key, key);
+                intent.putExtra("TAG_VALUE_LABEL."+key+".yes", "Yes");
+                intent.putExtra("TAG_VALUE_LABEL." + key + ".no", "No");
+            }
+            intent.putExtra("TAG_KEYS", tagKeys);
+        } catch (Exception e) {
+
+        }
     }
 }

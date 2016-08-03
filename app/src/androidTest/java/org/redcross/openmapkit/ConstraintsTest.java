@@ -2,13 +2,15 @@ package org.redcross.openmapkit;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
+import android.content.Intent;
 
 import com.spatialdev.osm.model.OSMColorConfig;
 
+import java.util.HashMap;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.HashMap;
+import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 import static org.junit.Assert.*;
 
@@ -23,6 +25,11 @@ public class ConstraintsTest {
         context = InstrumentationRegistry.getContext();
         ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
 
+        Intent intent = ApplicationTest.getLaunchOMKIntent();
+        ODKCollectHandler.registerIntent(intent);
+
+        context = InstrumentationRegistry.getContext();
+        ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
         Constraints.initialize();
     }
 
@@ -38,5 +45,33 @@ public class ConstraintsTest {
         assertEquals(tagValueColors.size(), 2);
         assertTrue(tagValueColors.containsKey("yes"));
         assertEquals(tagValueColors.get("yes"), "#83b26e");
+    }
+    /**
+     * This method tests whether the 'hide' constraint works
+     */
+    @Test
+    public void testHideConstraint() {
+        assertTrue(Constraints.singleton().tagIsHidden("hidden_tag_1"));
+        assertFalse(Constraints.singleton().tagIsHidden("shown_tag_1"));
+    }
+
+    /**
+     * This method tests whether the 'hide' constraint works in tags that also have the 'required'
+     * constraint
+     */
+    @Test
+    public void testHideConstraint_Required() {
+        assertTrue(Constraints.singleton().tagIsHidden("hidden_tag_2"));
+        assertFalse(Constraints.singleton().tagIsHidden("shown_tag_2"));
+    }
+
+    /**
+     * This method tests whether the 'hide' constraint works in tags that also have the 'hide_if'
+     * constraint
+     */
+    @Test
+    public void testHideConstraint_HideIf() {
+        assertTrue(Constraints.singleton().tagIsHidden("hidden_tag_3"));
+        assertFalse(Constraints.singleton().tagIsHidden("shown_tag_3"));
     }
 }
