@@ -1,4 +1,4 @@
-# OpenMapKit
+# OpenMapKit [![Build Status](https://travis-ci.org/jasonrogena/OpenMapKit.svg?branch=master)](https://travis-ci.org/jasonrogena/OpenMapKit)
 
 ## Description
 
