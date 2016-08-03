@@ -164,7 +164,7 @@ public class Basemap {
         });
 
         //present dialog to user
-        builder.show();
+        mapActivity.setMbtilesDialog(builder.show());
 
     }
 

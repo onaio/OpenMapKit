@@ -157,7 +157,7 @@ public class MapActivityTest {
                 mapActivity.changeTestProviderLocation(location);
 
                 try {
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS+100);
+                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + 100);
                     Espresso.onView(ViewMatchers.withText(R.string.getting_gps_fix))
                             .check(ViewAssertions.doesNotExist());
                 } catch (InterruptedException e) {
@@ -203,6 +203,14 @@ public class MapActivityTest {
         mapActivityTR.launchActivity(intent);
         Activity activity = getActivityInstance();
         if(activity instanceof MapActivity) {
+            final MapActivity mapActivity = (MapActivity) activity;
+            mapActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mapActivity.clickMbtilesPositiveButton();
+                    mapActivity.zoomToRecommendedLevel();
+                }
+            });
             onPostLaunchActivity.run(activity);
         } else {
             assertTrue("Current activity is not the MapActivity", false);

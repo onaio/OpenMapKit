@@ -97,6 +97,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private boolean nodeMode = false;
     private boolean moveNodeMode = false;
     private Dialog gpsCountdownDialog;
+    private AlertDialog mbtilesDialog;
     public static final int TASK_INTERVAL_IN_MILLIS = 1000;
     private Timer mTimer;
     protected TimerTask timerTask;
@@ -881,6 +882,16 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         startActivity(deploymentsActivity);
     }
 
+    public void clickMbtilesPositiveButton() {
+        if(mbtilesDialog != null) {
+            mbtilesDialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+        }
+    }
+
+    public void zoomToRecommendedLevel() {
+        mapView.setZoom(OSMMapBuilder.MIN_VECTOR_RENDER_ZOOM);
+    }
+
     @Override
     public void selectedElementsChanged(LinkedList<OSMElement> selectedElements) {
         if (selectedElements != null && selectedElements.size() > 0) {
@@ -1072,5 +1083,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         } else {
             Log.w("TagSwipeActivity", "Location manager is null, cannot change the location in the test provider");
         }
+    }
+
+    public void setMbtilesDialog(AlertDialog mbtilesDialog) {
+        this.mbtilesDialog = mbtilesDialog;
     }
 }
