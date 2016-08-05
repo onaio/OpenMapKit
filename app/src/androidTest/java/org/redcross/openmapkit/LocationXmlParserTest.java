@@ -34,6 +34,7 @@ public class LocationXmlParserTest {
     private void copySettingsDir() {
         //first remove the existing dir if already exists
         File dir = new File(ExternalStorage.getSettingsDir());
+        dir.mkdirs();
         if (dir.exists() && dir.isDirectory()) {
             String[] children = dir.list();
             for (int i = 0; i < children.length; i++) {
