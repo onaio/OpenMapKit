@@ -872,6 +872,12 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             //fetch the tapped feature
             OSMElement tappedOSMElement = selectedElements.get(0);
 
+            //zoom into location
+            Geometry geometry = tappedOSMElement.getJTSGeom();
+            Point elementCentroid = geometry.getCentroid();
+            LatLng centroidLatLng = new LatLng(elementCentroid.getCoordinate().y, elementCentroid.getCoordinate().x);
+            mapView.setCenter(centroidLatLng);
+
             //check whether the user is within the proximity
             if(isWithinUserProximity(tappedOSMElement)) {
                 //present OSM Feature tags in bottom ListView
