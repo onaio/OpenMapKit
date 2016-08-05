@@ -202,7 +202,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         // Proximity is disabled until there is a GPS fix.
         LocationXMLParser.setProximityEnabled(false);
 
-        if (isGPSEnabled() && LocationXMLParser.getProximityCheck() == true) {
+        if (isGPSEnabled() && LocationXMLParser.getProximityCheck()) {
             // Start GPS progress
             initialCountdownValue = LocationXMLParser.getGpsTimerDelay();
             showProgressDialog();
@@ -214,11 +214,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onLocationChanged(Location location) {
                 lastLocation = location;
-                if(LocationXMLParser.getProximityCheck() == true) {
+                if(LocationXMLParser.getProximityCheck()) {
                     if(location.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
-                        if(LocationXMLParser.isProximityEnabled() == false) {
+                        if(!LocationXMLParser.isProximityEnabled()) {
                             //means this is the first time a location fix for the user has been gotten
-                            if(isUserLocationEnabled() == false) {
+                            if(!isUserLocationEnabled()) {
                                 toggleUserLocation();//zoom into the user's current position
                             }
                         }
@@ -253,7 +253,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * @return TRUE if the preferred location provider is enabled
      */
     public boolean checkLocationProviderEnabled() {
-        if(isGPSEnabled() == true) {
+        if(isGPSEnabled()) {
             if(gpsProviderAlertDialog != null) {
                 gpsProviderAlertDialog.dismiss();
             }
@@ -268,7 +268,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            if (isGPSEnabled() == true) {
+                            if (isGPSEnabled()) {
                                 dialogInterface.dismiss();
                             } else {
                                 MapActivity.this.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
@@ -583,7 +583,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             if(LocationXMLParser.getProximityCheck()) {
                 //check user's last location is accurate enough
                 if(lastLocation != null && lastLocation.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
-                    if(isUserLocationEnabled() == false) {
+                    if(!isUserLocationEnabled()) {
                         toggleUserLocation();
                     }
                     mapView.goToUserLocation(true);
@@ -621,7 +621,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void toggleMoveNodeMode() {
-        if(LocationXMLParser.getProximityCheck() == false) {
+        if(!LocationXMLParser.getProximityCheck()) {
             final ImageButton moveNodeModeBtn = (ImageButton)findViewById(R.id.moveNodeModeBtn);
             final ImageButton moveNodeMarkerBtn = (ImageButton)findViewById(R.id.moveNodeMarkerBtn);
             final Button moveNodeBtn = (Button)findViewById(R.id.moveNodeBtn);
@@ -997,7 +997,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void showProgressDialog() {
-        if(isUserLocationEnabled() == false) {
+        if(!isUserLocationEnabled()) {
             toggleUserLocation();
         }
         // custom dialog
@@ -1019,7 +1019,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 MapActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (isUserLocationEnabled() == false) {
+                        if (!isUserLocationEnabled()) {
                             toggleUserLocation();
                         }
                     }

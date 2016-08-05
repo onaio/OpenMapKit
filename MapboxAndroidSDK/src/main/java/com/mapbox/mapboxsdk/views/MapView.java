@@ -1705,7 +1705,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 //        Log.i(TAG, "onTouchEvent with event = " + event);
-        if(interactionEnabled == false) {
+        if(!interactionEnabled) {
             return false;
         }
 
