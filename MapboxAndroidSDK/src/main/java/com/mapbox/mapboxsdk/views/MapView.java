@@ -1704,14 +1704,12 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-//        Log.i(TAG, "onTouchEvent with event = " + event);
         if(!interactionEnabled) {
             return false;
         }
 
         // If map rotation is enabled, propagate onTouchEvent to the rotate gesture detector
         if (mMapRotationEnabled) {
-//            Log.i(TAG, "onTouchEvent with Rotation Enabled so passing it along to RotationGestureDetector.onTouchEvent()");
             mRotateGestureDetector.onTouchEvent(event);
         }
         // Get rotated event for some touch listeners.
@@ -1727,13 +1725,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             //Android seems to be able to recognize a scale with one pointer ...
             // what a smart guy... let's prevent this
             if (rotatedEvent.getPointerCount() != 1) {
-//                Log.i(TAG, "rotateEvent.getPointerCount() == 1");
                 mScaleGestureDetector.onTouchEvent(rotatedEvent);
             }
             boolean result = mScaleGestureDetector.isInProgress();
-//            Log.i(TAG, "mScaleGestureDector in progress? '" + result + "'");
             if (!result) {
-//                Log.i(TAG, "mScaleGestureDector not in progress, forward on to mGestureDetector.onTouchEvent()");
                 result = mGestureDetector.onTouchEvent(rotatedEvent);
             } else {
                 //needs to cancel two fingers tap

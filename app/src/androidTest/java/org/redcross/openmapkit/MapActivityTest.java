@@ -244,7 +244,6 @@ public class MapActivityTest {
      */
     @Test
     public void testAddNode() {
-        Log.d("MapActivityTest", "Running testAddNode");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -289,7 +288,6 @@ public class MapActivityTest {
      */
     @Test
     public void testAddNode_InaccurateLocation() {
-        Log.d("MapActivityTest", "Running testAddNodeInaccurateLocation");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
