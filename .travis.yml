@@ -30,7 +30,8 @@ addons:
 
 before_script:
   - echo no | android create avd --force --name test --target $ANDROID_TARGET --abi $ANDROID_ABI
-  - emulator -avd test -no-skin -no-audio -no-window &
+  - mksdcard 32M sdcard.img
+  - emulator -avd test -no-skin -no-audio -no-window -sdcard sdcard.img &
 
 script:
   - ./gradlew check -PdisablePreDex --continue --stacktrace
