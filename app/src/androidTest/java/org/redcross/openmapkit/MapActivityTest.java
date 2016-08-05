@@ -1,5 +1,6 @@
 package org.redcross.openmapkit;
 
+import android.os.Environment;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.assertion.PositionAssertions;
@@ -240,7 +241,8 @@ public class MapActivityTest {
      * @return  Intent similar to the one used to launch OpenMapKit from OpenDataKit
      */
     private Intent getLaunchOMKIntent() {
-        File odkInstanceDir = new File("/storage/emulated/0/odk/instances/omk_functional_test");
+        String sdcardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File odkInstanceDir = new File(sdcardPath + "/odk/instances/omk_functional_test");
         odkInstanceDir.mkdirs();
 
         Intent intent = new Intent(Intent.ACTION_SEND);
@@ -248,7 +250,7 @@ public class MapActivityTest {
         intent.putExtra("FORM_FILE_NAME", "omk_functional_test");
         intent.putExtra("FORM_ID", "-1");
         intent.putExtra("INSTANCE_ID", "uuid:6004201f-9942-429d-bfa4-e65b683da37b");
-        intent.putExtra("INSTANCE_DIR", "/storage/emulated/0/odk/instances/omk_functional_test");
+        intent.putExtra("INSTANCE_DIR", sdcardPath + "/odk/instances/omk_functional_test");
         intent.putExtra("OSM_EDIT_FILE_NAME", "omk_functional_test.osm");
         ArrayList<String> tagKeys = new ArrayList<>();
         tagKeys.add("spray_status");
