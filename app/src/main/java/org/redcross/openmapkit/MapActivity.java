@@ -37,6 +37,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vividsolutions.jts.geom.Geometry;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
@@ -46,6 +47,7 @@ import com.spatialdev.osm.OSMMap;
 import com.spatialdev.osm.events.OSMSelectionListener;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
+import com.vividsolutions.jts.geom.Point;
 
 import org.fieldpapers.listeners.FPListener;
 import org.fieldpapers.model.FPAtlas;
@@ -409,7 +411,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * @param osmElement The target OSMElement.
      */
     protected void identifyOSMFeature(OSMElement osmElement) {
-
         // only open it if we render the OSM vectors,
         // otherwise it is confusing for the user
         if (mapView.getZoomLevel() < OSMMapBuilder.MIN_VECTOR_RENDER_ZOOM) {
@@ -868,15 +869,43 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     @Override
     public void selectedElementsChanged(LinkedList<OSMElement> selectedElements) {
         if (selectedElements != null && selectedElements.size() > 0) {
-//            tagsButton.setVisibility(View.VISIBLE);
-
             //fetch the tapped feature
             OSMElement tappedOSMElement = selectedElements.get(0);
 
-            //present OSM Feature tags in bottom ListView
-            identifyOSMFeature(tappedOSMElement);
-
+            //check whether the user is within the proximity
+            if(isWithinUserProximity(tappedOSMElement)) {
+                //present OSM Feature tags in bottom ListView
+                identifyOSMFeature(tappedOSMElement);
+            } else {
+                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), LocationXMLParser.getProximityRadius()+"m");
+                Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
+            }
         }
+    }
+
+    /**
+     * This method checks whether the user is within the required proximity to the provided
+     * {@link com.spatialdev.osm.model.OSMElement}
+     *
+     * @param tappedOSMOsmElement
+     * @return TRUE if proximity settings are off or the user is within the set maximum proximity to
+     *          the {@link com.spatialdev.osm.model.OSMElement}
+     */
+    public boolean isWithinUserProximity(OSMElement tappedOSMOsmElement) {
+        if(LocationXMLParser.getProximityCheck()) {
+            if (tappedOSMOsmElement != null) {
+                Geometry geometry = tappedOSMOsmElement.getJTSGeom();
+                if(geometry != null && lastLocation != null) {
+                    Point elementCentroid = geometry.getCentroid();
+                    LatLng centroidLatLng = new LatLng(elementCentroid.getCoordinate().y, elementCentroid.getCoordinate().x);
+                    if(centroidLatLng.distanceTo(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())) <= LocationXMLParser.getProximityRadius()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return true;
     }
 
     @Override
