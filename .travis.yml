@@ -1,5 +1,5 @@
 language: android
-sudo: false
+sudo: required
 jdk: oraclejdk8
 env:
   matrix:
@@ -7,6 +7,7 @@ env:
   global:
     # wait up to 10 minutes for adb to connect to emulator
     - ADB_INSTALL_TIMEOUT=10
+    - MALLOC_ARENA_MAX=2
 
 android:
   components:
