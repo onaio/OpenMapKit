@@ -40,7 +40,7 @@ script:
   - ./gradlew connectedAndroidTest -i --stacktrace -x MapboxAndroidSDK:connectedAndroidTest
 
 after_failure:
-  - pandoc builder/build/reports/tests/index.html -t plain | sed -n '/^Failed tests/,/default-package/p'
+  - pandoc app/build/reports/androidTests/connected/index.html -t plain
 
 after_script:
   # print lint results details
