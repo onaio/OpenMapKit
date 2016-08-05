@@ -1,4 +1,4 @@
-# OpenMapKit [![Build Status](https://travis-ci.org/jasonrogena/OpenMapKit.svg?branch=master)](https://travis-ci.org/jasonrogena/OpenMapKit)
+# OpenMapKit [![Build Status](https://travis-ci.org/onaio/OpenMapKit.svg?branch=master)](https://travis-ci.org/onaio/OpenMapKit)
 
 ## Description
 
