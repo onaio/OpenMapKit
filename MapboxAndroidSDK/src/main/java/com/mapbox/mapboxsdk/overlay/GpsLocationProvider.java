@@ -1,14 +1,19 @@
 package com.mapbox.mapboxsdk.overlay;
 
 import android.content.Context;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
+
 import com.mapbox.mapboxsdk.util.NetworkLocationIgnorer;
 
-public class GpsLocationProvider implements LocationListener {
+import java.util.ArrayList;
+import java.util.Calendar;
 
+public class GpsLocationProvider implements LocationListener {
     private final LocationManager mLocationManager;
     private Location mLocation;
 
@@ -16,9 +21,25 @@ public class GpsLocationProvider implements LocationListener {
     private long mLocationUpdateMinTime = 0;
     private float mLocationUpdateMinDistance = 0.0f;
     private final NetworkLocationIgnorer mIgnorer = new NetworkLocationIgnorer();
+    private final ArrayList<LocationListener> locationListeners;
 
     public GpsLocationProvider(Context context) {
         mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locationListeners = new ArrayList<>();
+    }
+
+    public void addLocationListener(final LocationListener locationListener) {
+        if(!locationListeners.contains(locationListener)) {
+            this.locationListeners.add(locationListener);
+        }
+    }
+
+    public void addLocationListeners(final ArrayList<LocationListener> locationListeners) {
+        if(locationListeners!= null) {
+            for (LocationListener currLocationListener : locationListeners) {
+                addLocationListener(currLocationListener);
+            }
+        }
     }
 
     public long getLocationUpdateMinTime() {
@@ -100,17 +121,34 @@ public class GpsLocationProvider implements LocationListener {
         if (mMyLocationConsumer != null) {
             mMyLocationConsumer.onLocationChanged(mLocation, this);
         }
+
+        for(int i = 0; i < locationListeners.size(); i++) {
+            locationListeners.get(i).onLocationChanged(location);
+        }
     }
 
     @Override
     public void onProviderDisabled(final String provider) {
+        for(int i = 0; i < locationListeners.size(); i++) {
+            locationListeners.get(i).onProviderDisabled(provider);
+        }
     }
 
     @Override
     public void onProviderEnabled(final String provider) {
+        for(int i = 0; i < locationListeners.size(); i++) {
+            locationListeners.get(i).onProviderEnabled(provider);
+        }
     }
 
     @Override
     public void onStatusChanged(final String provider, final int status, final Bundle extras) {
+        for(int i = 0; i < locationListeners.size(); i++) {
+            locationListeners.get(i).onStatusChanged(provider, status, extras);
+        }
+    }
+
+    public LocationManager getLocationManager() {
+        return mLocationManager;
     }
 }
