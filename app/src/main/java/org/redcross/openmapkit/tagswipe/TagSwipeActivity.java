@@ -40,11 +40,6 @@ import org.redcross.openmapkit.R;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 public class TagSwipeActivity extends ActionBarActivity {
-    /*
-    Intent bundle key used to determine whether the activity has been started for testing purposes
-     */
-    public static final String BUNDLE_KEY_IS_TESTING = "is_testing";
-
     private List<TagEdit> tagEdits;
     private SharedPreferences userNamePref;
     private LocationListener locationListener;
@@ -55,7 +50,6 @@ public class TagSwipeActivity extends ActionBarActivity {
     private String preferredLocationProvider = LocationManager.GPS_PROVIDER;
     private AlertDialog gpsProviderAlertDialog;
     private ProgressDialog gpsSearchingProgressDialog;
-    private boolean forTesting;
     private AlertDialog insertOsmUsernameDialog;
     private EditText osmUsernameEditText;
     private String osmFilePath;
@@ -78,17 +72,6 @@ public class TagSwipeActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tag_swipe);
-        forTesting = false;
-        Intent startActivityIntent = getIntent();
-        if(startActivityIntent != null) {
-            Bundle extras = startActivityIntent.getExtras();
-            if(extras != null) {
-                if(extras.containsKey(BUNDLE_KEY_IS_TESTING)){
-                    forTesting = extras.getBoolean(BUNDLE_KEY_IS_TESTING);
-                }
-            }
-        }
-
         setupModel();
         
         // Create the adapter that will return a fragment for each of the three
@@ -107,21 +90,12 @@ public class TagSwipeActivity extends ActionBarActivity {
     protected void onDestroy() {
         if(locationManager != null) {
             locationManager.removeUpdates(locationListener);
-            if(forTesting) {
-                locationManager.removeTestProvider(preferredLocationProvider);
-            }
         }
         super.onDestroy();
     }
 
     private void initLocationManager() {
         locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        if(forTesting) {
-            preferredLocationProvider = "test_provider_"+String.valueOf(Calendar.getInstance().getTimeInMillis());
-            if(locationManager.getProvider(preferredLocationProvider) != null) {
-                locationManager.removeTestProvider(preferredLocationProvider);
-            }
-        }
 
         locationListener = new LocationListener() {
             @Override
@@ -146,67 +120,21 @@ public class TagSwipeActivity extends ActionBarActivity {
             }
         };
 
-        if(forTesting == false) {
-            locationManager.requestLocationUpdates(preferredLocationProvider, 30000, 4, locationListener);
-        } else {
-            Toast.makeText(this, "App launched for automated tests", Toast.LENGTH_LONG).show();
-            locationManager.addTestProvider(preferredLocationProvider
-                    , true, false, false, false, true, true, true,
-                    Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
-            changeTestProviderEnabled(true);
-            locationManager.requestLocationUpdates(preferredLocationProvider, 0, 0, locationListener);
-        }
+        locationManager.requestLocationUpdates(preferredLocationProvider, 30000, 4, locationListener);
 
         updateUsersLocation();
     }
 
-    /**
-     * This method changes the state of the test provider initialized in this activity.
-     * This method is intended to only be used in tests.
-     *
-     * @param enable    TRUE of you want to enable the test provider
-     */
-    public void changeTestProviderEnabled(boolean enable) {
-        if(locationManager != null) {
-            locationManager.setTestProviderEnabled(preferredLocationProvider, enable);
-        } else {
-            Log.w("TagSwipeActivity", "Location manager is null, cannot enable/disable the test provider");
-        }
+    public LocationManager getLocationManager() {
+        return locationManager;
     }
 
-    /**
-     * This method changes the status of the test provider for the locationManager initialized in
-     * this activity.
-     * This method is intended to only be used in tests.
-     *
-     * @param status    Status similar to those provided in android.location.LocationProvider
-     * @see android.location.LocationProvider
-     */
-    public void changeTestProviderStatus(int status) {
-        if(locationManager != null) {
-            locationManager.setTestProviderStatus(
-                    preferredLocationProvider,
-                    status,
-                    null,
-                    Calendar.getInstance().getTimeInMillis());
-        } else {
-            Log.w("TagSwipeActivity", "Location manager is null, cannot change the status of the test provider");
-        }
+    public void setPreferredLocationProvider(String preferredLocationProvider) {
+        this.preferredLocationProvider = preferredLocationProvider;
     }
 
-    /**
-     * This method changes the location passed by the test provider registered in the
-     * locationManager initialized in this activity.
-     * This method is intended to only be used in tests.
-     *
-     * @param location  The location to be provided by the locationManager
-     */
-    public void changeTestProviderLocation(Location location) {
-        if(locationManager != null) {
-            locationManager.setTestProviderLocation(preferredLocationProvider, location);
-        } else {
-            Log.w("TagSwipeActivity", "Location manager is null, cannot change the location in the test provider");
-        }
+    public LocationListener getLocationListener() {
+        return locationListener;
     }
 
     public String getPreferredLocationProvider() {

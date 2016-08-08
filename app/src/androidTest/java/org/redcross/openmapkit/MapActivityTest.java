@@ -43,8 +43,9 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class MapActivityTest {
+    private static final String TAG = "MapActivityTest";
     private static final String ROUNDED_BUTTON_LABEL = "Add Structure";
-    private static final long GPS_DIALOG_TIMEOUT = 10100l;
+    public static final long GPS_DIALOG_TIMEOUT = 10100l;
     private static final long UI_STANDARD_WAIT_TIME = 100l;//standard time to wait for a UI update
     private Activity currentActivity;
     /*
@@ -109,7 +110,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 //set a location with a good accuracy so that if add node button is clicked, the add
                 //node views show
@@ -151,7 +152,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
@@ -182,7 +183,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
@@ -216,7 +217,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
@@ -252,7 +253,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
@@ -296,7 +297,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
@@ -340,7 +341,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
@@ -387,7 +388,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
@@ -425,7 +426,7 @@ public class MapActivityTest {
     }
 
     private void startMapActivity(OnPostLaunchActivity onPostLaunchActivity) {
-        Intent intent = getLaunchOMKIntent();
+        Intent intent = ApplicationTest.getLaunchOMKIntent();
         mapActivityTR.launchActivity(intent);
         Activity activity = getActivityInstance();
         if(activity instanceof MapActivity) {
@@ -464,56 +465,34 @@ public class MapActivityTest {
      * This method creates a test provider and attaches it to the LocationManager initialized in the
      * provided gpsLocationProvider
      *
-     * @param gpsLocationProvider   Object containing the LocationManager to attach the test provider
+     * @param mapActivity   Activity containing the LocationManager to attach the test provider
      * @return  The name of the test provider created
      *
      * @see android.location.LocationManager
      * @see com.mapbox.mapboxsdk.overlay.GpsLocationProvider
      */
-    private String createTestLocationProvider(GpsLocationProvider gpsLocationProvider) {
+    public static String createTestLocationProvider(MapActivity mapActivity) {
+        final GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
         if(gpsLocationProvider != null) {
-            LocationManager locationManager = gpsLocationProvider.getLocationManager();
-            String providerName = "test_provider" + String.valueOf(Calendar.getInstance().getTimeInMillis());
+            final LocationManager locationManager = gpsLocationProvider.getLocationManager();
+            locationManager.removeUpdates(gpsLocationProvider);
+            final String providerName = "test_provider" + String.valueOf(Calendar.getInstance().getTimeInMillis());
             if(locationManager.getProvider(providerName) == null) {//provider has not yet been created
                 locationManager.addTestProvider(providerName, true, false, false, false, true, true,
                         true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
                 locationManager.setTestProviderEnabled(providerName, true);
-                locationManager.requestLocationUpdates(providerName,
-                        gpsLocationProvider.getLocationUpdateMinTime(),
-                        gpsLocationProvider.getLocationUpdateMinDistance(),
-                        gpsLocationProvider);
+                mapActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        locationManager.requestLocationUpdates(providerName,
+                                gpsLocationProvider.getLocationUpdateMinTime(),
+                                gpsLocationProvider.getLocationUpdateMinDistance(),
+                                gpsLocationProvider);
+                    }
+                });
             }
             return providerName;
         }
         return null;
-    }
-
-    /**
-     * This method creates an intent similar to the one used to launch OpenMapKit from OpenDataKit
-     *
-     * @return  Intent similar to the one used to launch OpenMapKit from OpenDataKit
-     */
-    private Intent getLaunchOMKIntent() {
-        String sdcardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File odkInstanceDir = new File(sdcardPath + "/odk/instances/omk_functional_test");
-        odkInstanceDir.mkdirs();
-
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra("FORM_FILE_NAME", "omk_functional_test");
-        intent.putExtra("FORM_ID", "-1");
-        intent.putExtra("INSTANCE_ID", "uuid:6004201f-9942-429d-bfa4-e65b683da37b");
-        intent.putExtra("INSTANCE_DIR", sdcardPath + "/odk/instances/omk_functional_test");
-        intent.putExtra("OSM_EDIT_FILE_NAME", "omk_functional_test.osm");
-        ArrayList<String> tagKeys = new ArrayList<>();
-        tagKeys.add("spray_status");
-        intent.putExtra("TAG_KEYS", tagKeys);
-        intent.putExtra("TAG_LABEL.spray_status", "Spray Status");
-        intent.putExtra("TAG_VALUES.spray_status", "null");
-        intent.putExtra("TAG_VALUE_LABEL.spray_status.undefined", "Undefined");
-        intent.putExtra("TAG_VALUE_LABEL.spray_status.yes", "Yes");
-        intent.putExtra("TAG_VALUE_LABEL.spray_status.no", "No");
-
-        return intent;
     }
 }
