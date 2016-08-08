@@ -11,7 +11,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -40,6 +39,7 @@ import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.OSMMap;
@@ -59,7 +59,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -68,11 +67,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MapActivity extends AppCompatActivity implements OSMSelectionListener, FPListener {
-    /**
-     * Intent bundle key used to determine whether the activity has been started for testing purposes
-     */
-    public static final String BUNDLE_KEY_IS_TESTING = "is_testing";
-
     protected static final String PREVIOUS_LAT = "org.redcross.openmapkit.PREVIOUS_LAT";
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
@@ -97,14 +91,15 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private boolean nodeMode = false;
     private boolean moveNodeMode = false;
     private Dialog gpsCountdownDialog;
+    private AlertDialog mbtilesDialog;
     public static final int TASK_INTERVAL_IN_MILLIS = 1000;
     private Timer mTimer;
     protected TimerTask timerTask;
     protected int initialCountdownValue;
-    private LocationManager locationManager;
     private LocationListener locationListener;
     private android.support.v7.app.AlertDialog gpsProviderAlertDialog;
-    private boolean forTesting;
+    private Location lastLocation;
+
     /**
      * Which GPS provider should be used to get the User's current location
      */
@@ -117,16 +112,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        forTesting = false;
-        Intent startActivityIntent = getIntent();
-        if(startActivityIntent != null) {
-            Bundle extras = startActivityIntent.getExtras();
-            if(extras != null) {
-                if(extras.containsKey(BUNDLE_KEY_IS_TESTING)){
-                    forTesting = extras.getBoolean(BUNDLE_KEY_IS_TESTING);
-                }
-            }
-        }
         // Turn on MBTiles HTTP server.
         /**
          * We are waiting to enable this until we need it for a new map renderer.
@@ -217,7 +202,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         // Proximity is disabled until there is a GPS fix.
         LocationXMLParser.setProximityEnabled(false);
 
-        if (isGPSEnabled()) {
+        if (isGPSEnabled() && LocationXMLParser.getProximityCheck()) {
             // Start GPS progress
             initialCountdownValue = LocationXMLParser.getGpsTimerDelay();
             showProgressDialog();
@@ -225,19 +210,20 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void initLocationManager() {
-        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        if(forTesting) {
-            preferredLocationProvider = "test_provider_"+String.valueOf(Calendar.getInstance().getTimeInMillis());
-            if(locationManager.getProvider(preferredLocationProvider) != null) {
-                locationManager.removeTestProvider(preferredLocationProvider);
-            }
-        }
-
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                if(location.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
-                    LocationXMLParser.setProximityEnabled(true);
+                lastLocation = location;
+                if(LocationXMLParser.getProximityCheck()) {
+                    if(location.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
+                        if(!LocationXMLParser.isProximityEnabled()) {
+                            //means this is the first time a location fix for the user has been gotten
+                            if(!isUserLocationEnabled()) {
+                                toggleUserLocation();//zoom into the user's current position
+                            }
+                        }
+                        LocationXMLParser.setProximityEnabled(true);
+                    }
                 }
             }
 
@@ -256,33 +242,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             }
         };
 
-        if(forTesting == false) {
-            locationManager.requestLocationUpdates(preferredLocationProvider, 30000, 4, locationListener);
-        } else {
-            Toast.makeText(this, "App launched for automated tests", Toast.LENGTH_LONG).show();
-            locationManager.addTestProvider(preferredLocationProvider
-                    , true, false, false, false, true, true, true,
-                    Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
-            changeTestProviderEnabled(true);
-            locationManager.requestLocationUpdates(preferredLocationProvider, 0, 0, locationListener);
-        }
+        mapView.addLocationListener(locationListener);
     }
 
-    public String getPreferredLocationProvider() {
-        return preferredLocationProvider;
-    }
-
-    /**
-     * This method changes the state of the test provider initialized in this activity.
-     * This method is intended to only be used in tests.
-     *
-     * @param enable    TRUE of you want to enable the test provider
-     */
-    public void changeTestProviderEnabled(boolean enable) {
-        if(locationManager != null) {
-            locationManager.setTestProviderEnabled(preferredLocationProvider, enable);
-        }
-    }
 
     /**
      * This method checks whether the preferred location provider is enabled in the device and shows
@@ -291,7 +253,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * @return TRUE if the preferred location provider is enabled
      */
     public boolean checkLocationProviderEnabled() {
-        if(isGPSEnabled() == true) {
+        if(isGPSEnabled()) {
             if(gpsProviderAlertDialog != null) {
                 gpsProviderAlertDialog.dismiss();
             }
@@ -306,7 +268,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            if (isGPSEnabled() == true) {
+                            if (isGPSEnabled()) {
                                 dialogInterface.dismiss();
                             } else {
                                 MapActivity.this.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
@@ -324,17 +286,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     @Override
     protected void onPause() {
         super.onPause();
-        saveMapPosition();        
+        saveMapPosition();
     }
 
     @Override
     protected void onDestroy() {
-        if(locationManager != null) {
-            locationManager.removeUpdates(locationListener);
-            if(forTesting) {
-                locationManager.removeTestProvider(preferredLocationProvider);
-            }
-        }
         super.onDestroy();
     }
 
@@ -428,7 +384,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         tagButton.setOnClickListener(tagSwipeLaunchListener);
 
         // add tags button
-        addTagsButton = (Button)findViewById(R.id.addTagsBtn);
+        addTagsButton = (Button) findViewById(R.id.addTagsBtn);
         addTagsButton.setOnClickListener(tagSwipeLaunchListener);
 
         //handle list view item taps
@@ -486,7 +442,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         //pass the tags to the list adapter
         tagListAdapter = new TagListAdapter(this, osmElement);
-        
+
         //set the ListView's adapter
         mTagListView.setAdapter(tagListAdapter);
 
@@ -622,7 +578,22 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             addNodeBtn.setVisibility(View.GONE);
             addNodeMarkerBtn.setVisibility(View.GONE);
             nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
+            mapView.setInteractionEnabled(true);
         } else {
+            if(LocationXMLParser.getProximityCheck()) {
+                //check user's last location is accurate enough
+                if(lastLocation != null && lastLocation.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
+                    if(!isUserLocationEnabled()) {
+                        toggleUserLocation();
+                    }
+                    mapView.goToUserLocation(true);
+                    mapView.setInteractionEnabled(false);
+                } else {
+                    Toast.makeText(this, getResources().getString(R.string.waiting_for_accurate_location), Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+
             addNodeBtn.setVisibility(View.VISIBLE);
             addNodeMarkerBtn.setVisibility(View.VISIBLE);
             nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_green));
@@ -650,22 +621,24 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void toggleMoveNodeMode() {
-        final ImageButton moveNodeModeBtn = (ImageButton)findViewById(R.id.moveNodeModeBtn);
-        final ImageButton moveNodeMarkerBtn = (ImageButton)findViewById(R.id.moveNodeMarkerBtn);
-        final Button moveNodeBtn = (Button)findViewById(R.id.moveNodeBtn);
-        if (moveNodeMode) {
-            moveNodeMarkerBtn.setVisibility(View.GONE);
-            moveNodeBtn.setVisibility(View.GONE);
-            moveNodeModeBtn.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
-            showSelectedMarker();
-        } else {
-            moveNodeMarkerBtn.setVisibility(View.VISIBLE);
-            moveNodeBtn.setVisibility(View.VISIBLE);
-            moveNodeModeBtn.setBackground(getResources().getDrawable(R.drawable.roundedbutton_orange));
-            hideSelectedMarker();
-            proportionMapAndList(100, 0);
+        if(!LocationXMLParser.getProximityCheck()) {
+            final ImageButton moveNodeModeBtn = (ImageButton)findViewById(R.id.moveNodeModeBtn);
+            final ImageButton moveNodeMarkerBtn = (ImageButton)findViewById(R.id.moveNodeMarkerBtn);
+            final Button moveNodeBtn = (Button)findViewById(R.id.moveNodeBtn);
+            if (moveNodeMode) {
+                moveNodeMarkerBtn.setVisibility(View.GONE);
+                moveNodeBtn.setVisibility(View.GONE);
+                moveNodeModeBtn.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
+                showSelectedMarker();
+            } else {
+                moveNodeMarkerBtn.setVisibility(View.VISIBLE);
+                moveNodeBtn.setVisibility(View.VISIBLE);
+                moveNodeModeBtn.setBackground(getResources().getDrawable(R.drawable.roundedbutton_orange));
+                hideSelectedMarker();
+                proportionMapAndList(100, 0);
+            }
+            moveNodeMode = !moveNodeMode;
         }
-        moveNodeMode = !moveNodeMode;
     }
 
     private void hideSelectedMarker() {
@@ -881,6 +854,16 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         startActivity(deploymentsActivity);
     }
 
+    public void clickMbtilesPositiveButton() {
+        if(mbtilesDialog != null) {
+            mbtilesDialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+        }
+    }
+
+    public void zoomToRecommendedLevel() {
+        mapView.setZoom(OSMMapBuilder.MIN_VECTOR_RENDER_ZOOM);
+    }
+
     @Override
     public void selectedElementsChanged(LinkedList<OSMElement> selectedElements) {
         if (selectedElements != null && selectedElements.size() > 0) {
@@ -1014,6 +997,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void showProgressDialog() {
+        if(!isUserLocationEnabled()) {
+            toggleUserLocation();
+        }
         // custom dialog
         gpsCountdownDialog = new Dialog(this);
         gpsCountdownDialog.setContentView(R.layout.dialog_gps_countdown);
@@ -1033,7 +1019,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 MapActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (isUserLocationEnabled() == false) {
+                        if (!isUserLocationEnabled()) {
                             toggleUserLocation();
                         }
                     }
@@ -1059,18 +1045,18 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         }
     }
 
-    /**
-     * This method changes the location passed by the test provider registered in the
-     * locationManager initialized in this activity.
-     * This method is intended to only be used in tests.
-     *
-     * @param location  The location to be provided by the locationManager
-     */
-    public void changeTestProviderLocation(Location location) {
-        if(locationManager != null) {
-            locationManager.setTestProviderLocation(preferredLocationProvider, location);
-        } else {
-            Log.w("TagSwipeActivity", "Location manager is null, cannot change the location in the test provider");
+    public GpsLocationProvider getGpsLocationProvider() {
+        if(mapView.getGpsLocationProvider() != null) {
+            return mapView.getGpsLocationProvider();
         }
+        return null;
+    }
+
+    public void setMbtilesDialog(AlertDialog mbtilesDialog) {
+        this.mbtilesDialog = mbtilesDialog;
+    }
+
+    public boolean isMapInteractionEnabled () {
+        return mapView.isInteractionEnabled();
     }
 }

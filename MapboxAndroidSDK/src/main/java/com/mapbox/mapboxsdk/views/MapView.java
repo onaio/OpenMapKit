@@ -9,6 +9,7 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.location.Location;
+import android.location.LocationListener;
 import android.os.Build;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -62,7 +63,6 @@ import com.mapbox.mapboxsdk.views.util.TilesLoadedListener;
 import com.mapbox.mapboxsdk.views.util.constants.MapViewConstants;
 import com.mapbox.mapboxsdk.views.util.constants.MapViewLayouts;
 import com.spatialdev.osm.marker.OSMItemizedIconOverlay;
-import com.spatialdev.osm.marker.OSMMarker;
 import com.spatialdev.osm.renderer.OSMOverlay;
 
 import org.json.JSONException;
@@ -113,6 +113,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     protected float mRequestedMinimumZoomLevel = 0;
     private float mMinimumZoomLevel = 0;
     private float mMaximumZoomLevel = 22;
+    private boolean interactionEnabled = true;
 
     /**
      * The MapView listener
@@ -180,6 +181,8 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     private ClusterMarker.OnDrawClusterListener mOnDrawClusterListener = null;
     private float mMinZoomForClustering = 22;
     private boolean mShouldDisplayBubble = true;
+    private final ArrayList<LocationListener> locationListeners;
+    private GpsLocationProvider gpsLocationProvider;
 
     /**
      * Constructor for XML layout calls. Should not be used programmatically.
@@ -251,6 +254,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             Log.d(TAG, "zoomLevel is not specified in XML.");
         }
         a.recycle();
+        this.locationListeners = new ArrayList<>();
     }
 
     public MapView(final Context aContext) {
@@ -265,6 +269,12 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         this(aContext, tileSizePixels, aTileProvider, null, null);
     }
 
+    public void addLocationListener(final LocationListener listener) {
+        if(!locationListeners.contains(listener)) {
+            locationListeners.add(listener);
+        }
+    }
+
     /**
      * Add a new MapListener that observes changes in this map.
      *
@@ -274,6 +284,14 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         if (!mListeners.contains(listener)) {
             mListeners.add(listener);
         }
+    }
+
+    public void setInteractionEnabled(boolean interactionEnabled) {
+        this.interactionEnabled = interactionEnabled;
+    }
+
+    public boolean isInteractionEnabled() {
+        return interactionEnabled;
     }
 
     /**
@@ -1686,10 +1704,12 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-//        Log.i(TAG, "onTouchEvent with event = " + event);
+        if(!interactionEnabled) {
+            return false;
+        }
+
         // If map rotation is enabled, propagate onTouchEvent to the rotate gesture detector
         if (mMapRotationEnabled) {
-//            Log.i(TAG, "onTouchEvent with Rotation Enabled so passing it along to RotationGestureDetector.onTouchEvent()");
             mRotateGestureDetector.onTouchEvent(event);
         }
         // Get rotated event for some touch listeners.
@@ -1705,13 +1725,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             //Android seems to be able to recognize a scale with one pointer ...
             // what a smart guy... let's prevent this
             if (rotatedEvent.getPointerCount() != 1) {
-//                Log.i(TAG, "rotateEvent.getPointerCount() == 1");
                 mScaleGestureDetector.onTouchEvent(rotatedEvent);
             }
             boolean result = mScaleGestureDetector.isInProgress();
-//            Log.i(TAG, "mScaleGestureDector in progress? '" + result + "'");
             if (!result) {
-//                Log.i(TAG, "mScaleGestureDector not in progress, forward on to mGestureDetector.onTouchEvent()");
                 result = mGestureDetector.onTouchEvent(rotatedEvent);
             } else {
                 //needs to cancel two fingers tap
@@ -1931,7 +1948,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     private UserLocationOverlay getOrCreateLocationOverlay() {
         if (mLocationOverlay == null) {
-            mLocationOverlay = new UserLocationOverlay(new GpsLocationProvider(getContext()), this);
+            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext());
+            gpsLocationProvider.addLocationListeners(locationListeners);
+            this.gpsLocationProvider = gpsLocationProvider;
+            mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this);
             addOverlay(mLocationOverlay);
         }
         return mLocationOverlay;
@@ -2167,5 +2187,9 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     public void setBubbleEnabled(boolean enable) {
         closeCurrentTooltip();
         mShouldDisplayBubble = enable;
+    }
+
+    public GpsLocationProvider getGpsLocationProvider() {
+        return gpsLocationProvider;
     }
 }
