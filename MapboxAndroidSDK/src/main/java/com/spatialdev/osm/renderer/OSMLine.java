@@ -4,6 +4,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 
 import com.mapbox.mapboxsdk.views.MapView;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMWay;
 
 /**
@@ -62,19 +63,24 @@ public class OSMLine extends OSMPath {
         width = DEFAULT_WIDTH;
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setARGB(a, r, g, b);
+        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusOutARGB(osmElement, new OSMColorConfig.ARGB(a, r, g, b));
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
         setStrokeWidth(width);
     }
 
     @Override
     public void select() {
-        paint.setARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
+        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
+        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusInARGB(osmElement, nonEnabled);
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
         setStrokeWidth(DEFAULT_SELECTED_WIDTH);
     }
 
     @Override
     public void deselect() {
-        paint.setARGB(a, r, g, b);
+        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(a, r, g, b);
+        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusOutARGB(osmElement, nonEnabled);
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
         setStrokeWidth(width);
     }
 

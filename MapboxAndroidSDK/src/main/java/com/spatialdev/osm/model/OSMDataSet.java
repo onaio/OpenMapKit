@@ -48,6 +48,7 @@ public class OSMDataSet {
      *      ie: same first and last node
      */
     private List<OSMWay> closedWays = new ArrayList<>();
+    private final OSMColorConfig osmColorConfig;
 
     /**
      * If its not a closed way, then it is an open way.
@@ -64,7 +65,9 @@ public class OSMDataSet {
         return tagValues;
     }
 
-    public OSMDataSet() {}
+    public OSMDataSet(OSMColorConfig osmColorConfig) {
+        this.osmColorConfig = osmColorConfig;
+    }
 
     public void createNote(String note) {
         notes.add(note);
@@ -85,7 +88,7 @@ public class OSMDataSet {
                            String action ) {
 
         OSMNode n = new OSMNode(idStr, latStr, lonStr, versionStr, timestampStr,
-                                changesetStr, uidStr, userStr, action);
+                                changesetStr, uidStr, userStr, action, osmColorConfig);
 
         nodes.put(n.getId(), n);
         return n;
@@ -100,7 +103,7 @@ public class OSMDataSet {
                           String action ) {
 
         OSMWay w = new OSMWay(idStr, versionStr, timestampStr, 
-                              changesetStr, uidStr, userStr, action);
+                              changesetStr, uidStr, userStr, action, osmColorConfig);
         ways.put(w.getId(), w);
         return w;
     }
@@ -114,7 +117,7 @@ public class OSMDataSet {
                                     String action ) {
 
         OSMRelation r = new OSMRelation(idStr, versionStr, timestampStr, 
-                                        changesetStr, uidStr, userStr, action);
+                                        changesetStr, uidStr, userStr, action, osmColorConfig);
         relations.put(r.getId(), r);
         return r;
     }

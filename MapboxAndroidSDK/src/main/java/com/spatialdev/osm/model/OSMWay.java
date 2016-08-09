@@ -67,9 +67,10 @@ public class OSMWay extends OSMElement {
                   String changesetStr,
                   String uidStr,
                   String userStr,
-                  String action) {
+                  String action,
+                  OSMColorConfig osmColorConfig) {
 
-        super(idStr, versionStr, timestampStr, changesetStr, uidStr, userStr, action);
+        super(idStr, versionStr, timestampStr, changesetStr, uidStr, userStr, action, osmColorConfig);
     }
 
     @Override

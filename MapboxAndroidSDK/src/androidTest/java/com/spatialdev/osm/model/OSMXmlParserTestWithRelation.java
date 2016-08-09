@@ -2,11 +2,6 @@ package com.spatialdev.osm.model;
 
 import android.test.InstrumentationTestCase;
 
-import com.spatialdev.osm.model.OSMDataSet;
-import com.spatialdev.osm.model.OSMRelation;
-import com.spatialdev.osm.model.OSMWay;
-import com.spatialdev.osm.model.OSMXmlParser;
-
 import java.io.InputStream;
 import java.util.List;
 
@@ -20,8 +15,9 @@ public class OSMXmlParserTestWithRelation extends InstrumentationTestCase {
 
     public void setUp() throws Exception {
         super.setUp();
+        OSMColorConfig osmColorConfig = OSMColorConfig.getDefaultConfig();
         InputStream in = getInstrumentation().getTargetContext().getResources().getAssets().open("test/osm/ballard_relation.osm");
-        ds = OSMXmlParser.parseFromInputStream(in);
+        ds = OSMXmlParser.parseFromInputStream(in, osmColorConfig);
     }
 
     public void tearDown() throws Exception {

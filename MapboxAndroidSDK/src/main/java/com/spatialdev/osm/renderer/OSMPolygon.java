@@ -4,6 +4,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 
 import com.mapbox.mapboxsdk.views.MapView;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMWay;
 
 /**
@@ -43,7 +44,6 @@ public class OSMPolygon extends OSMPath {
      */
     protected OSMPolygon(OSMWay w, MapView mv) {
         super(w, mv);
-
         // color polygon according to if it has been edited before
         if (w.isModified()) {
             this.a = DEFAULT_EDITED_A;
@@ -57,20 +57,25 @@ public class OSMPolygon extends OSMPath {
             this.b = DEFAULT_B;
         }
 
+        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusOutARGB(osmElement, new OSMColorConfig.ARGB(a, r, g, b));
         paint.setStyle(Paint.Style.FILL);
-        paint.setARGB(a, r, g, b);
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
     }
 
     @Override
     public void select() {
-        paint.setARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
+        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
+        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusInARGB(osmElement, nonEnabled);
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
     }
 
     @Override
     public void deselect() {
-        paint.setARGB(a, r, g, b);
+        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(a, r, g, b);
+        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusOutARGB(osmElement, nonEnabled);
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
     }
-    
+
 
 
     /**

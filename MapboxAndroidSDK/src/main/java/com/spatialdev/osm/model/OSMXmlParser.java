@@ -35,16 +35,16 @@ public class OSMXmlParser {
      * Access the parser through public static methods which function
      * as factories creating parser instances.
      */
-    public static OSMDataSet parseFromAssets(final Context context, final String fileName) throws IOException {
+    public static OSMDataSet parseFromAssets(final Context context, final String fileName, OSMColorConfig osmColorConfig) throws IOException {
         if (TextUtils.isEmpty(fileName)) {
             throw new NullPointerException("No OSM XML File Name passed in.");
         }
         InputStream in = context.getAssets().open(fileName);
-        return parseFromInputStream(in);
+        return parseFromInputStream(in, osmColorConfig);
     }
 
-    public static OSMDataSet parseFromInputStream(InputStream in) throws IOException {
-        OSMXmlParser osmXmlParser = new OSMXmlParser();
+    public static OSMDataSet parseFromInputStream(InputStream in, OSMColorConfig osmColorConfig) throws IOException {
+        OSMXmlParser osmXmlParser = new OSMXmlParser(osmColorConfig);
         try {
             osmXmlParser.parse(in);
         } catch (XmlPullParserException e) {
@@ -57,8 +57,8 @@ public class OSMXmlParser {
         return osmXmlParser.getDataSet();
     }
 
-    protected OSMXmlParser() {
-        ds = new OSMDataSet();
+    protected OSMXmlParser(OSMColorConfig osmColorConfig) {
+        ds = new OSMDataSet(osmColorConfig);
     }
 
     public OSMDataSet getDataSet() {

@@ -7,6 +7,7 @@ import android.graphics.Rect;
 
 import com.mapbox.mapboxsdk.views.MapView;
 import com.mapbox.mapboxsdk.views.util.Projection;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMNode;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMWay;
@@ -22,6 +23,7 @@ public abstract class OSMPath {
     /**
      * Paint Settings * 
      */
+    protected OSMElement osmElement;
     protected Paint paint = new Paint();
     protected final Path path = new Path();
     
@@ -79,6 +81,7 @@ public abstract class OSMPath {
         projectNodes(nodes);
         mapView = mv;
         paint.setAntiAlias(true);
+        osmElement = w;
     }
 
     /**

@@ -1,5 +1,6 @@
 package org.redcross.openmapkit;
 
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMElement;
 
 import org.apache.commons.io.FileUtils;
@@ -7,7 +8,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
-import org.redcross.openmapkit.tagswipe.TagEdit;
 
 import java.io.File;
 import java.util.Collection;
@@ -172,6 +172,60 @@ public class Constraints {
     }
 
     /**
+     * This method returns the first OSM color configuration found, starting with the form constraints
+     * file and finishing with the default constraints file
+     *
+     * @return  An OSMColorConfig matching the first color constraint found or a default OSMColorConfig
+     *          that will trigger turning off color coding based on tag values
+     */
+    public OSMColorConfig getFirstColorConfig() {
+        OSMColorConfig defaultConfig = OSMColorConfig.getDefaultConfig();
+        //start with the form's constraints file
+        if(formConstraintsJson != null) {
+            OSMColorConfig formColorConfig = getFirstColorConfig(formConstraintsJson);
+            if(formColorConfig != null) {
+                return formColorConfig;
+            }
+        }
+
+        if(defaultConstraintsJson != null) {
+            OSMColorConfig defaultColorConfig = getFirstColorConfig(defaultConstraintsJson);
+            if(defaultColorConfig != null) {
+                return defaultColorConfig;
+            }
+        }
+
+        //if search for color constraints in the default constraints file
+        return defaultConfig;
+    }
+
+    private OSMColorConfig getFirstColorConfig(JSONObject constraintsJson) {
+        if(constraintsJson != null) {
+            Iterator<String> tagKeys = constraintsJson.keys();
+            while (tagKeys.hasNext()) {
+                String currentTag = tagKeys.next();
+                JSONObject colors = cascadeJSONObjectTagConstraint(currentTag, "colors", null, constraintsJson);
+                if(colors != null) {
+                    HashMap<String, String> tagValueColors = new HashMap<>();
+                    Iterator<String> tagValues = colors.keys();
+                    while (tagValues.hasNext()) {
+                        String currentValue = tagValues.next();
+                        try {
+                            String valueColor = colors.getString(currentValue);
+                            tagValueColors.put(currentValue, valueColor);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    return new OSMColorConfig(true, currentTag, tagValueColors);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * If the tag has an implicit value, it returns it.
      * Otherwise, it returns null.
      *
@@ -273,6 +327,24 @@ public class Constraints {
             try {
                 JSONObject tagConstraints = formConstraintsJson.getJSONObject(tagKey);
                 val = tagConstraints.getString(tagConstraint);
+            } catch (JSONException e) {
+                // do nothing
+            }
+        }
+
+        return val;
+    }
+
+    private JSONObject cascadeJSONObjectTagConstraint(String tagKey, String tagConstraint, JSONObject defaultVal, JSONObject constraintsJson) {
+        JSONObject val = defaultVal;
+        if (!isActive()) {
+            return val;
+        }
+
+        if (constraintsJson != null) {
+            try {
+                JSONObject tagConstraints = constraintsJson.getJSONObject(tagKey);
+                val = tagConstraints.getJSONObject(tagConstraint);
             } catch (JSONException e) {
                 // do nothing
             }

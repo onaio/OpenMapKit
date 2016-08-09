@@ -1,7 +1,12 @@
 package com.spatialdev.osm.marker;
 
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+
+import com.mapbox.mapboxsdk.R;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.mapbox.mapboxsdk.views.MapView;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMNode;
 
 /**
@@ -29,4 +34,5 @@ public class OSMMarker extends Marker {
     public MapView getMapView() {
         return mapView;
     }
+
 }

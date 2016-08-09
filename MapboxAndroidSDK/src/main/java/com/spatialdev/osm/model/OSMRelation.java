@@ -45,9 +45,10 @@ public class OSMRelation extends OSMElement {
                        String changesetStr,
                        String uidStr,
                        String userStr,
-                       String action) {
+                       String action,
+                       OSMColorConfig colorConfig) {
 
-        super(idStr, versionStr, timestampStr, changesetStr, uidStr, userStr, action);
+        super(idStr, versionStr, timestampStr, changesetStr, uidStr, userStr, action, colorConfig);
     }
 
     @Override
