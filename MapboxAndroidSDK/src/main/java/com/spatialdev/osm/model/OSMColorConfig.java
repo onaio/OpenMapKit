@@ -99,6 +99,7 @@ public class OSMColorConfig {
     public static Drawable getFocusInDrawable(OSMElement osmElement, Drawable originalDrawable) {
         if(osmElement != null && osmElement.getOsmColorConfig() != null) {
             if(osmElement.getOsmColorConfig().enabled) {
+                originalDrawable = originalDrawable.mutate();
                 ARGB argb = getFocusInARGB(osmElement, osmElement.getOsmColorConfig().defaultArgb);
                 originalDrawable = applyColorFilterToDrawable(originalDrawable, argb);
             }
@@ -109,6 +110,7 @@ public class OSMColorConfig {
     public static Drawable getFocusOutDrawable(OSMElement osmElement, Drawable originalDrawable) {
         if(osmElement != null && osmElement.getOsmColorConfig() != null) {
             if(osmElement.getOsmColorConfig().enabled) {
+                originalDrawable = originalDrawable.mutate();
                 ARGB argb = getFocusOutARGB(osmElement, osmElement.getOsmColorConfig().defaultArgb);
                 originalDrawable = applyColorFilterToDrawable(originalDrawable, argb);
             }
