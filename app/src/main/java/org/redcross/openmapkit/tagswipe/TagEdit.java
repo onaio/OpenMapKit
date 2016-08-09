@@ -94,8 +94,12 @@ public class TagEdit {
             Set<String> readOnlyKeys = readOnlyTags.keySet();
             for (String readOnlyKey : readOnlyKeys) {
                 TagEdit tagEdit = new TagEdit(readOnlyKey, readOnlyTags.get(readOnlyKey), true);
-                tagEditHash.put(readOnlyKey, tagEdit);
-                tagEdits.add(tagEdit);
+                if(Constraints.singleton().tagIsHidden(readOnlyKey) == true) {
+                    tagEditHiddenHash.put(readOnlyKey, tagEdit);
+                } else {
+                    tagEditHash.put(readOnlyKey, tagEdit);
+                    tagEdits.add(tagEdit);
+                }
             }
         }
         

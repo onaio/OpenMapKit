@@ -78,6 +78,11 @@ public class Constraints {
         return active;
     }
 
+    public boolean tagIsHidden(String tagKey) {
+        if(tagIsRequired(tagKey)) return false;//required tags cannot be hidden
+        return cascadeBooleanTagConstraint(tagKey, "hide", false);
+    }
+
     public boolean tagIsNumeric(String tagKey) {
         return cascadeBooleanTagConstraint(tagKey, "numeric", false);
     }
@@ -120,6 +125,9 @@ public class Constraints {
 
     public boolean tagShouldBeShown(String tagKey, OSMElement osmElement) {
         if (!isActive()) return true;
+
+        //check hide constraint
+        if(tagIsHidden(tagKey) == true) return false;
 
         // Check showMap
         Map<String, String> showMapMap = showMap.get(tagKey);
@@ -506,5 +514,4 @@ public class Constraints {
 
         return tags;
     }
-
 }

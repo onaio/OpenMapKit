@@ -1,0 +1,37 @@
+{
+  "building": {
+    "hide":true
+  },
+  "shown_tag_1": {
+    "hide":false
+  },
+  "hidden_tag_1": {
+    "hide":true
+  },
+  "hidden_tag_2": {
+    "hide":true,
+    "required":false
+  },
+  "shown_tag_2": {
+    "hide":true,
+    "required":true
+  },
+  "default_tag": {
+    "default":"yes"
+  },
+  "hidden_tag_3": {
+    "hide":true,
+    "hide_if":{
+      "default_tag":"no"
+    }
+  },
+  "shown_tag_3": {
+    "hide":false,
+    "hide_if":{
+      "default_tag":"no"
+    }
+  },
+  "spray_status": {
+
+  }
+}

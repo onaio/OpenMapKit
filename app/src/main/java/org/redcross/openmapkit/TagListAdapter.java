@@ -46,7 +46,9 @@ public class TagListAdapter extends BaseAdapter {
             }
             Set<String> readOnlyKeys = readOnlyTags.keySet();
             for (String readOnlyKey : readOnlyKeys) {
-                tagMap.put(readOnlyKey, tags.get(readOnlyKey));
+                if(Constraints.singleton().tagIsHidden(readOnlyKey) == false) {
+                    tagMap.put(readOnlyKey, tags.get(readOnlyKey));
+                }
             }
         } else {
             tagMap = osmElement.getTags();

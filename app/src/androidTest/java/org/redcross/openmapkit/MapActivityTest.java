@@ -31,16 +31,20 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 
 import org.hamcrest.CoreMatchers;
+import org.apache.commons.io.FileUtils;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Iterator;
 
 import static org.junit.Assert.*;
 
@@ -66,6 +70,7 @@ public class MapActivityTest {
         //get instrumented (not device) context so as to fetch files from androidTest/assets
         Context context = InstrumentationRegistry.getContext();
         copySettingsDir(context);
+        ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
     }
 
     private void copySettingsDir(Context context) {
@@ -483,6 +488,42 @@ public class MapActivityTest {
         });
     }
 
+    /**
+     * This method tests whether tags with the 'hide' constraints in the testing constraints json
+     * file (androidTest/constraints/omk_functional_test.json) are shown
+     */
+    @Test
+    public void testHideTagConstraint() {
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                MapActivity mapActivity = (MapActivity) activity;
+                try {
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).perform(ViewActions.click());
+
+                    //check which tags are shown
+                    Espresso.onView(ViewMatchers.withText("hidden_tag_1"))
+                            .check(ViewAssertions.doesNotExist());
+                    Espresso.onView(ViewMatchers.withText("hidden_tag_2"))
+                            .check(ViewAssertions.doesNotExist());
+                    Espresso.onView(ViewMatchers.withText("hidden_tag_3"))
+                            .check(ViewAssertions.doesNotExist());
+
+                    Espresso.onView(ViewMatchers.withText("shown_tag_1"))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+                    Espresso.onView(ViewMatchers.withText("shown_tag_2"))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+                    Espresso.onView(ViewMatchers.withText("shown_tag_3"))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
     private void startMapActivity(OnPostLaunchActivity onPostLaunchActivity) {
         Intent intent = ApplicationTest.getLaunchOMKIntent();
         mapActivityTR.launchActivity(intent);
@@ -531,11 +572,11 @@ public class MapActivityTest {
      */
     public static String createTestLocationProvider(MapActivity mapActivity) {
         final GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-        if(gpsLocationProvider != null) {
+        if (gpsLocationProvider != null) {
             final LocationManager locationManager = gpsLocationProvider.getLocationManager();
             locationManager.removeUpdates(gpsLocationProvider);
             final String providerName = "test_provider" + String.valueOf(Calendar.getInstance().getTimeInMillis());
-            if(locationManager.getProvider(providerName) == null) {//provider has not yet been created
+            if (locationManager.getProvider(providerName) == null) {//provider has not yet been created
                 locationManager.addTestProvider(providerName, true, false, false, false, true, true,
                         true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
                 locationManager.setTestProviderEnabled(providerName, true);
