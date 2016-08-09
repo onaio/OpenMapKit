@@ -19,10 +19,15 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.Stage;
-import android.util.Log;
 import android.widget.Button;
 
+import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
+import com.spatialdev.osm.model.OSMElement;
+import com.spatialdev.osm.model.OSMNode;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
@@ -269,7 +274,7 @@ public class MapActivityTest {
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
 
                     //click the '+' button and check whether views responsible for adding a new
                     //node show (shouldn't be the case)
@@ -357,7 +362,7 @@ public class MapActivityTest {
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
 
                     //click the '+' button and check whether map interactions are enabled (shouldn't be)
                     Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
@@ -404,7 +409,7 @@ public class MapActivityTest {
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
 
                     //click the '+' button and then add node button
                     Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
@@ -421,6 +426,58 @@ public class MapActivityTest {
                 }
 
                 gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
+            }
+        });
+    }
+
+    /**
+     * This method tests whether the proximity_radius preference in the proximity_settings works
+     */
+    @Test
+    public void testIsWithinUserProximity() {
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(mapActivity);
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(testProvider);
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
+
+                try {
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    GeometryFactory geometryFactory = new GeometryFactory();
+
+                    //test close-by node
+                    LatLng latLng1 = new LatLng(-0.3212321, 36.324224);
+                    OSMElement osmElement1 = new OSMNode(latLng1);
+                    Coordinate coord1 = new Coordinate(latLng1.getLongitude(), latLng1.getLatitude());
+                    Point point1 = geometryFactory.createPoint(coord1);
+                    osmElement1.setJTSGeom(point1);
+                    assertTrue(mapActivity.isWithinUserProximity(osmElement1));
+
+                    //test far way node
+                    LatLng latLng2 = new LatLng(-0.3212321, 36.323224);
+                    OSMElement osmElement2 = new OSMNode(latLng2);//should be further than 100m from the provider location
+                    Coordinate coord2 = new Coordinate(latLng2.getLongitude(), latLng2.getLatitude());
+                    Point point2 = geometryFactory.createPoint(coord2);
+                    osmElement2.setJTSGeom(point2);
+                    assertFalse(mapActivity.isWithinUserProximity(osmElement2));
+
+                    gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
