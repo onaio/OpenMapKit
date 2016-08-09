@@ -23,6 +23,7 @@ import android.widget.Button;
 
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
+import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -460,7 +461,7 @@ public class MapActivityTest {
 
                     //test close-by node
                     LatLng latLng1 = new LatLng(-0.3212321, 36.324224);
-                    OSMElement osmElement1 = new OSMNode(latLng1);
+                    OSMElement osmElement1 = new OSMNode(latLng1, OSMColorConfig.getDefaultConfig());
                     Coordinate coord1 = new Coordinate(latLng1.getLongitude(), latLng1.getLatitude());
                     Point point1 = geometryFactory.createPoint(coord1);
                     osmElement1.setJTSGeom(point1);
@@ -468,7 +469,7 @@ public class MapActivityTest {
 
                     //test far way node
                     LatLng latLng2 = new LatLng(-0.3212321, 36.323224);
-                    OSMElement osmElement2 = new OSMNode(latLng2);//should be further than 100m from the provider location
+                    OSMElement osmElement2 = new OSMNode(latLng2, OSMColorConfig.getDefaultConfig());//should be further than 100m from the provider location
                     Coordinate coord2 = new Coordinate(latLng2.getLongitude(), latLng2.getLatitude());
                     Point point2 = geometryFactory.createPoint(coord2);
                     osmElement2.setJTSGeom(point2);
