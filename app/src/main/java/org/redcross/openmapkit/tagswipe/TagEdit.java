@@ -1,5 +1,7 @@
 package org.redcross.openmapkit.tagswipe;
 
+import android.location.Location;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -30,6 +32,11 @@ import java.util.Set;
  * * *
  */
 public class TagEdit {
+
+    public static final String TAG_KEY_USER_LOCATION = "user_location";
+    public static final String TAG_LABEL_USER_LOCATION = "User Location";
+    public static final String TAG_KEY_USER_LOCATION_ACCURACY = "user_location_accuracy";
+    public static final String TAG_LABEL_USER_LOCATION_ACCURACY = "User Location Accuracy";
 
     private static LinkedHashMap<String, TagEdit> tagEditHash;
     private static LinkedHashMap<String, TagEdit> tagEditHiddenHash;
@@ -71,7 +78,7 @@ public class TagEdit {
             Collection<ODKTag> requiredTags = odkCollectData.getRequiredTags();
             for (ODKTag odkTag : requiredTags) {
                 String tagKey = odkTag.getKey();
-                TagEdit tagEdit = new TagEdit(tagKey, tagValueOrDefaultValue(tags, tagKey), odkTag, false);
+                TagEdit tagEdit = new TagEdit(tagKey, tagValueOrDefaultValue(tags, tagKey), odkTag, getReadOnlyValue(tagKey));
                 String implicitVal = Constraints.singleton().implicitVal(tagKey);
                 if (implicitVal != null) {
                     tagEditHiddenHash.put(tagKey, tagEdit);
@@ -96,13 +103,144 @@ public class TagEdit {
         else {
             Set<String> keys = tags.keySet();
             for (String key : keys) {
-                TagEdit tagEdit = new TagEdit(key, tags.get(key), false);
+                TagEdit tagEdit = new TagEdit(key, tags.get(key), getReadOnlyValue(key));
                 tagEditHash.put(key, tagEdit);
                 tagEdits.add(tagEdit);
             }
         }
-        
+
+        cleanUserLocationTags();
+
         return tagEdits;
+    }
+
+    /**
+     * This method is intended for use in only tests. It repopulates the tagEditHash hashMap with
+     * data. The data includes user location tags
+     */
+    public static void mockTagEditHash() {
+        tagEditHash = new LinkedHashMap<>();
+        tagEditHash.put("test_tag_1", new TagEdit("test_tag_1", "test", new ODKTag(), false));
+        tagEditHash.put("test_tag_2", new TagEdit("test_tag_2", "test", new ODKTag(), true));
+        tagEditHash.put("test_tag_3", new TagEdit("test_tag_3", null, new ODKTag(), false));
+        tagEditHash.put("test_tag_4", new TagEdit("test_tag_4", null, new ODKTag(), true));
+        tagEditHash.put("test_tag_5", new TagEdit("test_tag_5", "test", false));
+        tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
+        tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
+        tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
+        tagEditHash.put(TAG_KEY_USER_LOCATION, new TagEdit(TAG_KEY_USER_LOCATION, "-1.22321132,36.32234233", true));
+        tagEditHash.put(TAG_KEY_USER_LOCATION_ACCURACY, new TagEdit(TAG_KEY_USER_LOCATION_ACCURACY, locationAccuracyToString(32f), true));
+    }
+
+    /**
+     * This method is intended for use in only tests. It repopulates the tagEditHash hashMap with
+     * data. The data does not include user location tags
+     */
+    public static void mockTagEditHashWithoutUserLocTags() {
+        tagEditHash = new LinkedHashMap<>();
+        tagEditHash.put("test_tag_1", new TagEdit("test_tag_1", "test", new ODKTag(), false));
+        tagEditHash.put("test_tag_2", new TagEdit("test_tag_2", "test", new ODKTag(), true));
+        tagEditHash.put("test_tag_3", new TagEdit("test_tag_3", null, new ODKTag(), false));
+        tagEditHash.put("test_tag_4", new TagEdit("test_tag_4", null, new ODKTag(), true));
+        tagEditHash.put("test_tag_5", new TagEdit("test_tag_5", "test", false));
+        tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
+        tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
+        tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
+    }
+
+    /**
+     * This method is intended for use in only tests. It repopulates the tagEditHash hashMap with
+     * data. The data includes user location tags that have null values
+     */
+    public static void mockTagEditHashWithNullUserLocTags() {
+        tagEditHash = new LinkedHashMap<>();
+        tagEditHash.put("test_tag_1", new TagEdit("test_tag_1", "test", new ODKTag(), false));
+        tagEditHash.put("test_tag_2", new TagEdit("test_tag_2", "test", new ODKTag(), true));
+        tagEditHash.put("test_tag_3", new TagEdit("test_tag_3", null, new ODKTag(), false));
+        tagEditHash.put("test_tag_4", new TagEdit("test_tag_4", null, new ODKTag(), true));
+        tagEditHash.put("test_tag_5", new TagEdit("test_tag_5", "test", false));
+        tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
+        tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
+        tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
+        tagEditHash.put(TAG_KEY_USER_LOCATION, new TagEdit(TAG_KEY_USER_LOCATION, null, true));
+        tagEditHash.put(TAG_KEY_USER_LOCATION_ACCURACY, new TagEdit(TAG_KEY_USER_LOCATION_ACCURACY, "", true));
+    }
+
+    /**
+     * This method cleans the values in the user location and user location accuracy tags
+     */
+    public static void cleanUserLocationTags() {
+        if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION)) {
+            tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal = null;
+            if(tagEditHash.get(TAG_KEY_USER_LOCATION).editText != null) {
+                tagEditHash.get(TAG_KEY_USER_LOCATION).editText.setText(null);
+            }
+        }
+
+        if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION_ACCURACY)) {
+            tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal = null;
+            if(tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).editText != null) {
+                tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).editText.setText(null);
+            }
+        }
+    }
+
+    /**
+     * This method determines whether the provided tag is read only
+     *
+     * @param tagKey    Key of tag you want to get the readOnly status
+     * @return  TRUE if tag is read only
+     */
+    public static boolean getReadOnlyValue(String tagKey) {
+        //TODO: add test for read only for user location and user location accuracy
+        if(tagKey != null
+                && (tagKey.equals(TAG_KEY_USER_LOCATION)
+                    || tagKey.equals(TAG_KEY_USER_LOCATION_ACCURACY))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * This method update the values for the user location tags
+     *
+     * @param location  The location object to be used to update the user's location and location
+     *                  accuracy
+     * @see Location
+     */
+    public static void updateUserLocationTags(Location location) {
+        if(location != null) {
+            tagSwipeActivity.hideGpsSearchingProgressDialog();
+
+            if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION)) {
+                tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal = locationToString(location);
+            }
+
+            if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION_ACCURACY)) {
+                tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal = locationAccuracyToString(location.getAccuracy());
+            }
+        }
+    }
+
+    /**
+     * This method converts a location object to a string containing the latitude and longitude
+     * (separated using a comma i.e latitude,longitude)
+     *
+     * @param location  The location to be converted
+     * @return  String representing the latitude and longitude for the location or NULL if location
+     *          is NULL
+     * @see Location
+     */
+    public static String locationToString(Location location) {
+        if(location != null) {
+            return String.valueOf(location.getLatitude())+","+String.valueOf(location.getLongitude());
+        }
+        return null;
+    }
+
+    public static String locationAccuracyToString(float accuracy) {
+        return String.valueOf(accuracy) + " m";
     }
 
     private static String tagValueOrDefaultValue(Map<String,String> tags, String tagKey) {
@@ -145,16 +283,39 @@ public class TagEdit {
         // If its not there, just go to the first TagEdit
         return 0;
     }
+
+    /**
+     * This method checks whether the user location and user location accuracy tags have been set
+     *
+     * @return  TRUE if the user location and user location accuracy tags have been set
+     */
+    public static boolean checkUserLocationTags() {
+        if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION)
+                && tagEditHash.containsKey(TAG_KEY_USER_LOCATION_ACCURACY)) {
+            if(tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal != null
+                    && tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal.length() > 0
+                    && tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal != null
+                    && tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal.length() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
     
     public static boolean saveToODKCollect(String osmUserName) {
         updateTagsInOSMElement();
 
         Set<String> missingTags = Constraints.singleton().requiredTagsNotMet(osmElement);
+        tagSwipeActivity.setOsmFilePath(null);
         if (missingTags.size() > 0) {
             tagSwipeActivity.notifyMissingTags(missingTags);
             return false;
+        } else if(checkUserLocationTags() == false) {
+            tagSwipeActivity.notifyMissingUserLocation();
+            return false;
         } else {
-            ODKCollectHandler.saveXmlInODKCollect(osmElement, osmUserName);
+            tagSwipeActivity.setOsmFilePath(
+                    ODKCollectHandler.saveXmlInODKCollect(osmElement, osmUserName));
             return true;
         }
     }
@@ -182,6 +343,8 @@ public class TagEdit {
     }
     
     private static void updateTagsInOSMElement() {
+        tagSwipeActivity.updateUsersLocation();
+
         for (TagEdit tagEdit : tagEdits) {
             tagEdit.updateTagInOSMElement();
         }
@@ -273,6 +436,13 @@ public class TagEdit {
         else if (editText != null) {
             tagVal = editText.getText().toString();
             addOrEditTag(tagKey, tagVal);
+        }
+        else if(tagKey.equals(TAG_KEY_USER_LOCATION) || tagKey.equals(TAG_KEY_USER_LOCATION_ACCURACY)) {
+            if(tagVal != null) {
+                addOrEditTag(tagKey, tagVal);
+            } else {
+                addOrEditTag(tagKey, "");
+            }
         }
     }
 

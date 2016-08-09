@@ -104,6 +104,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * Which GPS provider should be used to get the User's current location
      */
     private String preferredLocationProvider = LocationManager.GPS_PROVIDER;
+
     /**
      * intent request codes
      */

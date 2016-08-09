@@ -83,5 +83,6 @@
     <string name="enable_gps">Please enable GPS before continuing</string>
     <string name="getting_gps_fix">"Getting a GPS Fix..."</string>
     <string name="waiting_for_accurate_location">Waiting for an accurate GPS location</string>
+    <string name="waiting_for_user_location">OpenMapKit is searching for your GPS location</string>
 
 </resources>

@@ -165,7 +165,6 @@ public class Basemap {
 
         //present dialog to user
         mapActivity.setMbtilesDialog(builder.show());
-
     }
 
     private void selectOnlineBasemap() {
