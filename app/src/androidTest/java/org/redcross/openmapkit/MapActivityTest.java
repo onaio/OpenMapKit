@@ -274,7 +274,7 @@ public class MapActivityTest {
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
 
                     //click the '+' button and check whether views responsible for adding a new
                     //node show (shouldn't be the case)
@@ -362,7 +362,7 @@ public class MapActivityTest {
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
 
                     //click the '+' button and check whether map interactions are enabled (shouldn't be)
                     Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
@@ -409,7 +409,7 @@ public class MapActivityTest {
 
                 try {
                     //wait until after the next time the GPS dialog timer runs
-                    Thread.sleep(MapActivity.TASK_INTERVAL_IN_MILLIS + UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
 
                     //click the '+' button and then add node button
                     Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
@@ -440,7 +440,7 @@ public class MapActivityTest {
             public void run(Activity activity) {
                 final MapActivity mapActivity = (MapActivity) activity;
                 GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
-                String testProvider = createTestLocationProvider(gpsLocationProvider);
+                String testProvider = createTestLocationProvider(mapActivity);
 
                 //set current location with an accuracy that is larger than the one set in
                 //proximity_settings
