@@ -1,5 +1,6 @@
 package org.redcross.openmapkit;
 
+import android.content.DialogInterface;
 import android.location.Criteria;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -548,6 +549,96 @@ public class MapActivityTest {
                             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
                     Espresso.onView(ViewMatchers.withText("shown_tag_3"))
                             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
+            }
+        });
+    }
+
+    /**
+     * This method tests whether the UI logic for deleting a newly added node works
+     */
+    @Test
+    public void testDeleteNode() {
+        Log.i(TAG, "Running test testDeleteNode");
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(mapActivity);
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(testProvider);
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
+
+                try {
+                    //wait until after the next time the GPS dialog timer runs
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
+
+                    //launch the noe details by clicking on add node/structure
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton))
+                            .perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn))
+                            .perform(ViewActions.click());
+
+                    //check if the delete node button exists
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.deleteButton))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+
+                    //click on the delete button and check if confirmation dialog shows
+                    Espresso.onView(ViewMatchers.withId(R.id.deleteButton))
+                            .perform(ViewActions.click());
+
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    assertTrue(mapActivity.getDeleteNodeDialog() != null);
+                    assertTrue(mapActivity.getDeleteNodeDialog().isShowing());
+
+                    //click on the no button and check if dialog disappears but node still in focus
+                    mapActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mapActivity.getDeleteNodeDialog()
+                                    .getButton(DialogInterface.BUTTON_NEGATIVE).performClick();
+                        }
+                    });
+
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    assertFalse(mapActivity.getDeleteNodeDialog().isShowing());
+                    Espresso.onView(ViewMatchers.withId(R.id.tagListView))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+
+
+                    //click on the delete button again
+                    Espresso.onView(ViewMatchers.withId(R.id.deleteButton))
+                            .perform(ViewActions.click());
+
+                    //click on the yes button and see if node disappears
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    mapActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mapActivity.getDeleteNodeDialog()
+                                    .getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+                        }
+                    });
+
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.tagListView))
+                            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

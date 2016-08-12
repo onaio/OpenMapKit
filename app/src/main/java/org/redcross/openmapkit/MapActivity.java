@@ -1140,4 +1140,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     public boolean isMapInteractionEnabled () {
         return mapView.isInteractionEnabled();
     }
+
+    public AlertDialog getDeleteNodeDialog() {
+        return deleteNodeDialog;
+    }
 }
