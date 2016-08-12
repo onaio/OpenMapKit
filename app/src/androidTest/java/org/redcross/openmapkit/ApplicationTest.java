@@ -31,6 +31,9 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         File odkInstanceDir = new File(sdcardPath + "/odk/instances/omk_functional_test");
         odkInstanceDir.mkdirs();
 
+        File omkDirectory = new File(sdcardPath + "/" + ExternalStorage.APP_DIR);
+        omkDirectory.mkdirs();
+
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra("FORM_FILE_NAME", "omk_functional_test");

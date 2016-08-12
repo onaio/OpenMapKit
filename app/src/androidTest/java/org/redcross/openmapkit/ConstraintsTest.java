@@ -22,14 +22,12 @@ public class ConstraintsTest {
 
     @Before
     public void initConstraints() {
-        context = InstrumentationRegistry.getContext();
-        ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
-
         Intent intent = ApplicationTest.getLaunchOMKIntent();
         ODKCollectHandler.registerIntent(intent);
 
         context = InstrumentationRegistry.getContext();
         ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
+
         Constraints.initialize();
     }
 
