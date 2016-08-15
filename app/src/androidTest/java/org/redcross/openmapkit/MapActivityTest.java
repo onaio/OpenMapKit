@@ -1,7 +1,9 @@
 package org.redcross.openmapkit;
 
+import android.content.DialogInterface;
 import android.location.Criteria;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Environment;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.action.ViewActions;
@@ -19,6 +21,7 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.Stage;
+import android.util.Log;
 import android.widget.Button;
 
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -32,6 +35,8 @@ import com.vividsolutions.jts.geom.Point;
 
 import org.hamcrest.CoreMatchers;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
+import org.hamcrest.object.HasToString;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -92,6 +97,7 @@ public class MapActivityTest {
      */
     @Test
     public void locationButtonPosition() {
+        Log.i(TAG, "Running test locationButtonPosition");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -116,6 +122,7 @@ public class MapActivityTest {
      */
     @Test
     public void roundedButtonLabel() {
+        Log.i(TAG, "Running test roundedButtonLabel");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -158,6 +165,7 @@ public class MapActivityTest {
     @Test
     @Ignore//passes on physical devices but fails in emulators
     public void testLoadingGpsDialogShown() {
+        Log.i(TAG, "Running test testLoadingGpsDialogShown");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -189,6 +197,7 @@ public class MapActivityTest {
      */
     @Test
     public void testLoadingGpsDialogNotShownGpsAccurate() {
+        Log.i(TAG, "Running test testLoadingGpsDialogNotShowingGpsAccurate");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -223,6 +232,7 @@ public class MapActivityTest {
      */
     @Test
     public void testLoadingGpsDialogNotShownAfterTimeout() {
+        Log.i(TAG, "Running test testLoadingGpsDialogNotShowingAfterTimeout");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -259,6 +269,7 @@ public class MapActivityTest {
      */
     @Test
     public void testAddNode() {
+        Log.i(TAG, "Running test testAddNode");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -303,6 +314,7 @@ public class MapActivityTest {
      */
     @Test
     public void testAddNode_InaccurateLocation() {
+        Log.i(TAG, "Running test testAddNode_InaccurateLocation");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -347,6 +359,7 @@ public class MapActivityTest {
      */
     @Test
     public void testMapInteraction_AddingNewNode() {
+        Log.i(TAG, "Running test testMapInteraction_AddingNewNode");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -394,6 +407,7 @@ public class MapActivityTest {
      */
     @Test
     public void moveNode_AddingNewNode() {
+        Log.i(TAG, "Running test moveNode_AddingNewNode");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -441,6 +455,7 @@ public class MapActivityTest {
      */
     @Test
     public void testIsWithinUserProximity() {
+        Log.i(TAG, "Running test testIsWithinUserProximity");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -461,7 +476,7 @@ public class MapActivityTest {
                 gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
                 try {
-                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
                     GeometryFactory geometryFactory = new GeometryFactory();
 
                     //test close-by node
@@ -493,11 +508,28 @@ public class MapActivityTest {
      * file (androidTest/constraints/omk_functional_test.json) are shown
      */
     @Test
+    @Ignore//test already being done in ConstraintsTest
     public void testHideTagConstraint() {
+        Log.i(TAG, "Running test testHideTagConstraint");
         startMapActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
                 MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(mapActivity);
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(testProvider);
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
+
                 try {
                     Thread.sleep(GPS_DIALOG_TIMEOUT);
                     Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
@@ -520,6 +552,98 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
+            }
+        });
+    }
+
+    /**
+     * This method tests whether the UI logic for deleting a newly added node works
+     */
+    @Test
+    public void testDeleteNode() {
+        Log.i(TAG, "Running test testDeleteNode");
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(mapActivity);
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(testProvider);
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
+
+                try {
+                    //wait until after the next time the GPS dialog timer runs
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
+
+                    //launch the noe details by clicking on add node/structure
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton))
+                            .perform(ViewActions.click());
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn))
+                            .perform(ViewActions.click());
+
+                    //check if the delete node button exists
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.deleteButton))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+
+                    //click on the delete button and check if confirmation dialog shows
+                    Espresso.onView(ViewMatchers.withId(R.id.deleteButton))
+                            .perform(ViewActions.click());
+
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    assertTrue(mapActivity.getDeleteNodeDialog() != null);
+                    assertTrue(mapActivity.getDeleteNodeDialog().isShowing());
+
+                    //click on the no button and check if dialog disappears but node still in focus
+                    mapActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mapActivity.getDeleteNodeDialog()
+                                    .getButton(DialogInterface.BUTTON_NEGATIVE).performClick();
+                        }
+                    });
+
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    assertFalse(mapActivity.getDeleteNodeDialog().isShowing());
+                    Espresso.onView(ViewMatchers.withId(R.id.tagListView))
+                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+
+
+                    //click on the delete button again
+                    Espresso.onView(ViewMatchers.withId(R.id.deleteButton))
+                            .perform(ViewActions.click());
+
+                    //click on the yes button and see if node disappears
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    mapActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mapActivity.getDeleteNodeDialog()
+                                    .getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+                        }
+                    });
+
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withId(R.id.tagListView))
+                            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }
@@ -573,22 +697,39 @@ public class MapActivityTest {
     public static String createTestLocationProvider(MapActivity mapActivity) {
         final GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
         if (gpsLocationProvider != null) {
-            final LocationManager locationManager = gpsLocationProvider.getLocationManager();
-            locationManager.removeUpdates(gpsLocationProvider);
             final String providerName = "test_provider" + String.valueOf(Calendar.getInstance().getTimeInMillis());
-            if (locationManager.getProvider(providerName) == null) {//provider has not yet been created
-                locationManager.addTestProvider(providerName, true, false, false, false, true, true,
-                        true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
-                locationManager.setTestProviderEnabled(providerName, true);
-                mapActivity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+            Runnable uiRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    LocationManager locationManager = gpsLocationProvider.getLocationManager();
+                    if(locationManager.getProvider(providerName) == null) {
+                        locationManager.removeUpdates(gpsLocationProvider);
+
+                        locationManager.addTestProvider(providerName, true, false, false, false, true, true,
+                                true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
+                        locationManager.setTestProviderEnabled(providerName, true);
                         locationManager.requestLocationUpdates(providerName,
                                 gpsLocationProvider.getLocationUpdateMinTime(),
                                 gpsLocationProvider.getLocationUpdateMinDistance(),
                                 gpsLocationProvider);
                     }
-                });
+
+                    //notify all other threads that are waiting that we're done
+                    synchronized (this) {
+                        this.notify();
+                    }
+                }
+            };
+
+            //run code that needs to be run on the UI thread but wait for that to finish
+            synchronized (uiRunnable) {
+                mapActivity.runOnUiThread(uiRunnable);
+
+                try {
+                    uiRunnable.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             return providerName;
         }

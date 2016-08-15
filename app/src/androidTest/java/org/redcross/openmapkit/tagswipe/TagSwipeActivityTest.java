@@ -56,6 +56,7 @@ import java.util.regex.Matcher;
  */
 @RunWith(AndroidJUnit4.class)
 public class TagSwipeActivityTest {
+    private static final String TAG = "TagSwipeActivityTest";
     private static final long UI_STANDARD_WAIT_TIME = 100l;//standard time to wait for a UI update
     private static final long UI_LONG_WAIT_TIME = 2000l;
     private Activity currentActivity;
@@ -73,6 +74,7 @@ public class TagSwipeActivityTest {
     @Test
     @Ignore
     public void testCheckLocationProviderDisabled() {
+        Log.i(TAG, "Running test testCheckLocationProviderDisabled");
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -102,6 +104,7 @@ public class TagSwipeActivityTest {
      */
     @Test
     public void testCheckLocationProviderEnabled() {
+        Log.i(TAG, "Running test testCheckLocationProviderEnabled");
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -129,6 +132,7 @@ public class TagSwipeActivityTest {
      */
     @Test
     public void testUpdateUserLocation() {
+        Log.i(TAG, "Running test testUpdateUserLocation");
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -170,7 +174,9 @@ public class TagSwipeActivityTest {
      * save to ODK button before a location fix is recorded
      */
     @Test
+    @Ignore
     public void testShowGpsSearchingDialog() {
+        Log.i(TAG, "Running test testShowGpsSearchingDialog");
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -190,8 +196,9 @@ public class TagSwipeActivityTest {
                             tagSwipeActivity.setOsmUsername("test");
                         }
                     });
-                    Espresso.onView(ViewMatchers.withText(R.string.waiting_for_user_location))
-                            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Assert.assertTrue(tagSwipeActivity.getGpsSearchingProgressDialog() != null);
+                    Assert.assertTrue(tagSwipeActivity.getGpsSearchingProgressDialog().isShowing());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     Assert.assertTrue(e.getMessage(), false);
@@ -207,6 +214,7 @@ public class TagSwipeActivityTest {
      */
     @Test
     public void testUserLocationTagsInOsmFile() {
+        Log.i(TAG, "Running test testUserLocationTagsInOsmFile");
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
@@ -217,7 +225,7 @@ public class TagSwipeActivityTest {
                 final Location location = new Location(testProvider);
                 location.setLatitude(-0.3212321d);
                 location.setLongitude(36.324324d);
-                location.setAccuracy(30.0f);
+                location.setAccuracy(9f);
                 location.setTime(System.currentTimeMillis());
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
                     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
@@ -231,9 +239,11 @@ public class TagSwipeActivityTest {
                     }
                 });
 
-                Espresso.onView(ViewMatchers.withText(R.string.save_to_odk_collect))
-                        .perform(ViewActions.click());
                 try {
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Espresso.onView(ViewMatchers.withText(R.string.save_to_odk_collect))
+                            .perform(ViewActions.click());
+
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
                     tagSwipeActivity.runOnUiThread(new Runnable() {
                         @Override
@@ -242,7 +252,7 @@ public class TagSwipeActivityTest {
                         }
                     });
 
-                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(UI_LONG_WAIT_TIME);
                     String osmFilePath = tagSwipeActivity.getOsmFilePath();
                     if(osmFilePath != null) {
                         try {
@@ -435,23 +445,39 @@ public class TagSwipeActivityTest {
      * @see com.mapbox.mapboxsdk.overlay.GpsLocationProvider
      */
     public static String createTestLocationProvider(final TagSwipeActivity tagSwipeActivity) {
-        final LocationManager locationManager = tagSwipeActivity.getLocationManager();
-        locationManager.removeUpdates(tagSwipeActivity.getLocationListener());
         final String providerName = "test_provider" + String.valueOf(Calendar.getInstance().getTimeInMillis());
-        if(locationManager.getProvider(providerName) == null) {//provider has not yet been created
-            locationManager.addTestProvider(providerName, true, false, false, false, true, true,
-                    true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
-            locationManager.setTestProviderEnabled(providerName, true);
-            tagSwipeActivity.setPreferredLocationProvider(providerName);
-            tagSwipeActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
+
+        Runnable uiRunnable = new Runnable() {
+            @Override
+            public void run() {
+                LocationManager locationManager = tagSwipeActivity.getLocationManager();
+                locationManager.removeUpdates(tagSwipeActivity.getLocationListener());
+
+                if(locationManager.getProvider(providerName) == null) {
+                    locationManager.addTestProvider(providerName, true, false, false, false, true, true,
+                            true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
+                    locationManager.setTestProviderEnabled(providerName, true);
+                    tagSwipeActivity.setPreferredLocationProvider(providerName);
                     locationManager.requestLocationUpdates(providerName,
                             0,
                             0,
                             tagSwipeActivity.getLocationListener());
                 }
-            });
+
+                synchronized (this) {
+                    this.notify();
+                }
+            }
+        };
+
+        synchronized (uiRunnable) {
+            tagSwipeActivity.runOnUiThread(uiRunnable);
+
+            try {
+                uiRunnable.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         return providerName;
     }

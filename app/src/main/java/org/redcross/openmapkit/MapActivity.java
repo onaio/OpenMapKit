@@ -82,6 +82,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected ImageButton mCloseListViewButton;
     protected ImageButton tagButton;
     protected ImageButton moveButton;
+    protected ImageButton deleteButton;
     protected Button nodeModeButton;
     protected Button addTagsButton;
     protected LinearLayout mTopLinearLayout;
@@ -94,6 +95,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private boolean moveNodeMode = false;
     private Dialog gpsCountdownDialog;
     private AlertDialog mbtilesDialog;
+    private AlertDialog deleteNodeDialog;
     public static final int TASK_INTERVAL_IN_MILLIS = 1000;
     private Timer mTimer;
     protected TimerTask timerTask;
@@ -188,6 +190,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         initializeNodeModeButton();
         initializeAddNodeButtons();
         initializeMoveNodeButtons();
+        initializeDeleteNodeButton();
 
         positionMap();
 
@@ -417,6 +420,13 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             return;
         }
 
+        //enable the delete button for newly added features
+        if(osmElement.getId() < 0) {
+            deleteButton.setVisibility(View.VISIBLE);
+        } else {
+            deleteButton.setVisibility(View.GONE);
+        }
+
         int numRequiredTags = 0;
         if (ODKCollectHandler.isODKCollectMode()) {
             Collection<ODKTag> requiredTags = ODKCollectHandler.getODKCollectData().getRequiredTags();
@@ -450,6 +460,31 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         //show the ListView under the map
         proportionMapAndList(50, 50);
+    }
+
+    private void launchDeleteDialog() {
+        if(deleteNodeDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.confirm_delete_node);
+            builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    deleteNode();
+                    dialogInterface.dismiss();
+                    proportionMapAndList(100, 0);
+                }
+            });
+
+            builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                }
+            });
+            deleteNodeDialog = builder.show();
+        } else {
+            deleteNodeDialog.show();
+        }
     }
 
     /**
@@ -573,6 +608,16 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         moveNodeMarkerBtn.setOnClickListener(listener);
     }
 
+    protected void initializeDeleteNodeButton() {
+        deleteButton = (ImageButton)findViewById(R.id.deleteButton);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                launchDeleteDialog();
+            }
+        });
+    }
+
     private void toggleNodeMode() {
         final Button addNodeBtn = (Button)findViewById(R.id.addNodeBtn);
         final ImageButton addNodeMarkerBtn = (ImageButton)findViewById(R.id.addNodeMarkerBtn);
@@ -609,7 +654,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         final OSMNode deletedNode = osmMap.deleteNode();
 
         Snackbar.make(findViewById(R.id.mapActivity),
-                "Deleted Node",
+                "Deleted Structure",
                 Snackbar.LENGTH_LONG)
                 .setAction("UNDO", new View.OnClickListener() {
                     // undo action
@@ -1094,5 +1139,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
     public boolean isMapInteractionEnabled () {
         return mapView.isInteractionEnabled();
+    }
+
+    public AlertDialog getDeleteNodeDialog() {
+        return deleteNodeDialog;
     }
 }

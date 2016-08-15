@@ -1,4 +1,5 @@
 {
+  "spray_status": {},
   "building": {
     "hide":true
   },
@@ -14,7 +15,8 @@
   },
   "shown_tag_2": {
     "hide":true,
-    "required":true
+    "required":true,
+    "default": "test"
   },
   "default_tag": {
     "default":"yes"
@@ -30,8 +32,5 @@
     "hide_if":{
       "default_tag":"no"
     }
-  },
-  "spray_status": {
-
   }
 }

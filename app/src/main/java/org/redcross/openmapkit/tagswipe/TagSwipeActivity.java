@@ -244,6 +244,10 @@ public class TagSwipeActivity extends ActionBarActivity {
         }
     }
 
+    public ProgressDialog getGpsSearchingProgressDialog() {
+        return gpsSearchingProgressDialog;
+    }
+
     private void pageToCorrectTag() {
         String tagKey = getIntent().getStringExtra("TAG_KEY");
         if (tagKey == null) return;
