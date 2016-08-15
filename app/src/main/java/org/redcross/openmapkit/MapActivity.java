@@ -469,7 +469,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    osmMap.deleteNode();
+                    deleteNode();
                     dialogInterface.dismiss();
                     proportionMapAndList(100, 0);
                 }
@@ -654,7 +654,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         final OSMNode deletedNode = osmMap.deleteNode();
 
         Snackbar.make(findViewById(R.id.mapActivity),
-                "Deleted Node",
+                "Deleted Structure",
                 Snackbar.LENGTH_LONG)
                 .setAction("UNDO", new View.OnClickListener() {
                     // undo action
