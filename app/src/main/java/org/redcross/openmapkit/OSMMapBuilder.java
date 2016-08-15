@@ -138,15 +138,19 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
             return;
         }
         for (File f : files) {
-            String absPath = f.getAbsolutePath();
-            if (loadedOSMFiles.contains(absPath)) {
-                jtsModel.removeDataSet(absPath);
-                loadedOSMFiles.remove(absPath);
-                persistedOSMFiles.remove(absPath);
-            }
+            removeOSMFileFromModel(f);
         }
         mapActivity.getMapView().invalidate();
         updateSharedPreferences();
+    }
+
+    public static void removeOSMFileFromModel(File file) {
+        String absPath = file.getAbsolutePath();
+        if (loadedOSMFiles.contains(absPath)) {
+            jtsModel.removeDataSet(absPath);
+            loadedOSMFiles.remove(absPath);
+            persistedOSMFiles.remove(absPath);
+        }
     }
     
     public static void addOSMFilesToModel(Set<File> files) {
