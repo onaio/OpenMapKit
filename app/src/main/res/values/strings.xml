@@ -87,4 +87,11 @@
     <string name="need_to_be_close_node">You need to be within %s to view details</string>
     <string name="confirm_delete_node">Are you sure you want to delete this structure?</string>
 
+    <string name="server_auth">Server Authentication</string>
+    <string name="odk_auth_instructions">Please enter the username and password for the server:</string>
+    <string name="server">Server</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="action_osmFromODK">OSM Data From ODK</string>
+
 </resources>

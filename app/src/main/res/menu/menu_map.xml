@@ -23,6 +23,9 @@
                 android:id="@+id/osmXmlLayers"
                 android:title="@string/action_osmsettings" />
             <item
+                android:id="@+id/osmFromODK"
+                android:title="@string/action_osmFromODK"/>
+            <item
                 android:id="@+id/info"
                 android:title="@string/action_info" />
             </menu>

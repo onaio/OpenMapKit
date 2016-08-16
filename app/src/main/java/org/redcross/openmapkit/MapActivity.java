@@ -55,6 +55,7 @@ import org.json.JSONException;
 import org.redcross.openmapkit.deployments.DeploymentsActivity;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
+import org.redcross.openmapkit.ona.OSMFromODKActivity;
 import org.redcross.openmapkit.server.MBTilesServer;
 import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 import org.xmlpull.v1.XmlPullParserException;
@@ -892,6 +893,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         } else if (id == R.id.action_save_to_odk_collect) {
             saveToODKCollectAndExit();
             return true;
+        } else if (id == R.id.osmFromODK) {
+            launchOSMFromODKActivity();
         }
         return false;
     }
@@ -899,6 +902,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private void launchDeploymentsActivity() {
         Intent deploymentsActivity = new Intent(getApplicationContext(), DeploymentsActivity.class);
         startActivity(deploymentsActivity);
+    }
+
+    private void launchOSMFromODKActivity() {
+        Intent intent = new Intent(getApplicationContext(), OSMFromODKActivity.class);
+        startActivity(intent);
     }
 
     public void clickMbtilesPositiveButton() {
@@ -928,7 +936,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 //present OSM Feature tags in bottom ListView
                 identifyOSMFeature(tappedOSMElement);
             } else {
-                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), LocationXMLParser.getProximityRadius()+"m");
+                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), LocationXMLParser.getProximityRadius() + "m");
                 Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
             }
         }
