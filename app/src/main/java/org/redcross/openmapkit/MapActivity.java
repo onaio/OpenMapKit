@@ -55,6 +55,7 @@ import org.json.JSONException;
 import org.redcross.openmapkit.deployments.DeploymentsActivity;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
+import org.redcross.openmapkit.ona.OSMFromODKActivity;
 import org.redcross.openmapkit.server.MBTilesServer;
 import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 import org.xmlpull.v1.XmlPullParserException;
@@ -893,6 +894,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         } else if (id == R.id.action_save_to_odk_collect) {
             saveToODKCollectAndExit();
             return true;
+        } else if (id == R.id.osmFromODK) {
+            launchOSMFromODKActivity();
         }
         return false;
     }
@@ -900,6 +903,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private void launchDeploymentsActivity() {
         Intent deploymentsActivity = new Intent(getApplicationContext(), DeploymentsActivity.class);
         startActivity(deploymentsActivity);
+    }
+
+    private void launchOSMFromODKActivity() {
+        Intent intent = new Intent(getApplicationContext(), OSMFromODKActivity.class);
+        startActivity(intent);
     }
 
     public void clickMbtilesPositiveButton() {

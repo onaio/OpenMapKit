@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
+        android:name=".OpenMapKit"
         android:allowBackup="true"
         android:icon="@mipmap/ic_omk_nobg_green"
         android:label="@string/app_name"
@@ -57,12 +58,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.redcross.openmapkit.deployments.DeploymentsActivity" />
         </activity>
-        <activity android:name=".ZXingActivity"
+        <activity
+            android:name=".ZXingActivity"
             android:screenOrientation="fullSensor"
             android:stateNotNeeded="true"
             android:theme="@style/zxing_CaptureTheme"
-            android:windowSoftInputMode="stateAlwaysHidden">
-        </activity>
+            android:windowSoftInputMode="stateAlwaysHidden"></activity>
+        <activity android:name=".ona.OSMFromODKActivity"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>
