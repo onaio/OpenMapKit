@@ -929,8 +929,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 //present OSM Feature tags in bottom ListView
                 identifyOSMFeature(tappedOSMElement);
             } else {
-                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), LocationXMLParser.getProximityRadius()+"m");
+                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), LocationXMLParser.getProximityRadius() + "m");
                 Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
+                proportionMapAndList(100, 0);
             }
         }
     }
