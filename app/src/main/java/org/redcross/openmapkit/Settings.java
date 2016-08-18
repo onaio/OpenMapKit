@@ -21,12 +21,17 @@ public class Settings {
     private static final String SUB_PROXIMITY = "proximity";
 
     //defaults
-    private static final String DEFAULT_OSM_FROM_ODK_SERVER = "https://api.ona.io/api/v1/osm/";
     public static final double DEFAULT_PROXIMITY_RADIUS = 50d;
     public static final boolean DEFAULT_PROXIMITY_CHECK = false;
     public static final int DEFAULT_GPS_TIMER_DELAY = 0;
     public static final float DEFAULT_GPS_PROXIMITY_ACCURACY = 25f;
     public static final boolean DEFAULT_PROXIMITY_ENABLED = false;
+    public static final String DEFAULT_OSM_FROM_ODK_QUERY = null;
+    public static final String DEFAULT_OSM_FROM_ODK_SERVER = "https://api.ona.io/api/v1/osm/";
+    public static final String DEFAULT_OSM_FROM_ODK_USERNAME = null;
+    public static final String DEFAULT_OSM_FROM_ODK_PASSWORD = null;
+    public static final ArrayList<Form> DEFAULT_OSM_FROM_ODK_FORMS = new ArrayList<>();
+
 
     private static Settings instance;
     private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
@@ -39,6 +44,7 @@ public class Settings {
     }
 
     private Settings() {
+        proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
         data = new JSONObject();
         if(ODKCollectHandler.isODKCollectMode()) {
             String formFileName = ODKCollectHandler.getODKCollectData().getFormFileName();
@@ -79,12 +85,13 @@ public class Settings {
     }
 
     public ArrayList<Form> getOSMFromODKForms() {
-        ArrayList<Form> forms = new ArrayList<>();
+        ArrayList<Form> forms = DEFAULT_OSM_FROM_ODK_FORMS;
         if(data != null) {
             try {
                 JSONObject osmFromODK = getOSMFromODKSub();
                 if(osmFromODK.has("forms")) {
                     JSONArray formsJsonArray = osmFromODK.getJSONArray("forms");
+                    forms = new ArrayList<>();
                     for(int i = 0; i < formsJsonArray.length(); i++) {
                         forms.add(new Form(null, formsJsonArray.getInt(i)));
                     }
@@ -98,7 +105,7 @@ public class Settings {
     }
 
     public String getOSMFromODKServer() {
-        String server = null;
+        String server = DEFAULT_OSM_FROM_ODK_SERVER;
         if(data != null) {
             try {
                 JSONObject osmFromODK = getOSMFromODKSub();
@@ -111,7 +118,7 @@ public class Settings {
     }
 
     public String getOSMFromODKUsername() {
-        String username = null;
+        String username = DEFAULT_OSM_FROM_ODK_USERNAME;
         if(data != null) {
             try {
                 JSONObject osmFromODK = getOSMFromODKSub();
@@ -124,7 +131,7 @@ public class Settings {
     }
 
     public String getOSMFromODKPassword() {
-        String password = null;
+        String password = DEFAULT_OSM_FROM_ODK_PASSWORD;
         if(data != null) {
             try {
                 JSONObject osmFromODK = getOSMFromODKSub();
@@ -137,7 +144,7 @@ public class Settings {
     }
 
     public String getOSMFromODKQuery() {
-        String query = null;
+        String query = DEFAULT_OSM_FROM_ODK_QUERY;
         if(data != null) {
             try {
                 JSONObject osmFromODK = getOSMFromODKSub();

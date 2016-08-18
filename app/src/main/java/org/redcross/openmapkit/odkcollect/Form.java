@@ -32,4 +32,15 @@ public class Form {
         File osmDirectory = new File(ExternalStorage.getOSMDir());
         return new File(osmDirectory, getOsmFileName());
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if(object instanceof Form) {
+            Form b = (Form) object;
+            if(((name == null && b.name == null)|| name.equals(b.name)) && id == b.id) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -1,10 +1,10 @@
 {
   "osm_from_odk":{
-    "query":"target_area",
-    "forms":[79639,98995],
-    "server":"https://api.ona.io/api/v1/osm/",
-    "username":"ukdemo",
-    "password":"demo"
+    "query":"test_query",
+    "forms":[1234,5678],
+    "server":"https://api.ona.io/api/v1/data/",
+    "username":"testuser",
+    "password":"testpassword"
   },
   "proximity":{
     "proximity_check":true,

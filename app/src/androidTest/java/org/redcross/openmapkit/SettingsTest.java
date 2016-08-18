@@ -9,6 +9,7 @@ import android.util.Log;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.redcross.openmapkit.odkcollect.Form;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -64,7 +65,7 @@ public class SettingsTest {
         Settings.initialize();
         /*
         make sure the values in androidTest/assets/settings/omk_functional_test.json are not the
-        default settings in LocationXMLParser
+        default settings
          */
         assertTrue(Settings.singleton().getProximityRadius() != Settings.DEFAULT_PROXIMITY_RADIUS);
         assertTrue(Settings.singleton().getProximityCheck() != Settings.DEFAULT_PROXIMITY_CHECK);
@@ -91,5 +92,34 @@ public class SettingsTest {
 
         Settings.setProximityEnabled(true);
         assertTrue(Settings.isProximityEnabled());
+    }
+
+    /**
+     * This method tests whether the OSM from ODK configuration variables are those set in the
+     * sample instrumentation json file and not the default ones in Settings. Please make
+     * sure the values in the omk_functional_test.json file under androidTest/assets does not have
+     * similar default configurations in Settings
+     */
+    @Test
+    public void testOsmFromOdkSettings() {
+        Settings.initialize();
+        /*
+        make sure the values in androidTest/assets/settings/omk_functional_test.json are not the
+        default settings
+         */
+        assertFalse(Settings.singleton().getOSMFromODKUsername().equals(Settings.DEFAULT_OSM_FROM_ODK_USERNAME));
+        assertFalse(Settings.singleton().getOSMFromODKPassword().equals(Settings.DEFAULT_OSM_FROM_ODK_PASSWORD));
+        assertFalse(Settings.singleton().getOSMFromODKServer().equals(Settings.DEFAULT_OSM_FROM_ODK_SERVER));
+        assertFalse(Settings.singleton().getOSMFromODKQuery().equals(Settings.DEFAULT_OSM_FROM_ODK_QUERY));
+        assertFalse(Settings.singleton().getOSMFromODKForms().size() == 0);
+
+        assertEquals(Settings.singleton().getOSMFromODKUsername(), "testuser");
+        assertEquals(Settings.singleton().getOSMFromODKPassword(), "testpassword");
+        assertEquals(Settings.singleton().getOSMFromODKServer(), "https://api.ona.io/api/v1/data/");
+        assertEquals(Settings.singleton().getOSMFromODKQuery(), "test_query");
+        assertTrue(Settings.singleton().getOSMFromODKForms().contains(new Form(null, 1234)));
+        assertTrue(Settings.singleton().getOSMFromODKForms().contains(new Form(null, 5678)));
+        Log.d("SettingsTest", "size = "+Settings.singleton().getOSMFromODKForms().size());
+        assertTrue(Settings.singleton().getOSMFromODKForms().size() == 2);
     }
 }
