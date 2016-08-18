@@ -31,8 +31,12 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         File odkInstanceDir = new File(sdcardPath + "/odk/instances/omk_functional_test");
         odkInstanceDir.mkdirs();
 
-        File omkDirectory = new File(sdcardPath + "/" + ExternalStorage.APP_DIR);
-        omkDirectory.mkdirs();
+        //delete and recreate the OpenMapKit directory on the SDCard
+        File appDir = new File(sdcardPath+"/"+ExternalStorage.APP_DIR);
+        if(appDir.exists()) {
+            appDir.delete();
+        }
+        ExternalStorage.checkOrCreateAppDirs();
 
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");

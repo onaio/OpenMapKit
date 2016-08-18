@@ -1,0 +1,15 @@
+{
+  "osm_from_odk":{
+    "query":"target_area",
+    "forms":[79639,98995],
+    "server":"https://api.ona.io/api/v1/osm/",
+    "username":"ukdemo",
+    "password":"demo"
+  },
+  "proximity":{
+    "proximity_check":true,
+    "proximity_radius":100,
+    "max_gps_timer_delay":10,
+    "gps_proximity_accuracy":10
+  }
+}
