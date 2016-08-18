@@ -1,4 +1,4 @@
-package org.redcross.openmapkit.ona;
+package org.redcross.openmapkit.odkcollect;
 
 import org.redcross.openmapkit.Strings;
 
