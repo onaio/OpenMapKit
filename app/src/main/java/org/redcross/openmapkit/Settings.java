@@ -1,9 +1,13 @@
-package org.redcross.openmapkit.ona;
+package org.redcross.openmapkit;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.redcross.openmapkit.odkcollect.Form;
+import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -16,7 +20,7 @@ public class Settings {
     private static final String SUB_OSM_FROM_ODK = "osm_from_odk";
 
 
-    private static final String DEFAULT_OSM_FROM_ODK_SERVER = "https://api.ona.io/api/v1";
+    private static final String DEFAULT_OSM_FROM_ODK_SERVER = "https://api.ona.io/api/v1/osm/";
 
     private JSONObject data;
 
@@ -27,6 +31,16 @@ public class Settings {
 
     private Settings() {
         data = new JSONObject();
+        if(ODKCollectHandler.isODKCollectMode()) {
+            String formFileName = ODKCollectHandler.getODKCollectData().getFormFileName();
+            try {
+                File file = ExternalStorage.fetchSettingsFile(formFileName);
+                String settingsString = FileUtils.readFileToString(file);
+                data = new JSONObject(settingsString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static Settings singleton() {
@@ -44,12 +58,6 @@ public class Settings {
                 || data.getJSONObject(SUB_OSM_FROM_ODK).getString("server").trim().length() == 0) {
             data.getJSONObject(SUB_OSM_FROM_ODK).put("server", DEFAULT_OSM_FROM_ODK_SERVER);
         }
-
-        //TODO:remove
-        JSONArray forms = new JSONArray();
-        forms.put(79639);
-        data.getJSONObject(SUB_OSM_FROM_ODK).put("forms", forms);
-
         return data.getJSONObject(SUB_OSM_FROM_ODK);
     }
 
@@ -111,54 +119,18 @@ public class Settings {
         return password;
     }
 
-    public JSONObject getOSMFromODKQuery() {
-        JSONObject query = null;
+    public String getOSMFromODKQuery() {
+        String query = null;
         if(data != null) {
             try {
                 JSONObject osmFromODK = getOSMFromODKSub();
                 if(osmFromODK.has("query")) {
-                    query = osmFromODK.getJSONObject("query");
+                    query = osmFromODK.getString("query");
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
         return query;
-    }
-
-    public void setOSMFromODKServer(String server) {
-        if(data == null) {
-            data = new JSONObject();
-        }
-        try {
-            JSONObject osmFromODK = getOSMFromODKSub();
-            osmFromODK.put("server", server);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void setOSMFromODKUsername(String username) {
-        if(data == null) {
-            data = new JSONObject();
-        }
-        try {
-            JSONObject osmFromODK = getOSMFromODKSub();
-            osmFromODK.put("username", username);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void setOSMFromODKPassword(String password) {
-        if(data == null) {
-            data = new JSONObject();
-        }
-        try {
-            JSONObject osmFromODK = getOSMFromODKSub();
-            osmFromODK.put("password", password);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 }

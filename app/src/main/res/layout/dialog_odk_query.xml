@@ -8,46 +8,20 @@
     android:paddingLeft="25dp"
     android:paddingRight="25dp">
     <TextView
+        android:id="@+id/instructionsTV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/odk_auth_instructions"
         android:layout_marginBottom="15dp"/>
 
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <EditText
-            android:id="@+id/serverET"
+            android:id="@+id/filterET"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/server"
+            android:hint="@string/filter"
             android:inputType="textUri"
-            android:maxLines="1"
-            android:singleLine="true" />
-    </android.support.design.widget.TextInputLayout>
-
-    <android.support.design.widget.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <EditText
-            android:id="@+id/usernameET"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/username"
-            android:inputType="text"
-            android:maxLines="1"
-            android:singleLine="true" />
-    </android.support.design.widget.TextInputLayout>
-
-    <android.support.design.widget.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <EditText
-            android:id="@+id/passwordET"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/password"
-            android:inputType="textPassword"
             android:maxLines="1"
             android:singleLine="true" />
     </android.support.design.widget.TextInputLayout>
