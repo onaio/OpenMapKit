@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Base64;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,6 +15,8 @@ import org.redcross.openmapkit.Settings;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
@@ -57,14 +60,20 @@ public class FormOSMDownloader extends AsyncTask<Void, Void, Void> {
         downloading = true;
 
         //remove file from directory
-        String destPath = ExternalStorage.getOSMDir() + String.valueOf(form.getId()) + ".osm";
-        File destination = new File(destPath);
+        File destination = form.getLocalOsmFile();
         if(destination.exists()) {
             destination.delete();
         }
 
         //start the new download
-        String url = server + String.valueOf(form.getId()) + ".osm";
+        String url = null;
+        try {
+            if(!server.endsWith("/")) server = server + "/";
+            URL serverUrl = new URL(server);
+            url = new URL(serverUrl, form.getOsmFileName()).toString();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
         if(query != null) {
             JSONObject queryObject = new JSONObject();
             try {
@@ -85,7 +94,7 @@ public class FormOSMDownloader extends AsyncTask<Void, Void, Void> {
             String credentials = username + ":" + password;
             request.addRequestHeader("Authorization", "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.URL_SAFE));
         }
-        request.setDestinationInExternalPublicDir(ExternalStorage.getOSMDirRelativeToExternalDir(), form.getId()+".osm");
+        request.setDestinationInExternalPublicDir(ExternalStorage.getOSMDirRelativeToExternalDir(), form.getOsmFileName());
 
         if(form.getName() == null || form.getName().trim().length() == 0) {
             request.setTitle(String.valueOf(form.getId()));
