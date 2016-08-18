@@ -1,5 +1,7 @@
 package org.redcross.openmapkit;
 
+import android.util.Log;
+
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,13 +16,20 @@ import java.util.ArrayList;
  * Created by Jason Rogena - jrogena@ona.io on 8/16/16.
  */
 public class Settings {
-    private static Settings instance;
-
     //sub settings
     private static final String SUB_OSM_FROM_ODK = "osm_from_odk";
+    private static final String SUB_PROXIMITY = "proximity";
 
-
+    //defaults
     private static final String DEFAULT_OSM_FROM_ODK_SERVER = "https://api.ona.io/api/v1/osm/";
+    public static final double DEFAULT_PROXIMITY_RADIUS = 50d;
+    public static final boolean DEFAULT_PROXIMITY_CHECK = false;
+    public static final int DEFAULT_GPS_TIMER_DELAY = 0;
+    public static final float DEFAULT_GPS_PROXIMITY_ACCURACY = 25f;
+    public static final boolean DEFAULT_PROXIMITY_ENABLED = false;
+
+    private static Settings instance;
+    private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
 
     private JSONObject data;
 
@@ -59,6 +68,14 @@ public class Settings {
             data.getJSONObject(SUB_OSM_FROM_ODK).put("server", DEFAULT_OSM_FROM_ODK_SERVER);
         }
         return data.getJSONObject(SUB_OSM_FROM_ODK);
+    }
+
+    private JSONObject getProximitySub() throws JSONException {
+        if(!data.has(SUB_PROXIMITY)) {
+            data.put(SUB_PROXIMITY, new JSONObject());
+        }
+
+        return data.getJSONObject(SUB_PROXIMITY);
     }
 
     public ArrayList<Form> getOSMFromODKForms() {
@@ -132,5 +149,81 @@ public class Settings {
             }
         }
         return query;
+    }
+
+    /**
+     *
+     * @return proximity proximityRadius around user location.
+     */
+    public double getProximityRadius() {
+        double proximityRadius = DEFAULT_PROXIMITY_RADIUS;
+        try {
+            JSONObject proximitySettings = getProximitySub();
+            if(proximitySettings.has("proximity_radius")) {
+                proximityRadius = proximitySettings.getDouble("proximity_radius");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return proximityRadius;
+    }
+
+    /**
+     *
+     * @return true if GPS must be enabled to show user location.
+     */
+    public boolean getProximityCheck() {
+        boolean proximityCheck = DEFAULT_PROXIMITY_CHECK;
+        try {
+            JSONObject proximitySettings = getProximitySub();
+            if(proximitySettings.has("proximity_check")) {
+                proximityCheck = proximitySettings.getBoolean("proximity_check");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return proximityCheck;
+    }
+
+    /**
+     *
+     * @param value set whether to apply proximity settings.
+     */
+    public static void setProximityEnabled(boolean value) {
+        proximityEnabled = value;
+    }
+
+    /**
+     *
+     * @return true if proximity settings should be applied.
+     */
+    public static boolean isProximityEnabled() {
+        return proximityEnabled;
+    }
+
+    public int getGpsTimerDelay() {
+        int gpsTimerDelay = DEFAULT_GPS_TIMER_DELAY;
+        try {
+            JSONObject proximitySettings = getProximitySub();
+            if(proximitySettings.has("max_gps_timer_delay")) {
+                gpsTimerDelay = proximitySettings.getInt("max_gps_timer_delay");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return gpsTimerDelay;
+    }
+
+    public double getGpsProximityAccuracy() {
+        double gpsProximityAccuracy = DEFAULT_GPS_PROXIMITY_ACCURACY;
+        try {
+            JSONObject proximitySettings = getProximitySub();
+            if(proximitySettings.has("gps_proximity_accuracy")) {
+                gpsProximityAccuracy = proximitySettings.getDouble("gps_proximity_accuracy");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return gpsProximityAccuracy;
     }
 }
