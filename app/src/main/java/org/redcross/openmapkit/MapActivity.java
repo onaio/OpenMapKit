@@ -214,22 +214,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         positionMap();
 
         initializeListView();
-
-        //Initialize location settings.
-        try {
-            LocationXMLParser.parseXML(this);
-        } catch (XmlPullParserException | IOException e) {
-            e.printStackTrace();
-        }
-
         initLocationManager();
 
         // Proximity is disabled until there is a GPS fix.
-        LocationXMLParser.setProximityEnabled(false);
+        Settings.setProximityEnabled(false);
 
-        if (isGPSEnabled() && LocationXMLParser.getProximityCheck()) {
+        if (isGPSEnabled() && Settings.singleton().getProximityCheck()) {
             // Start GPS progress
-            initialCountdownValue = LocationXMLParser.getGpsTimerDelay();
+            initialCountdownValue = Settings.singleton().getGpsTimerDelay();
             showProgressDialog();
         }
 
@@ -241,15 +233,15 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onLocationChanged(Location location) {
                 lastLocation = location;
-                if(LocationXMLParser.getProximityCheck()) {
-                    if(location.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
-                        if(!LocationXMLParser.isProximityEnabled()) {
+                if(Settings.singleton().getProximityCheck()) {
+                    if(location.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
+                        if(!Settings.singleton().isProximityEnabled()) {
                             //means this is the first time a location fix for the user has been gotten
                             if(!isUserLocationEnabled()) {
                                 toggleUserLocation();//zoom into the user's current position
                             }
                         }
-                        LocationXMLParser.setProximityEnabled(true);
+                        Settings.singleton().setProximityEnabled(true);
                     }
                 }
             }
@@ -649,9 +641,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
             mapView.setInteractionEnabled(true);
         } else {
-            if(LocationXMLParser.getProximityCheck()) {
+            if(Settings.singleton().getProximityCheck()) {
                 //check user's last location is accurate enough
-                if(lastLocation != null && lastLocation.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
+                if(lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
                     if(!isUserLocationEnabled()) {
                         toggleUserLocation();
                     }
@@ -690,7 +682,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void toggleMoveNodeMode() {
-        if(!LocationXMLParser.getProximityCheck()) {
+        if(!Settings.singleton().getProximityCheck()) {
             final ImageButton moveNodeModeBtn = (ImageButton)findViewById(R.id.moveNodeModeBtn);
             final ImageButton moveNodeMarkerBtn = (ImageButton)findViewById(R.id.moveNodeMarkerBtn);
             final Button moveNodeBtn = (Button)findViewById(R.id.moveNodeBtn);
@@ -961,7 +953,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 //present OSM Feature tags in bottom ListView
                 identifyOSMFeature(tappedOSMElement);
             } else {
-                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), LocationXMLParser.getProximityRadius() + "m");
+                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
                 Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
                 proportionMapAndList(100, 0);
             }
@@ -977,13 +969,13 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      *          the {@link com.spatialdev.osm.model.OSMElement}
      */
     public boolean isWithinUserProximity(OSMElement tappedOSMOsmElement) {
-        if(LocationXMLParser.getProximityCheck()) {
+        if(Settings.singleton().getProximityCheck()) {
             if (tappedOSMOsmElement != null) {
                 Geometry geometry = tappedOSMOsmElement.getJTSGeom();
                 if(geometry != null && lastLocation != null) {
                     Point elementCentroid = geometry.getCentroid();
                     LatLng centroidLatLng = new LatLng(elementCentroid.getCoordinate().y, elementCentroid.getCoordinate().x);
-                    if(centroidLatLng.distanceTo(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())) <= LocationXMLParser.getProximityRadius()) {
+                    if(centroidLatLng.distanceTo(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())) <= Settings.singleton().getProximityRadius()) {
                         return true;
                     }
                 }
@@ -1127,7 +1119,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void doCountDown() {
-        boolean foundGpsLocation = LocationXMLParser.isProximityEnabled();
+        boolean foundGpsLocation = Settings.isProximityEnabled();
         if (initialCountdownValue-- == 0 || foundGpsLocation) {
             gpsCountdownDialog.dismiss();
             if (foundGpsLocation) {
@@ -1343,8 +1335,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         if(downloadingForms != null
                 && successfulForms != null
                 &&(downloadingForms.size() + successfulForms.size()) > 0) {
-            Log.d("DownloadManager", "Max = " + String.valueOf(downloadingForms.size() + successfulForms.size()));
-            Log.d("DownloadManager", "Prog = " + String.valueOf(successfulForms.size()));
             progressDialog.setMax(downloadingForms.size() + successfulForms.size());
             progressDialog.setProgress(successfulForms.size());
 
