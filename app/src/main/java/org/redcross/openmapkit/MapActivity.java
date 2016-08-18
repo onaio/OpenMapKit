@@ -1290,8 +1290,27 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             downloadingForms.remove(form.getId());
             successfulForms.put(form.getId(), form);
             updateOsmFromOdkProgress();
+
+            if(downloadingForms.size() == 0) {//no more forms downloading
+                loadOSMFromODK();
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void loadOSMFromODK() {
+        ArrayList<Form> forms = Settings.singleton().getOSMFromODKForms();
+        Set<File> osmFiles = new HashSet<>();
+        for(Form curForm : forms) {
+            if(curForm.getLocalOsmFile().exists()) {
+                osmFiles.add(curForm.getLocalOsmFile());
+            }
+        }
+
+        if(osmFiles.size() == forms.size()) {
+            OSMMapBuilder.removeOSMFilesFromModel(osmFiles);
+            OSMMapBuilder.addOSMFilesToModel(osmFiles);
         }
     }
 

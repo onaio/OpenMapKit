@@ -1,6 +1,8 @@
 package org.redcross.openmapkit.odkcollect;
 
-import org.redcross.openmapkit.Strings;
+import org.redcross.openmapkit.ExternalStorage;
+
+import java.io.File;
 
 /**
  * Created by Jason Rogena - jrogena@ona.io on 8/16/16.
@@ -20,5 +22,14 @@ public class Form {
 
     public int getId() {
         return id;
+    }
+
+    public String getOsmFileName() {
+        return String.valueOf(id)+".osm";
+    }
+
+    public File getLocalOsmFile() {
+        File osmDirectory = new File(ExternalStorage.getOSMDir());
+        return new File(osmDirectory, getOsmFileName());
     }
 }
