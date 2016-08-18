@@ -1,6 +1,0 @@
-<settings>
-  <proximity_check>true</proximity_check>
-  <proximity_radius>100</proximity_radius>
-  <max_gps_timer_delay>10</max_gps_timer_delay><!--maximum time in seconds for showing the GPS countdown dialog-->
-  <gps_proximity_accuracy>10</gps_proximity_accuracy><!--accuracy threshold below which the GPS countdown dialog is hidden-->
-</settings>
