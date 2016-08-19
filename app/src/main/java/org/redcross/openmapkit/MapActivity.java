@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
@@ -1169,7 +1170,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         return deleteNodeDialog;
     }
 
-    private void showOdkQueryDialog() {
+    public void showOdkQueryDialog() {
         if(Settings.singleton().getOSMFromODKQuery() != null) {
             final SharedPreferences sharedPreferences = getSharedPreferences("org.redcross.openmapkit.USER_NAME", Context.MODE_PRIVATE);
             if (odkQueryDialog == null) {
@@ -1230,6 +1231,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         }
     }
 
+    public Dialog getOdkQuDialog() {
+        return odkQueryDialog;
+    }
+
+    public ProgressDialog getOSMFromODKProgressDialog() {
+        return progressDialog;
+    }
+
     private void startDownload() {
         //stop all previous downloads
         FormOSMDownloader.clearOngoingDownloads(getApplicationContext());
@@ -1245,6 +1254,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         updateOsmFromOdkProgress();
     }
+
+    @Override
+    public void onStart(Form form) {}
 
     @Override
     public void onFail(final Form form) {

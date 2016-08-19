@@ -2,9 +2,9 @@
   "osm_from_odk":{
     "query":"test_query",
     "forms":[1234,5678],
-    "server":"https://api.ona.io/api/v1/data/",
-    "username":"testuser",
-    "password":"testpassword"
+    "server":"https://stage-api.ona.io/api/v1/data/",
+    "username":"testomkuser",
+    "password":"testomkpassword"
   },
   "proximity":{
     "proximity_check":true,

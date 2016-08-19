@@ -1,5 +1,7 @@
 package org.redcross.openmapkit;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.location.Criteria;
 import android.location.LocationManager;
@@ -37,12 +39,14 @@ import org.hamcrest.CoreMatchers;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matchers;
 import org.hamcrest.object.HasToString;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.redcross.openmapkit.odkcollect.FormOSMDownloader;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 import java.io.File;
@@ -62,6 +66,7 @@ public class MapActivityTest {
     private static final String ROUNDED_BUTTON_LABEL = "Add Structure";
     public static final long GPS_DIALOG_TIMEOUT = 10100l;
     private static final long UI_STANDARD_WAIT_TIME = 100l;//standard time to wait for a UI update
+    private static final long UI_LONG_WAIT_TIME = 500l;//standard time to wait for a UI update
     private Activity currentActivity;
     /*
     Launch the MapActivity with touch mode set to true (nothing is in focus and nothing is initially
@@ -644,6 +649,85 @@ public class MapActivityTest {
                 }
 
                 gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
+            }
+        });
+    }
+
+    /**
+     * This method tests whether the OSM Form ODK query dialog is shown when the OSM From ODK menu
+     * item is clicked.
+     */
+    @Test
+    public void testOSMFromODK_QueryDialogShowing() {
+        Log.i(TAG, "Running test testOSMFromODK_QueryDialogShowing");
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(mapActivity);
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(testProvider);
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
+
+                try {
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
+
+                    mapActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mapActivity.showOdkQueryDialog();
+                        }
+                    });
+
+                    Thread.sleep(UI_LONG_WAIT_TIME);
+
+                    //check if the odkQueryDialog is showing
+                    final Dialog queryDialog = mapActivity.getOdkQuDialog();
+                    assertTrue(queryDialog != null);
+                    assertTrue(queryDialog.isShowing());
+
+                    Settings.singleton().setOSMFromODKUsername(Settings.DEFAULT_OSM_FROM_ODK_USERNAME);
+                    Settings.singleton().setOSMFromODKPassword(Settings.DEFAULT_OSM_FROM_ODK_PASSWORD);
+                    Settings.singleton().setOSMFromODKQuery(Settings.DEFAULT_OSM_FROM_ODK_QUERY);
+                    Settings.singleton().setOSMFromODKServer(Settings.DEFAULT_OSM_FROM_ODK_SERVER);
+                    JSONArray formArray = new JSONArray();
+                    formArray.put(79639);
+                    formArray.put(80159);
+                    Settings.singleton().setOSMFromODKForms(formArray);
+
+                    //clear all ongoing downloads
+                    FormOSMDownloader.clearOngoingDownloads(mapActivity.getApplicationContext());
+                    assertEquals(FormOSMDownloader.getOngoingDownloadIds().size(), 0);
+
+                    //press the ok button and check if the downloads have started
+                    mapActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Button okButton = (Button) queryDialog.findViewById(R.id.okB);
+                            okButton.performClick();
+                        }
+                    });
+
+                    Thread.sleep(UI_LONG_WAIT_TIME);
+
+                    ProgressDialog progressDialog = mapActivity.getOSMFromODKProgressDialog();
+
+                    assertTrue(progressDialog != null);
+                    assertTrue(progressDialog.isShowing());
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }

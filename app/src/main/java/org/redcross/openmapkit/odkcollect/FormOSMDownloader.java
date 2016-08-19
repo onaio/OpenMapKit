@@ -53,17 +53,14 @@ public class FormOSMDownloader extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
+        //remove file from directory
+        deleteLocalOsmFile();
+        onFileDownload.onStart(form);
     }
 
     @Override
     protected Void doInBackground(Void... voids) {
         downloading = true;
-
-        //remove file from directory
-        File destination = form.getLocalOsmFile();
-        if(destination.exists()) {
-            destination.delete();
-        }
 
         //start the new download
         String url = null;
@@ -152,6 +149,21 @@ public class FormOSMDownloader extends AsyncTask<Void, Void, Void> {
         }
     }
 
+    public void deleteLocalOsmFile() {
+        File destination = form.getLocalOsmFile();
+        if(destination.exists()) {
+            destination.delete();
+        }
+    }
+
+    public static ArrayList<Long> getOngoingDownloadIds() {
+        ArrayList<Long> downloadIds = new ArrayList<>();
+        if(ongoingDownloads != null) {
+            downloadIds = new ArrayList<>(ongoingDownloads);//clone the ongoingDownloads object to prevent reference manipulation from somewhere else
+        }
+        return downloadIds;
+    }
+
     public static void clearOngoingDownloads(Context context) {
         DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
         if(ongoingDownloads != null) {
@@ -178,6 +190,7 @@ public class FormOSMDownloader extends AsyncTask<Void, Void, Void> {
     }
 
     public interface OnFileDownload {
+        void onStart(Form form);
         void onFail(Form form);
         void onSuccess(Form form);
     }

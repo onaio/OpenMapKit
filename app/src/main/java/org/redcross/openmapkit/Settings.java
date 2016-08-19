@@ -130,6 +130,61 @@ public class Settings {
         return username;
     }
 
+    public void setOSMFromODKUsername(String username) {
+        if(data != null) {
+            try {
+                JSONObject osmFromODK = getOSMFromODKSub();
+                osmFromODK.put("username", username);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setOSMFromODKPassword(String password) {
+        if(data != null) {
+            try {
+                JSONObject osmFromODK = getOSMFromODKSub();
+                osmFromODK.put("password", password);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setOSMFromODKQuery(String query) {
+        if(data != null) {
+            try {
+                JSONObject osmFromODK = getOSMFromODKSub();
+                osmFromODK.put("query", query);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setOSMFromODKServer(String server) {
+        if(data != null) {
+            try {
+                JSONObject osmFromODK = getOSMFromODKSub();
+                osmFromODK.put("server", server);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setOSMFromODKForms(JSONArray forms) {
+        if(data != null) {
+            try {
+                JSONObject osmFromODK = getOSMFromODKSub();
+                osmFromODK.put("forms", forms);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public String getOSMFromODKPassword() {
         String password = DEFAULT_OSM_FROM_ODK_PASSWORD;
         if(data != null) {
