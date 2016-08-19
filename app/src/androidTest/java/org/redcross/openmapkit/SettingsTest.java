@@ -113,9 +113,9 @@ public class SettingsTest {
         assertFalse(Settings.singleton().getOSMFromODKQuery().equals(Settings.DEFAULT_OSM_FROM_ODK_QUERY));
         assertFalse(Settings.singleton().getOSMFromODKForms().size() == 0);
 
-        assertEquals(Settings.singleton().getOSMFromODKUsername(), "testuser");
-        assertEquals(Settings.singleton().getOSMFromODKPassword(), "testpassword");
-        assertEquals(Settings.singleton().getOSMFromODKServer(), "https://api.ona.io/api/v1/data/");
+        assertEquals(Settings.singleton().getOSMFromODKUsername(), "testomkuser");
+        assertEquals(Settings.singleton().getOSMFromODKPassword(), "testomkpassword");
+        assertEquals(Settings.singleton().getOSMFromODKServer(), "https://stage-api.ona.io/api/v1/data/");
         assertEquals(Settings.singleton().getOSMFromODKQuery(), "test_query");
         assertTrue(Settings.singleton().getOSMFromODKForms().contains(new Form(null, 1234)));
         assertTrue(Settings.singleton().getOSMFromODKForms().contains(new Form(null, 5678)));
