@@ -122,4 +122,12 @@ public class SettingsTest {
         Log.d("SettingsTest", "size = "+Settings.singleton().getOSMFromODKForms().size());
         assertTrue(Settings.singleton().getOSMFromODKForms().size() == 2);
     }
+
+    @Test
+    public void testNodeNameSetting() {
+        Settings.initialize();
+
+        assertFalse(Settings.singleton().getNodeName().equals(Settings.DEFAULT_NODE_NAME));
+        assertEquals(Settings.singleton().getNodeName(), "Structure");
+    }
 }

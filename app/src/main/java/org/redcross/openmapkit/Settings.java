@@ -31,6 +31,7 @@ public class Settings {
     public static final String DEFAULT_OSM_FROM_ODK_USERNAME = null;
     public static final String DEFAULT_OSM_FROM_ODK_PASSWORD = null;
     public static final ArrayList<Form> DEFAULT_OSM_FROM_ODK_FORMS = new ArrayList<>();
+    public static final String DEFAULT_NODE_NAME = "node";
 
 
     private static Settings instance;
@@ -287,5 +288,18 @@ public class Settings {
             e.printStackTrace();
         }
         return gpsProximityAccuracy;
+    }
+
+    public String getNodeName() {
+        String nodeName = DEFAULT_NODE_NAME;
+        if(data.has("node_name")) {
+            try {
+                nodeName = data.getString("node_name");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return nodeName;
     }
 }

@@ -79,18 +79,19 @@
     <string name="serverUrl">OpenMapKit Server URL</string>
     <string name="deploymentDownloadCanceled">Deployment download canceled!</string>
     <string name="deploymentDownloadComplete">Deployment download complete!</string>
-    <string name="add_node">+  Add Structure</string>
+    <string name="add_node">+  Add %1$s</string>
     <string name="enable_gps">Please enable GPS before continuing</string>
     <string name="getting_gps_fix">"Getting a GPS Fix..."</string>
     <string name="waiting_for_accurate_location">Waiting for an accurate GPS location</string>
     <string name="waiting_for_user_location">OpenMapKit is searching for your GPS location</string>
-    <string name="need_to_be_close_node">You need to be within %s to view details</string>
-    <string name="confirm_delete_node">Are you sure you want to delete this structure?</string>
+    <string name="need_to_be_close_node">You need to be within %1$s to view details</string>
+    <string name="confirm_delete_node">Are you sure you want to delete this %1$s?</string>
 
     <string name="osm_data_from_odk">OSM Data From ODK</string>
     <string name="odk_query_instructions">Please %1$s the filter to be used for %2$s%3$s</string>
     <string name="filter">Filter</string>
     <string name="action_osmFromODK">OSM Data From ODK</string>
     <string name="downloading_osm_from_odk">Downloading OSM data from the ODK server</string>
+    <string name="deleted_node">Deleted %1$s</string>
 
 </resources>

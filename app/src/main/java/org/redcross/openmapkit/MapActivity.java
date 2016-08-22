@@ -479,7 +479,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private void launchDeleteDialog() {
         if(deleteNodeDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(R.string.confirm_delete_node);
+            builder.setMessage(String.format(getResources().getString(R.string.confirm_delete_node), Settings.singleton().getNodeName()));
             builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
@@ -594,6 +594,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
     protected void initializeAddNodeButtons() {
         final Button addNodeBtn = (Button)findViewById(R.id.addNodeBtn);
+        addNodeBtn.setText(String.format(getResources().getString(R.string.add_node), Settings.singleton().getNodeName()));
         final ImageButton addNodeMarkerBtn = (ImageButton)findViewById(R.id.addNodeMarkerBtn);
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
@@ -668,7 +669,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         final OSMNode deletedNode = osmMap.deleteNode();
 
         Snackbar.make(findViewById(R.id.mapActivity),
-                "Deleted Structure",
+                String.format(getResources().getString(R.string.deleted_node), Settings.singleton().getNodeName()),
                 Snackbar.LENGTH_LONG)
                 .setAction("UNDO", new View.OnClickListener() {
                     // undo action
