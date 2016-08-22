@@ -82,6 +82,17 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
     protected static final String ODK_OMK_QUERY_VAL = "org.redcross.openmapkit.ODK_QUERY_VAL";
+    public static final ArrayList<Integer> MENU_ITEM_IDS;
+    static{
+        MENU_ITEM_IDS = new ArrayList<>();
+        MENU_ITEM_IDS.add(R.id.deployments);
+        MENU_ITEM_IDS.add(R.id.basemaps);
+        MENU_ITEM_IDS.add(R.id.osmcredentials);
+        MENU_ITEM_IDS.add(R.id.osmdownloader);
+        MENU_ITEM_IDS.add(R.id.osmXmlLayers);
+        MENU_ITEM_IDS.add(R.id.osmFromODK);
+        MENU_ITEM_IDS.add(R.id.info);
+    }
     
     private static String version = "";
 
@@ -332,7 +343,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         double lat = (double) pref.getFloat(PREVIOUS_LAT, -999);
         double lng = (double) pref.getFloat(PREVIOUS_LNG, -999);
         float z = pref.getFloat(PREVIOUS_ZOOM, -999);
-        
+
         // no shared pref
         if (lat == -999 || lng == -999 || z == -999) {
             mapView.setUserLocationEnabled(true);
@@ -876,10 +887,29 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         return true;
     }
 
+    public Menu getMenu() {
+        return menu;
+    }
+
     private void hideMenuItems() {
         if(!ODKCollectHandler.isODKCollectMode()
                 || Settings.singleton().getOSMFromODKForms().size() == 0) {
             menu.findItem(R.id.osmFromODK).setVisible(false);
+        }
+
+        ArrayList<String> hiddenMenuItems = Settings.singleton().getHiddenMenuItems();
+        if(hiddenMenuItems.size() > 0) {
+            int hiddenItems = 0;
+            for (int currMenuItemId : MENU_ITEM_IDS) {
+                if (hiddenMenuItems.contains(menu.findItem(currMenuItemId).getTitle().toString().toLowerCase())) {
+                    menu.findItem(currMenuItemId).setVisible(false);
+                    hiddenItems++;
+                }
+            }
+
+            if(hiddenItems == MENU_ITEM_IDS.size()) {
+                menu.clear();
+            }
         }
     }
 

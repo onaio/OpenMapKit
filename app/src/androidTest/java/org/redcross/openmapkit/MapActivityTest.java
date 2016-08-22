@@ -24,6 +24,7 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
+import android.view.Menu;
 import android.widget.Button;
 
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -654,6 +655,30 @@ public class MapActivityTest {
     }
 
     /**
+     * This method checks whether the menu items configured to be hidden in assets/settings/omk_functional_test.json
+     * are actually hidden
+     */
+    @Test
+    public void testHiddenMenuItems() {
+        Log.i(TAG, "Running test testHiddenMenuItems");
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+                try {
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
+                    Menu menu = mapActivity.getMenu();
+                    for(int currMenuItemId : MapActivity.MENU_ITEM_IDS) {
+                        assertEquals(Settings.singleton().getHiddenMenuItems().contains(menu.findItem(currMenuItemId).getTitle().toString().toLowerCase()), !menu.findItem(currMenuItemId).isVisible());
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
      * This method tests whether the OSM Form ODK query dialog is shown when the OSM From ODK menu
      * item is clicked.
      */
@@ -728,6 +753,8 @@ public class MapActivityTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
             }
         });
     }

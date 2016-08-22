@@ -32,6 +32,7 @@ public class Settings {
     public static final String DEFAULT_OSM_FROM_ODK_PASSWORD = null;
     public static final ArrayList<Form> DEFAULT_OSM_FROM_ODK_FORMS = new ArrayList<>();
     public static final String DEFAULT_NODE_NAME = "node";
+    public static final ArrayList<String> DEFAULT_HIDDEN_MENU_ITEMS = new ArrayList<>();
 
 
     private static Settings instance;
@@ -301,5 +302,21 @@ public class Settings {
         }
 
         return nodeName;
+    }
+
+    public ArrayList<String> getHiddenMenuItems() {
+        ArrayList<String> hiddenMenuItems = DEFAULT_HIDDEN_MENU_ITEMS;
+        if(data.has("hidden_menu_items")) {
+            try {
+                JSONArray hiddenMenuItemsJA = data.getJSONArray("hidden_menu_items");
+                hiddenMenuItems = new ArrayList<>();
+                for(int i = 0; i < hiddenMenuItemsJA.length(); i++) {
+                    hiddenMenuItems.add(hiddenMenuItemsJA.getString(i).toLowerCase());
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return hiddenMenuItems;
     }
 }

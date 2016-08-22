@@ -123,11 +123,31 @@ public class SettingsTest {
         assertTrue(Settings.singleton().getOSMFromODKForms().size() == 2);
     }
 
+    /**
+     * This method tests the node_name setting
+     */
     @Test
     public void testNodeNameSetting() {
         Settings.initialize();
 
         assertFalse(Settings.singleton().getNodeName().equals(Settings.DEFAULT_NODE_NAME));
         assertEquals(Settings.singleton().getNodeName(), "Structure");
+    }
+
+    /**
+     * This method tests the hidden_menu_items setting
+     */
+    @Test
+    public void testHiddenMenuItemsSetting() {
+        Settings.initialize();
+
+        assertFalse(Settings.singleton().getHiddenMenuItems().size() == 0);
+
+        assertTrue(Settings.singleton().getHiddenMenuItems().contains("deployments"));
+        assertTrue(Settings.singleton().getHiddenMenuItems().contains("basemap"));
+        assertTrue(Settings.singleton().getHiddenMenuItems().contains("osm user name"));
+        assertTrue(Settings.singleton().getHiddenMenuItems().contains("osm xml downloader"));
+        assertTrue(Settings.singleton().getHiddenMenuItems().contains("osm xml layers"));
+        assertTrue(Settings.singleton().getHiddenMenuItems().contains("info"));
     }
 }
