@@ -1,8 +1,10 @@
 package org.redcross.openmapkit;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
+import android.support.test.InstrumentationRegistry;
 import android.test.ApplicationTestCase;
 
 import org.apache.commons.io.FileUtils;
@@ -22,21 +24,18 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
     }
 
     /**
-     * This method creates an intent similar to the one used to launch OpenMapKit from OpenDataKit
+     * This method performs actions that simulate a launch from ODK including:
+     *  - cleans up the sdcard directory for the app
+     *  - creating an intent similar to the one used to launch OpenMapKit from OpenDataKit
+     *  - calling ODKCollectHandler.registerIntent with the created intent
+     *  - initializes constraints and settings
      *
      * @return  Intent similar to the one used to launch OpenMapKit from OpenDataKit
      */
-    public static Intent getLaunchOMKIntent() {
+    public static Intent simulateODKLaunch() {
         String sdcardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         File odkInstanceDir = new File(sdcardPath + "/odk/instances/omk_functional_test");
         odkInstanceDir.mkdirs();
-
-        //delete and recreate the OpenMapKit directory on the SDCard
-        File appDir = new File(sdcardPath+"/"+ExternalStorage.APP_DIR);
-        if(appDir.exists()) {
-            appDir.delete();
-        }
-        ExternalStorage.checkOrCreateAppDirs();
 
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
@@ -45,13 +44,33 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         intent.putExtra("INSTANCE_ID", "uuid:6004201f-9942-429d-bfa4-e65b683da37b");
         intent.putExtra("INSTANCE_DIR", sdcardPath + "/odk/instances/omk_functional_test");
         intent.putExtra("OSM_EDIT_FILE_NAME", "omk_functional_test.osm");
+
+        Context context = InstrumentationRegistry.getContext();
+
+        //delete and recreate the OpenMapKit directory on the SDCard
+        File appDir = new File(sdcardPath+"/"+ExternalStorage.APP_DIR);
+        if(appDir.exists()) {
+            appDir.delete();
+        }
+
+        // create directory structure for app if needed
+        ExternalStorage.checkOrCreateAppDirs();
+
+        // Move constraints assets to ExternalStorage if necessary
+        ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
+
+        ODKCollectHandler.registerIntent(context, intent);
+
+        // Initialize the constraints singleton.
+        // Loads up all the constraints JSON configs.
+        Constraints.initialize();
+
         addTagsToIntent(intent);
 
         return intent;
     }
 
     private static void addTagsToIntent(Intent intent) {
-        ODKCollectHandler.registerIntent(intent);
         String formFileName = ODKCollectHandler.getODKCollectData().getFormFileName();
         try {
             File formConstraintsFile = ExternalStorage.fetchConstraintsFile(formFileName);

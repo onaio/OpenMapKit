@@ -5,13 +5,10 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.location.Criteria;
 import android.location.LocationManager;
-import android.location.LocationProvider;
-import android.os.Environment;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.assertion.PositionAssertions;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Build;
@@ -37,24 +34,16 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 
 import org.hamcrest.CoreMatchers;
-import org.apache.commons.io.FileUtils;
-import org.hamcrest.Matchers;
-import org.hamcrest.object.HasToString;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.redcross.openmapkit.odkcollect.FormOSMDownloader;
-import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Iterator;
 
 import static org.junit.Assert.*;
 
@@ -79,23 +68,7 @@ public class MapActivityTest {
     @Before
     public void setup() {
         //get instrumented (not device) context so as to fetch files from androidTest/assets
-        Context context = InstrumentationRegistry.getContext();
-        copySettingsDir(context);
-        ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
-    }
-
-    private void copySettingsDir(Context context) {
-        //first remove the existing dir if already exists
-        File dir = new File(ExternalStorage.getSettingsDir());
-        if (dir.exists() && dir.isDirectory()) {
-            String[] children = dir.list();
-            for (int i = 0; i < children.length; i++) {
-                new File(dir, children[i]).delete();
-            }
-        }
-
-        //add the fresh settings dir
-        ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
+        ApplicationTest.simulateODKLaunch();
     }
 
     /**
@@ -760,7 +733,7 @@ public class MapActivityTest {
     }
 
     private void startMapActivity(OnPostLaunchActivity onPostLaunchActivity) {
-        Intent intent = ApplicationTest.getLaunchOMKIntent();
+        Intent intent = ApplicationTest.simulateODKLaunch();
         mapActivityTR.launchActivity(intent);
         Activity activity = getActivityInstance();
         if(activity instanceof MapActivity) {

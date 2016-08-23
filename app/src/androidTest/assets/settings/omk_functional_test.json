@@ -1,17 +1,37 @@
 {
-  "osm_from_odk":{
-    "query":"test_query",
-    "forms":[1234,5678],
-    "server":"https://stage-api.ona.io/api/v1/data/",
-    "username":"testomkuser",
-    "password":"testomkpassword"
+  "osm_from_odk": {
+    "query": "test_query",
+    "forms": [
+      1234,
+      5678
+    ],
+    "server": "https://stage-api.ona.io/api/v1/data/",
+    "username": "testomkuser",
+    "password": "testomkpassword"
   },
-  "proximity":{
-    "proximity_check":true,
-    "proximity_radius":100,
-    "max_gps_timer_delay":10,
-    "gps_proximity_accuracy":10
+  "proximity": {
+    "proximity_check": true,
+    "proximity_radius": 100,
+    "max_gps_timer_delay": 10,
+    "gps_proximity_accuracy": 10
   },
-  "node_name":"Structure",
-  "hidden_menu_items":["deployments", "basemap", "osm user name", "osm xml downloader", "osm xml layers", "info"]
+  "node_name": "Structure",
+  "hidden_menu_items": [
+    "deployments",
+    "basemap",
+    "osm user name",
+    "osm xml downloader",
+    "osm xml layers",
+    "info"
+  ],
+  "user_location_tags": {
+    "lat_lng": {
+      "name": "user_location",
+      "label": "User Location"
+    },
+    "accuracy": {
+      "name": "location_accuracy",
+      "label": "Location Accuracy"
+    }
+  }
 }

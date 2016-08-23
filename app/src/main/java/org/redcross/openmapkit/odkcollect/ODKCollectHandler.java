@@ -1,11 +1,15 @@
 package org.redcross.openmapkit.odkcollect;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.spatialdev.osm.model.OSMElement;
 
+import org.redcross.openmapkit.Constraints;
+import org.redcross.openmapkit.ExternalStorage;
+import org.redcross.openmapkit.Settings;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.odkcollect.tag.ODKTagItem;
 import org.redcross.openmapkit.tagswipe.TagEdit;
@@ -25,7 +29,7 @@ public class ODKCollectHandler {
 
     private static ODKCollectData odkCollectData;
     
-    public static void registerIntent(Intent intent) {
+    public static void registerIntent(Context context, Intent intent) {
         Log.d("TestIntent", intent.toString());
         String action = intent.getAction();
         if(action != null && action.equals("android.intent.action.SEND")) {
@@ -38,6 +42,11 @@ public class ODKCollectHandler {
                     String instanceId = extras.getString("INSTANCE_ID");
                     String instanceDir = extras.getString("INSTANCE_DIR");
                     String previousOSMEditFileName = extras.getString("OSM_EDIT_FILE_NAME");
+
+                    //initialize settings
+                    ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
+                    Settings.initialize(formFileName);
+
                     LinkedHashMap<String, ODKTag> requiredTags = generateRequiredOSMTagsFromBundle(extras);
                     odkCollectData = new ODKCollectData(formId, 
                                                         formFileName,
@@ -126,17 +135,21 @@ public class ODKCollectHandler {
      * @return  List of all the tags, including the user location tags
      */
     public static LinkedHashMap<String, ODKTag> addUserLocationTags(LinkedHashMap<String, ODKTag> tags) {
-        //TODO: add test for checking whether user location tags are always returned to ODK
-        ODKTag userLocation = new ODKTag();
-        userLocation.setKey(TagEdit.TAG_KEY_USER_LOCATION);
-        userLocation.setLabel(TagEdit.TAG_LABEL_USER_LOCATION);
-        tags.put(TagEdit.TAG_KEY_USER_LOCATION, userLocation);
+        if(Settings.singleton().isUserLocationTagsEnabled()) {
+            if(Settings.singleton().getUserLatLngName() != null) {
+                ODKTag userLocation = new ODKTag();
+                userLocation.setKey(Settings.singleton().getUserLatLngName());
+                userLocation.setLabel(Settings.singleton().getUserLatLngLabel());
+                tags.put(Settings.singleton().getUserLatLngName(), userLocation);
+            }
 
-        ODKTag userLocationAccuracy = new ODKTag();
-        userLocationAccuracy.setKey(TagEdit.TAG_KEY_USER_LOCATION_ACCURACY);
-        userLocationAccuracy.setLabel(TagEdit.TAG_LABEL_USER_LOCATION_ACCURACY);
-        tags.put(TagEdit.TAG_KEY_USER_LOCATION_ACCURACY, userLocationAccuracy);
-
+            if(Settings.singleton().getUserAccuracyName() != null) {
+                ODKTag userLocationAccuracy = new ODKTag();
+                userLocationAccuracy.setKey(Settings.singleton().getUserAccuracyName());
+                userLocationAccuracy.setLabel(Settings.singleton().getUserAccuracyLabel());
+                tags.put(Settings.singleton().getUserAccuracyName(), userLocationAccuracy);
+            }
+        }
         return tags;
     }
 }

@@ -1,9 +1,7 @@
 package org.redcross.openmapkit.odkcollect;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
-import android.util.Log;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,11 +24,8 @@ public class FormOSMDownloaderTest {
 
     @Before
     public void setup() throws Exception {
-        Intent launchIntent = ApplicationTest.getLaunchOMKIntent();
-        ODKCollectHandler.registerIntent(launchIntent);
+        ApplicationTest.simulateODKLaunch();
         context = InstrumentationRegistry.getContext();
-        copySettingsDir();
-        Settings.initialize();
     }
 
     private void copySettingsDir() {

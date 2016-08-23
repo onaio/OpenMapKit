@@ -2,7 +2,6 @@ package org.redcross.openmapkit;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.content.Intent;
 
 import com.spatialdev.osm.model.OSMColorConfig;
 
@@ -10,7 +9,6 @@ import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 import static org.junit.Assert.*;
 
@@ -22,13 +20,8 @@ public class ConstraintsTest {
 
     @Before
     public void initConstraints() {
-        Intent intent = ApplicationTest.getLaunchOMKIntent();
-        ODKCollectHandler.registerIntent(intent);
-
+        ApplicationTest.simulateODKLaunch();
         context = InstrumentationRegistry.getContext();
-        ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
-
-        Constraints.initialize();
     }
 
     /**

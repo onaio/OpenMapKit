@@ -1,7 +1,6 @@
 package org.redcross.openmapkit;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
@@ -10,10 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.redcross.openmapkit.odkcollect.Form;
-import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.File;
 import java.io.IOException;
 
 import static junit.framework.Assert.assertEquals;
@@ -30,25 +27,8 @@ public class SettingsTest {
 
     @Before
     public void setup() throws Exception {
-        Intent launchIntent = ApplicationTest.getLaunchOMKIntent();
-        ODKCollectHandler.registerIntent(launchIntent);
+        ApplicationTest.simulateODKLaunch();
         context = InstrumentationRegistry.getContext();
-        copySettingsDir();
-    }
-
-    private void copySettingsDir() {
-        //first remove the existing dir if already exists
-        File dir = new File(ExternalStorage.getSettingsDir());
-        dir.mkdirs();
-        if (dir.exists() && dir.isDirectory()) {
-            String[] children = dir.list();
-            for (int i = 0; i < children.length; i++) {
-                new File(dir, children[i]).delete();
-            }
-        }
-
-        //add the fresh settings dir
-        ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
     }
 
     /**
@@ -62,7 +42,6 @@ public class SettingsTest {
      */
     @Test
     public void testProximitySettings() {
-        Settings.initialize();
         /*
         make sure the values in androidTest/assets/settings/omk_functional_test.json are not the
         default settings
@@ -87,7 +66,6 @@ public class SettingsTest {
      */
     @Test
     public void testProximityEnabled() {
-        Settings.initialize();
         assertFalse(Settings.isProximityEnabled());
 
         Settings.setProximityEnabled(true);
@@ -102,7 +80,6 @@ public class SettingsTest {
      */
     @Test
     public void testOsmFromOdkSettings() {
-        Settings.initialize();
         /*
         make sure the values in androidTest/assets/settings/omk_functional_test.json are not the
         default settings
@@ -128,8 +105,6 @@ public class SettingsTest {
      */
     @Test
     public void testNodeNameSetting() {
-        Settings.initialize();
-
         assertFalse(Settings.singleton().getNodeName().equals(Settings.DEFAULT_NODE_NAME));
         assertEquals(Settings.singleton().getNodeName(), "Structure");
     }
@@ -139,8 +114,6 @@ public class SettingsTest {
      */
     @Test
     public void testHiddenMenuItemsSetting() {
-        Settings.initialize();
-
         assertFalse(Settings.singleton().getHiddenMenuItems().size() == 0);
 
         assertTrue(Settings.singleton().getHiddenMenuItems().contains("deployments"));

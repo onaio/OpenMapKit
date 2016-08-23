@@ -171,18 +171,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         // Move constraints assets to ExternalStorage if necessary
         ExternalStorage.copyConstraintsToExternalStorageIfNeeded(this);
-        
+
         // Register the intent to the ODKCollect handler
         // This will determine if we are in ODK Collect Mode or not.
-        ODKCollectHandler.registerIntent(getIntent());
+        ODKCollectHandler.registerIntent(getApplicationContext(), getIntent());
 
         // Initialize the constraints singleton.
         // Loads up all the constraints JSON configs.
         Constraints.initialize();
-
-        // Initialize the settings singleton.
-        // Loads up all the settings JSON config
-        Settings.initialize();
 
         //set layout
         setContentView(R.layout.activity_map);

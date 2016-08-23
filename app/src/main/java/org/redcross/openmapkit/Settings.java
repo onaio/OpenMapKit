@@ -19,6 +19,7 @@ public class Settings {
     //sub settings
     private static final String SUB_OSM_FROM_ODK = "osm_from_odk";
     private static final String SUB_PROXIMITY = "proximity";
+    private static final String SUB_USER_LOCATION_TAGS = "user_location_tags";
 
     //defaults
     public static final double DEFAULT_PROXIMITY_RADIUS = 50d;
@@ -33,6 +34,8 @@ public class Settings {
     public static final ArrayList<Form> DEFAULT_OSM_FROM_ODK_FORMS = new ArrayList<>();
     public static final String DEFAULT_NODE_NAME = "node";
     public static final ArrayList<String> DEFAULT_HIDDEN_MENU_ITEMS = new ArrayList<>();
+    public static final String DEFAULT_USER_LOCATION_TAGS_LAT_LNG = null;
+    public static final String DEFAULT_USER_LOCATION_TAGS_ACCURACY = null;
 
 
     private static Settings instance;
@@ -45,18 +48,31 @@ public class Settings {
         return instance;
     }
 
+    public static Settings initialize(String formFileName) {
+        instance = new Settings(formFileName);
+        return instance;
+    }
+
     private Settings() {
-        proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
-        data = new JSONObject();
         if(ODKCollectHandler.isODKCollectMode()) {
             String formFileName = ODKCollectHandler.getODKCollectData().getFormFileName();
-            try {
-                File file = ExternalStorage.fetchSettingsFile(formFileName);
-                String settingsString = FileUtils.readFileToString(file);
-                data = new JSONObject(settingsString);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            completeInit(formFileName);
+        }
+    }
+
+    private Settings(String formFileName) {
+        completeInit(formFileName);
+    }
+
+    private void completeInit(String formFileName) {
+        proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
+        data = new JSONObject();
+        try {
+            File file = ExternalStorage.fetchSettingsFile(formFileName);
+            String settingsString = FileUtils.readFileToString(file);
+            data = new JSONObject(settingsString);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -84,6 +100,14 @@ public class Settings {
         }
 
         return data.getJSONObject(SUB_PROXIMITY);
+    }
+
+    private JSONObject getUserLocationTagsSub() throws JSONException {
+        if(!data.has(SUB_USER_LOCATION_TAGS)) {
+            data.put(SUB_USER_LOCATION_TAGS, new JSONObject());
+        }
+
+        return data.getJSONObject(SUB_USER_LOCATION_TAGS);
     }
 
     public ArrayList<Form> getOSMFromODKForms() {
@@ -304,6 +328,11 @@ public class Settings {
         return nodeName;
     }
 
+    /**
+     * This method returns lowercase text for menu items that should be hidden
+     *
+     * @return  A list of all lowercase labels for menu items that should be hidden
+     */
     public ArrayList<String> getHiddenMenuItems() {
         ArrayList<String> hiddenMenuItems = DEFAULT_HIDDEN_MENU_ITEMS;
         if(data.has("hidden_menu_items")) {
@@ -318,5 +347,78 @@ public class Settings {
             }
         }
         return hiddenMenuItems;
+    }
+
+    /**
+     * This method checks whether user location tags are enabled
+     *
+     * @return TRUE if user location tags are supposed to be inserted into the OSM data
+     */
+    public boolean isUserLocationTagsEnabled() {
+        boolean result = false;
+        if(getUserLatLngName() != null
+                || getUserAccuracyName() != null) {
+            Log.d("LocTest", "User location enabled");
+            result = true;
+        } else {
+            Log.d("LocTest", "User location is not enabled");
+        }
+        return result;
+    }
+
+    public String getUserLatLngName() {
+        String latLng = DEFAULT_USER_LOCATION_TAGS_LAT_LNG;
+        try {
+            JSONObject userLocationTags = getUserLocationTagsSub();
+            if(userLocationTags.has("lat_lng")
+                    && userLocationTags.getJSONObject("lat_lng").has("name")) {
+                latLng = userLocationTags.getJSONObject("lat_lng").getString("name");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return latLng;
+    }
+
+    public String getUserLatLngLabel() {
+        String latLng = getUserLatLngName();
+        try {
+            JSONObject userLocationTags = getUserLocationTagsSub();
+            if(userLocationTags.has("lat_lng")
+                    && userLocationTags.getJSONObject("lat_lng").has("label")) {
+                latLng = userLocationTags.getJSONObject("lat_lng").getString("label");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return latLng;
+    }
+
+    public String getUserAccuracyName() {
+        String accuracy = DEFAULT_USER_LOCATION_TAGS_ACCURACY;
+        try {
+            JSONObject userLocationTags = getUserLocationTagsSub();
+            if(userLocationTags.has("accuracy")
+                    && userLocationTags.getJSONObject("accuracy").has("name")) {
+                accuracy = userLocationTags.getJSONObject("accuracy").getString("name");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return accuracy;
+    }
+
+    public String getUserAccuracyLabel() {
+        String accuracy = getUserAccuracyName();
+        try {
+            JSONObject userLocationTags = getUserLocationTagsSub();
+            if(userLocationTags.has("accuracy")
+                    && userLocationTags.getJSONObject("accuracy").has("label")) {
+                accuracy = userLocationTags.getJSONObject("accuracy").getString("label");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return accuracy;
     }
 }

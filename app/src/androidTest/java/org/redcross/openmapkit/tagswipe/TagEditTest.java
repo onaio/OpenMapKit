@@ -1,20 +1,26 @@
 package org.redcross.openmapkit.tagswipe;
 
 import android.content.Context;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
+import android.support.test.InstrumentationRegistry;
 import android.test.AndroidTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import org.redcross.openmapkit.ApplicationTest;
+import org.redcross.openmapkit.Settings;
 
 /**
  * Created by Jason Rogena - jrogena@ona.io on 7/26/16.
  */
 public class TagEditTest extends AndroidTestCase {
+    Context context;
+
+    @Before
+    public void init() {
+        ApplicationTest.simulateODKLaunch();
+        context = InstrumentationRegistry.getContext();
+    }
 
     @Test
     public void testCheckUserLocationTags() throws Exception {
@@ -51,8 +57,8 @@ public class TagEditTest extends AndroidTestCase {
 
     @Test
     public void testGetReadOnlyValue() throws Exception {
-        assertTrue(TagEdit.getReadOnlyValue(TagEdit.TAG_KEY_USER_LOCATION));
-        assertTrue(TagEdit.getReadOnlyValue(TagEdit.TAG_KEY_USER_LOCATION_ACCURACY));
+        assertTrue(TagEdit.getReadOnlyValue(Settings.singleton().getUserLatLngName()));
+        assertTrue(TagEdit.getReadOnlyValue(Settings.singleton().getUserAccuracyName()));
         assertFalse(TagEdit.getReadOnlyValue("test_tag"));
         assertFalse(TagEdit.getReadOnlyValue(null));
     }

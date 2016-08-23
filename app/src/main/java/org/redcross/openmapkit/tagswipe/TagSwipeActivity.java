@@ -357,7 +357,7 @@ public class TagSwipeActivity extends ActionBarActivity {
 
     public void notifyMissingUserLocation() {
         showGpsSearchingProgressDialog();
-        int index = TagEdit.getIndexForTagKey(TagEdit.TAG_KEY_USER_LOCATION);
+        int index = TagEdit.getIndexForTagKey(org.redcross.openmapkit.Settings.singleton().getUserLatLngName());
         updateUsersLocation();
         mViewPager.setCurrentItem(index);
     }

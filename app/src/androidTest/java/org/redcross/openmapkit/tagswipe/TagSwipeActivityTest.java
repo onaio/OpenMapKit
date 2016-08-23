@@ -6,12 +6,10 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.action.ViewActions;
-import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -24,7 +22,6 @@ import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
 
 import junit.framework.Assert;
 
-import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,23 +30,19 @@ import org.redcross.openmapkit.ApplicationTest;
 import org.redcross.openmapkit.MapActivity;
 import org.redcross.openmapkit.MapActivityTest;
 import org.redcross.openmapkit.R;
-import org.redcross.openmapkit.odkcollect.ODKCollectData;
-import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
+import org.redcross.openmapkit.Settings;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.regex.Matcher;
 
 /**
  * Created by Jason Rogena - jrogena@ona.io on 7/26/16.
@@ -154,10 +147,10 @@ public class TagSwipeActivityTest {
 
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
 
-                    TagEdit userLocationTag = TagEdit.getTag(TagEdit.TAG_KEY_USER_LOCATION);
+                    TagEdit userLocationTag = TagEdit.getTag(Settings.singleton().getUserLatLngName());
                     Assert.assertTrue(TagEdit.locationToString(location).equals(userLocationTag.getTagVal()));
 
-                    TagEdit userLocationAccuracy = TagEdit.getTag(TagEdit.TAG_KEY_USER_LOCATION_ACCURACY);
+                    TagEdit userLocationAccuracy = TagEdit.getTag(Settings.singleton().getUserAccuracyName());
                     Assert.assertTrue(TagEdit.locationAccuracyToString(location.getAccuracy()).equals(userLocationAccuracy.getTagVal()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -301,11 +294,11 @@ public class TagSwipeActivityTest {
                     continue;
                 }
                 if(parser.getName().equals("tag")) {
-                    if(parser.getAttributeValue(0).trim().equals(TagEdit.TAG_KEY_USER_LOCATION)) {
+                    if(parser.getAttributeValue(0).trim().equals(Settings.singleton().getUserLatLngName())) {
                         if(parser.getAttributeValue(1).trim().equals(TagEdit.locationToString(location))) {
                             userLocationFound = true;
                         }
-                    } else if(parser.getAttributeValue(0).trim().equals(TagEdit.TAG_KEY_USER_LOCATION_ACCURACY)) {
+                    } else if(parser.getAttributeValue(0).trim().equals(Settings.singleton().getUserAccuracyName())) {
                         if(parser.getAttributeValue(1).trim().equals(TagEdit.locationAccuracyToString(location.getAccuracy()))) {
                             userLocationAccuracyFound = true;
                         }
@@ -362,7 +355,7 @@ public class TagSwipeActivityTest {
     }
 
     private void startTagSwipeActivity(OnPostLaunchActivity onPostLaunchActivity) {
-        Intent intent = ApplicationTest.getLaunchOMKIntent();
+        Intent intent = ApplicationTest.simulateODKLaunch();
         mapActivityTR.launchActivity(intent);
         try {
             Thread.sleep(UI_LONG_WAIT_TIME);

@@ -1,7 +1,6 @@
 package org.redcross.openmapkit.tagswipe;
 
 import android.location.Location;
-import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -12,6 +11,7 @@ import android.widget.RadioGroup;
 import com.spatialdev.osm.model.OSMElement;
 
 import org.redcross.openmapkit.Constraints;
+import org.redcross.openmapkit.Settings;
 import org.redcross.openmapkit.odkcollect.ODKCollectData;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
@@ -32,12 +32,6 @@ import java.util.Set;
  * * *
  */
 public class TagEdit {
-
-    public static final String TAG_KEY_USER_LOCATION = "user_location";
-    public static final String TAG_LABEL_USER_LOCATION = "User Location";
-    public static final String TAG_KEY_USER_LOCATION_ACCURACY = "user_location_accuracy";
-    public static final String TAG_LABEL_USER_LOCATION_ACCURACY = "User Location Accuracy";
-
     private static LinkedHashMap<String, TagEdit> tagEditHash;
     private static LinkedHashMap<String, TagEdit> tagEditHiddenHash;
     private static List<TagEdit> tagEdits;
@@ -132,8 +126,8 @@ public class TagEdit {
         tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
         tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
         tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
-        tagEditHash.put(TAG_KEY_USER_LOCATION, new TagEdit(TAG_KEY_USER_LOCATION, "-1.22321132,36.32234233", true));
-        tagEditHash.put(TAG_KEY_USER_LOCATION_ACCURACY, new TagEdit(TAG_KEY_USER_LOCATION_ACCURACY, locationAccuracyToString(32f), true));
+        tagEditHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), "-1.22321132,36.32234233", true));
+        tagEditHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), locationAccuracyToString(32f), true));
     }
 
     /**
@@ -166,25 +160,29 @@ public class TagEdit {
         tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
         tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
         tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
-        tagEditHash.put(TAG_KEY_USER_LOCATION, new TagEdit(TAG_KEY_USER_LOCATION, null, true));
-        tagEditHash.put(TAG_KEY_USER_LOCATION_ACCURACY, new TagEdit(TAG_KEY_USER_LOCATION_ACCURACY, "", true));
+        tagEditHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), null, true));
+        tagEditHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), "", true));
     }
 
     /**
      * This method cleans the values in the user location and user location accuracy tags
      */
     public static void cleanUserLocationTags() {
-        if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION)) {
-            tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal = null;
-            if(tagEditHash.get(TAG_KEY_USER_LOCATION).editText != null) {
-                tagEditHash.get(TAG_KEY_USER_LOCATION).editText.setText(null);
+        if(Settings.singleton().getUserLatLngName() != null) {
+            if(tagEditHash.containsKey(Settings.singleton().getUserLatLngName())) {
+                tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal = null;
+                if(tagEditHash.get(Settings.singleton().getUserLatLngName()).editText != null) {
+                    tagEditHash.get(Settings.singleton().getUserLatLngName()).editText.setText(null);
+                }
             }
         }
 
-        if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION_ACCURACY)) {
-            tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal = null;
-            if(tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).editText != null) {
-                tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).editText.setText(null);
+        if(Settings.singleton().getUserAccuracyName() != null) {
+            if(tagEditHash.containsKey(Settings.singleton().getUserAccuracyName())) {
+                tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal = null;
+                if(tagEditHash.get(Settings.singleton().getUserAccuracyName()).editText != null) {
+                    tagEditHash.get(Settings.singleton().getUserAccuracyName()).editText.setText(null);
+                }
             }
         }
     }
@@ -196,10 +194,9 @@ public class TagEdit {
      * @return  TRUE if tag is read only
      */
     public static boolean getReadOnlyValue(String tagKey) {
-        //TODO: add test for read only for user location and user location accuracy
         if(tagKey != null
-                && (tagKey.equals(TAG_KEY_USER_LOCATION)
-                    || tagKey.equals(TAG_KEY_USER_LOCATION_ACCURACY))) {
+                && (tagKey.equals(Settings.singleton().getUserLatLngName())
+                    || tagKey.equals(Settings.singleton().getUserAccuracyName()))) {
             return true;
         }
 
@@ -217,12 +214,16 @@ public class TagEdit {
         if(location != null) {
             tagSwipeActivity.hideGpsSearchingProgressDialog();
 
-            if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION)) {
-                tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal = locationToString(location);
+            if(Settings.singleton().getUserLatLngName() != null) {
+                if (tagEditHash.containsKey(Settings.singleton().getUserLatLngName())) {
+                    tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal = locationToString(location);
+                }
             }
 
-            if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION_ACCURACY)) {
-                tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal = locationAccuracyToString(location.getAccuracy());
+            if(Settings.singleton().getUserAccuracyName() != null) {
+                if (tagEditHash.containsKey(Settings.singleton().getUserAccuracyName())) {
+                    tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal = locationAccuracyToString(location.getAccuracy());
+                }
             }
         }
     }
@@ -294,16 +295,25 @@ public class TagEdit {
      * @return  TRUE if the user location and user location accuracy tags have been set
      */
     public static boolean checkUserLocationTags() {
-        if(tagEditHash.containsKey(TAG_KEY_USER_LOCATION)
-                && tagEditHash.containsKey(TAG_KEY_USER_LOCATION_ACCURACY)) {
-            if(tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal != null
-                    && tagEditHash.get(TAG_KEY_USER_LOCATION).tagVal.length() > 0
-                    && tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal != null
-                    && tagEditHash.get(TAG_KEY_USER_LOCATION_ACCURACY).tagVal.length() > 0) {
-                return true;
+        if(Settings.singleton().isUserLocationTagsEnabled()) {
+            if(Settings.singleton().getUserLatLngName() != null) {//lat_lng required
+                if(!tagEditHash.containsKey(Settings.singleton().getUserLatLngName())
+                        || tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal == null
+                        || tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal.length() == 0) {
+                    return false;
+                }
+            }
+
+            if(Settings.singleton().getUserAccuracyName() != null) {//accuracy required
+                if(!tagEditHash.containsKey(Settings.singleton().getUserAccuracyName())
+                        || tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal == null
+                        || tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal.length() == 0) {
+                    return false;
+                }
             }
         }
-        return false;
+
+        return true;
     }
     
     public static boolean saveToODKCollect(String osmUserName) {
@@ -441,7 +451,8 @@ public class TagEdit {
             tagVal = editText.getText().toString();
             addOrEditTag(tagKey, tagVal);
         }
-        else if(tagKey.equals(TAG_KEY_USER_LOCATION) || tagKey.equals(TAG_KEY_USER_LOCATION_ACCURACY)) {
+        else if(tagKey.equals(Settings.singleton().getUserLatLngName())
+                || tagKey.equals(Settings.singleton().getUserAccuracyName())) {
             if(tagVal != null) {
                 addOrEditTag(tagKey, tagVal);
             } else {
