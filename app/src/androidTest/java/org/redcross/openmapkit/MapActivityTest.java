@@ -621,7 +621,7 @@ public class MapActivityTest {
                         }
                     });
 
-                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(UI_LONG_WAIT_TIME);
                     assertFalse(mapActivity.getDeleteNodeDialog().isShowing());
                     Espresso.onView(ViewMatchers.withId(R.id.tagListView))
                             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
