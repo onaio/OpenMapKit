@@ -231,6 +231,7 @@ public class TagSwipeActivity extends ActionBarActivity {
     }
 
     private void showGpsSearchingProgressDialog() {
+        Log.d("TagSwipeTest", "showGpsearchingdialog called");
         if(gpsSearchingProgressDialog == null) {
             gpsSearchingProgressDialog = ProgressDialog.show(TagSwipeActivity.this, "", getResources().getString(R.string.waiting_for_user_location), true, false);
         } else {
@@ -240,6 +241,7 @@ public class TagSwipeActivity extends ActionBarActivity {
 
     public void hideGpsSearchingProgressDialog() {
         if(gpsSearchingProgressDialog != null) {
+            Log.d("TagSwipeTest", "hideDialog called");
             gpsSearchingProgressDialog.dismiss();
         }
     }
@@ -356,10 +358,7 @@ public class TagSwipeActivity extends ActionBarActivity {
     }
 
     public void notifyMissingUserLocation() {
-        showGpsSearchingProgressDialog();
-        int index = TagEdit.getIndexForTagKey(org.redcross.openmapkit.Settings.singleton().getUserLatLngName());
-        updateUsersLocation();
-        mViewPager.setCurrentItem(index);
+        Toast.makeText(this, String.format(getResources().getString(R.string.could_not_append_location), org.redcross.openmapkit.Settings.singleton().getNodeName()), Toast.LENGTH_LONG).show();
     }
 
     private String missingTagsText(Set<String> missingTags) {

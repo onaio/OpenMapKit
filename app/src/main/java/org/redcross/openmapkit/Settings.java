@@ -423,4 +423,15 @@ public class Settings {
         }
         return accuracy;
     }
+
+    public boolean isUserLocationTag(String name) {
+        if(isUserLocationTagsEnabled()) {
+            if((getUserLatLngName() != null && name.equals(getUserLatLngName()))
+                    || (getUserAccuracyName() != null && name.equals(getUserAccuracyName()))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

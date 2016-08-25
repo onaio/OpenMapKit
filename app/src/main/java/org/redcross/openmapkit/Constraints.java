@@ -129,6 +129,11 @@ public class Constraints {
         //check hide constraint
         if(tagIsHidden(tagKey) == true) return false;
 
+        //check if tag is a user location tag
+        if(Settings.singleton().isUserLocationTag(tagKey)) {
+            return false;
+        }
+
         // Check showMap
         Map<String, String> showMapMap = showMap.get(tagKey);
         if (showMapMap != null && showMapMap.size() > 0) {

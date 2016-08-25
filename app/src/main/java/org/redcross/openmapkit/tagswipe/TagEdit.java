@@ -1,6 +1,7 @@
 package org.redcross.openmapkit.tagswipe;
 
 import android.location.Location;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -72,7 +73,7 @@ public class TagEdit {
             Collection<ODKTag> requiredTags = odkCollectData.getRequiredTags();
             for (ODKTag odkTag : requiredTags) {
                 String tagKey = odkTag.getKey();
-                TagEdit tagEdit = new TagEdit(tagKey, tagValueOrDefaultValue(tags, tagKey), odkTag, getReadOnlyValue(tagKey));
+                TagEdit tagEdit = new TagEdit(tagKey, tagValueOrDefaultValue(tags, tagKey), odkTag, false);
                 String implicitVal = Constraints.singleton().implicitVal(tagKey);
                 if (implicitVal != null) {
                     tagEditHiddenHash.put(tagKey, tagEdit);
@@ -101,7 +102,7 @@ public class TagEdit {
         else {
             Set<String> keys = tags.keySet();
             for (String key : keys) {
-                TagEdit tagEdit = new TagEdit(key, tags.get(key), getReadOnlyValue(key));
+                TagEdit tagEdit = new TagEdit(key, tags.get(key), false);
                 tagEditHash.put(key, tagEdit);
                 tagEdits.add(tagEdit);
             }
@@ -126,8 +127,8 @@ public class TagEdit {
         tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
         tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
         tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
-        tagEditHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), "-1.22321132,36.32234233", true));
-        tagEditHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), locationAccuracyToString(32f), true));
+        tagEditHiddenHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), "-1.22321132,36.32234233", true));
+        tagEditHiddenHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), locationAccuracyToString(32f), true));
     }
 
     /**
@@ -160,8 +161,8 @@ public class TagEdit {
         tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
         tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
         tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
-        tagEditHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), null, true));
-        tagEditHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), "", true));
+        tagEditHiddenHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), null, true));
+        tagEditHiddenHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), "", true));
     }
 
     /**
@@ -169,38 +170,22 @@ public class TagEdit {
      */
     public static void cleanUserLocationTags() {
         if(Settings.singleton().getUserLatLngName() != null) {
-            if(tagEditHash.containsKey(Settings.singleton().getUserLatLngName())) {
-                tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal = null;
-                if(tagEditHash.get(Settings.singleton().getUserLatLngName()).editText != null) {
-                    tagEditHash.get(Settings.singleton().getUserLatLngName()).editText.setText(null);
+            if(tagEditHiddenHash.containsKey(Settings.singleton().getUserLatLngName())) {
+                tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).tagVal = null;
+                if(tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).editText != null) {
+                    tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).editText.setText(null);
                 }
             }
         }
 
         if(Settings.singleton().getUserAccuracyName() != null) {
-            if(tagEditHash.containsKey(Settings.singleton().getUserAccuracyName())) {
-                tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal = null;
-                if(tagEditHash.get(Settings.singleton().getUserAccuracyName()).editText != null) {
-                    tagEditHash.get(Settings.singleton().getUserAccuracyName()).editText.setText(null);
+            if(tagEditHiddenHash.containsKey(Settings.singleton().getUserAccuracyName())) {
+                tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).tagVal = null;
+                if(tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).editText != null) {
+                    tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).editText.setText(null);
                 }
             }
         }
-    }
-
-    /**
-     * This method determines whether the provided tag is read only
-     *
-     * @param tagKey    Key of tag you want to get the readOnly status
-     * @return  TRUE if tag is read only
-     */
-    public static boolean getReadOnlyValue(String tagKey) {
-        if(tagKey != null
-                && (tagKey.equals(Settings.singleton().getUserLatLngName())
-                    || tagKey.equals(Settings.singleton().getUserAccuracyName()))) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -215,14 +200,14 @@ public class TagEdit {
             tagSwipeActivity.hideGpsSearchingProgressDialog();
 
             if(Settings.singleton().getUserLatLngName() != null) {
-                if (tagEditHash.containsKey(Settings.singleton().getUserLatLngName())) {
-                    tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal = locationToString(location);
+                if (tagEditHiddenHash.containsKey(Settings.singleton().getUserLatLngName())) {
+                    tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).tagVal = locationToString(location);
                 }
             }
 
             if(Settings.singleton().getUserAccuracyName() != null) {
-                if (tagEditHash.containsKey(Settings.singleton().getUserAccuracyName())) {
-                    tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal = locationAccuracyToString(location.getAccuracy());
+                if (tagEditHiddenHash.containsKey(Settings.singleton().getUserAccuracyName())) {
+                    tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).tagVal = locationAccuracyToString(location.getAccuracy());
                 }
             }
         }
@@ -297,17 +282,17 @@ public class TagEdit {
     public static boolean checkUserLocationTags() {
         if(Settings.singleton().isUserLocationTagsEnabled()) {
             if(Settings.singleton().getUserLatLngName() != null) {//lat_lng required
-                if(!tagEditHash.containsKey(Settings.singleton().getUserLatLngName())
-                        || tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal == null
-                        || tagEditHash.get(Settings.singleton().getUserLatLngName()).tagVal.length() == 0) {
+                if(!tagEditHiddenHash.containsKey(Settings.singleton().getUserLatLngName())
+                        || tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).tagVal == null
+                        || tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).tagVal.length() == 0) {
                     return false;
                 }
             }
 
             if(Settings.singleton().getUserAccuracyName() != null) {//accuracy required
-                if(!tagEditHash.containsKey(Settings.singleton().getUserAccuracyName())
-                        || tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal == null
-                        || tagEditHash.get(Settings.singleton().getUserAccuracyName()).tagVal.length() == 0) {
+                if(!tagEditHiddenHash.containsKey(Settings.singleton().getUserAccuracyName())
+                        || tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).tagVal == null
+                        || tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).tagVal.length() == 0) {
                     return false;
                 }
             }
@@ -361,6 +346,17 @@ public class TagEdit {
 
         for (TagEdit tagEdit : tagEdits) {
             tagEdit.updateTagInOSMElement();
+        }
+
+        if(Settings.singleton().isUserLocationTagsEnabled()) {
+            if(Settings.singleton().getUserLatLngName() != null
+                    && tagEditHiddenHash.containsKey(Settings.singleton().getUserLatLngName())) {
+                tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).updateTagInOSMElement();
+            }
+            if(Settings.singleton().getUserAccuracyName() != null
+                    && tagEditHiddenHash.containsKey(Settings.singleton().getUserAccuracyName())) {
+                tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).updateTagInOSMElement();
+            }
         }
     }
     
