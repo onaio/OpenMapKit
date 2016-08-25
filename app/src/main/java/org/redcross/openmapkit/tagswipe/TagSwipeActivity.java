@@ -40,14 +40,9 @@ import org.redcross.openmapkit.R;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 public class TagSwipeActivity extends ActionBarActivity {
+    public static final String KEY_USER_LOCATION = "user_location";
     private List<TagEdit> tagEdits;
     private SharedPreferences userNamePref;
-    private LocationListener locationListener;
-    private LocationManager locationManager;
-    /*
-    Which GPS provider should be used to get the User's current location
-     */
-    private String preferredLocationProvider = LocationManager.GPS_PROVIDER;
     private AlertDialog gpsProviderAlertDialog;
     private ProgressDialog gpsSearchingProgressDialog;
     private AlertDialog insertOsmUsernameDialog;
@@ -83,136 +78,27 @@ public class TagSwipeActivity extends ActionBarActivity {
         mViewPager.setAdapter(mSectionsPagerAdapter);
     
         pageToCorrectTag();
-        initLocationManager();
+        setUserLocation();
     }
 
     @Override
     protected void onDestroy() {
-        if(locationManager != null) {
-            locationManager.removeUpdates(locationListener);
-        }
         super.onDestroy();
     }
 
-    private void initLocationManager() {
-        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                TagEdit.updateUserLocationTags(location);
-            }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-                checkLocationProviderEnabled();
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-                updateUsersLocation();
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-                TagEdit.cleanUserLocationTags();
-                checkLocationProviderEnabled();
-            }
-        };
-
-        locationManager.requestLocationUpdates(preferredLocationProvider, 30000, 4, locationListener);
-
-        updateUsersLocation();
-    }
-
-    public LocationManager getLocationManager() {
-        return locationManager;
-    }
-
-    public void setPreferredLocationProvider(String preferredLocationProvider) {
-        this.preferredLocationProvider = preferredLocationProvider;
-    }
-
-    public LocationListener getLocationListener() {
-        return locationListener;
-    }
-
-    public String getPreferredLocationProvider() {
-        return preferredLocationProvider;
-    }
-
     /**
-     * This method updates the user's location (and osm location tags)
-     *
-     * @return TRUE if location was successfully updated
+     * This method fetches the user's location from this activities bundle extras and
+     * sets it as the user location tags in the OSM data
      */
-    public boolean updateUsersLocation() {
-        if(checkLocationProviderEnabled()) {
-            Location location = locationManager.getLastKnownLocation(preferredLocationProvider);
-            TagEdit.updateUserLocationTags(location);
-            return true;
-        } else {
-            Log.w("TagSwipeActivity", "LocationManager is null");
+    private void setUserLocation() {
+        Bundle bundle = getIntent().getExtras();
+        TagEdit.cleanUserLocationTags();
+        if(org.redcross.openmapkit.Settings.singleton().isUserLocationTagsEnabled()
+                && bundle != null
+                && bundle.containsKey(KEY_USER_LOCATION)) {
+            Location userLocation = bundle.getParcelable(KEY_USER_LOCATION);
+            TagEdit.updateUserLocationTags(userLocation);
         }
-        return false;
-    }
-
-    /**
-     * This method checks whether the preferred location provider is enabled in the device and shows
-     * the gpsProviderAlertDialog if not
-     *
-     * @return TRUE if the preferred location provider is enabled
-     */
-    public boolean checkLocationProviderEnabled() {
-        if(getLocationProviderStatus() == true) {
-            if(gpsProviderAlertDialog != null) {
-                gpsProviderAlertDialog.dismiss();
-            }
-            return true;
-        }
-
-        //if we've reached this point, it means the location provider is not enabled
-        //show the enable location provider dialog
-        if(gpsProviderAlertDialog == null) {
-            gpsProviderAlertDialog = new AlertDialog.Builder(TagSwipeActivity.this)
-                    .setMessage(getResources().getString(R.string.enable_gps))
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            if (getLocationProviderStatus() == true) {
-                                dialogInterface.dismiss();
-                            } else {
-                                TagSwipeActivity.this.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                            }
-                        }
-                    })
-                    .setCancelable(false)
-                    .create();
-        }
-        gpsProviderAlertDialog.show();
-
-        return false;
-    }
-
-    public boolean isGpsProviderAlertDialogShowing() {
-        if(gpsProviderAlertDialog != null) {
-            return gpsProviderAlertDialog.isShowing();
-        }
-        return false;
-    }
-
-    /**
-     * This method checks whether the preferred location provider is available
-     *
-     * @return  TRUE if the preferred location provider is available
-     */
-    private boolean getLocationProviderStatus() {
-        if(locationManager != null) {
-            if(locationManager.isProviderEnabled(preferredLocationProvider)){
-                return true;
-            }
-        }
-        return false;
     }
 
     public void setOsmFilePath(String path) {

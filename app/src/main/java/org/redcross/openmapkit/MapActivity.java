@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
@@ -64,11 +63,11 @@ import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.server.MBTilesServer;
 import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -125,6 +124,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private LocationListener locationListener;
     private android.support.v7.app.AlertDialog gpsProviderAlertDialog;
     private Location lastLocation;
+    private Location userLocation;//the location to be recorded in the user location OSM tags
 
     private AppCompatDialog odkQueryDialog;
     private HashMap<Integer, Form> downloadingForms, successfulForms;
@@ -222,7 +222,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         positionMap();
 
         initializeListView();
-        initLocationManager();
+        initLocationListener();
 
         // Proximity is disabled until there is a GPS fix.
         Settings.setProximityEnabled(false);
@@ -236,7 +236,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
     }
 
-    private void initLocationManager() {
+    private void initLocationListener() {
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -246,7 +246,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                         if(!Settings.singleton().isProximityEnabled()) {
                             //means this is the first time a location fix for the user has been gotten
                             if(!isUserLocationEnabled()) {
-                                toggleUserLocation();//zoom into the user's current position
+                                toggleUserLocation(true);//zoom into the user's current position
                             }
                         }
                         Settings.singleton().setProximityEnabled(true);
@@ -398,9 +398,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onClick(View v) {
                 if (ODKCollectHandler.isODKCollectMode()) {
-                    //launch the TagSwipeActivity
-                    Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
-                    startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
+                    if(!Settings.singleton().isUserLocationTagsEnabled() || userLocation != null) {
+                        //launch the TagSwipeActivity
+                        Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
+                        tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, userLocation);
+                        startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
+                    } else {
+                        Toast.makeText(MapActivity.this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
+                    }
                 } else {
                     launchODKCollectSnackbar();
                 }
@@ -419,10 +424,15 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (ODKCollectHandler.isODKCollectMode()) {
-                    String tappedKey = tagListAdapter.getTagKeyForIndex(position);
-                    Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
-                    tagSwipe.putExtra("TAG_KEY", tappedKey);
-                    startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
+                    if (!Settings.singleton().isUserLocationTagsEnabled() || userLocation != null) {
+                        String tappedKey = tagListAdapter.getTagKeyForIndex(position);
+                        Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
+                        tagSwipe.putExtra("TAG_KEY", tappedKey);
+                        tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, userLocation);
+                        startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
+                    } else {
+                        Toast.makeText(MapActivity.this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
+                    }
                 } else {
                     launchODKCollectSnackbar();
                 }
@@ -558,7 +568,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         locationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toggleUserLocation();
+                toggleUserLocation(true);
             }
         });
     }
@@ -567,7 +577,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         return mapView.getUserLocationEnabled();
     }
 
-    private void toggleUserLocation() {
+    private void toggleUserLocation(boolean goToUserLocation) {
         final ImageButton locationButton = (ImageButton)findViewById(R.id.locationButton);
         boolean userLocationIsEnabled = isUserLocationEnabled();
         if (userLocationIsEnabled) {
@@ -575,7 +585,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
         } else {
             mapView.setUserLocationEnabled(true);
-            mapView.goToUserLocation(true);
+            if(goToUserLocation) mapView.goToUserLocation(true);
             locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_blue));
         }
     }
@@ -650,27 +660,57 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
             mapView.setInteractionEnabled(true);
         } else {
-            if(Settings.singleton().getProximityCheck()) {
-                //check user's last location is accurate enough
-                if(lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
-                    if(!isUserLocationEnabled()) {
-                        toggleUserLocation();
+            if(recordUserLocation()) {
+                if (Settings.singleton().getProximityCheck()) {
+                    //check user's last location is accurate enough
+                    if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
+                        if (!isUserLocationEnabled()) {
+                            toggleUserLocation(true);
+                        }
+                        mapView.goToUserLocation(true);
+                        mapView.setInteractionEnabled(false);
+                    } else {
+                        Toast.makeText(this, getResources().getString(R.string.waiting_for_accurate_location), Toast.LENGTH_LONG).show();
+                        return;
                     }
-                    mapView.goToUserLocation(true);
-                    mapView.setInteractionEnabled(false);
-                } else {
-                    Toast.makeText(this, getResources().getString(R.string.waiting_for_accurate_location), Toast.LENGTH_LONG).show();
-                    return;
                 }
-            }
 
-            addNodeBtn.setVisibility(View.VISIBLE);
-            addNodeMarkerBtn.setVisibility(View.VISIBLE);
-            nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_green));
-            OSMElement.deselectAll();
-            mapView.invalidate();
+                addNodeBtn.setVisibility(View.VISIBLE);
+                addNodeMarkerBtn.setVisibility(View.VISIBLE);
+                nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_green));
+                OSMElement.deselectAll();
+                mapView.invalidate();
+            }
         }
         nodeMode = !nodeMode;
+    }
+
+    /**
+     * This method records the user's current location if the user location tags setting is turned on
+     *
+     * @return  TRUE if the user location tags setting is turned off or if the user's location is
+     *          successfully recorded
+     */
+    private boolean recordUserLocation() {
+        boolean result = true;
+        //make sure the user's location is being gotten if user location tags are going to be collected
+        if(Settings.singleton().isUserLocationTagsEnabled()) {
+            userLocation = null;
+            //make sure we can get a user location
+            if(!isUserLocationEnabled()) toggleUserLocation(false);
+
+            if(lastLocation != null && (Calendar.getInstance().getTimeInMillis() - lastLocation.getTime()) < 60000l) {
+                userLocation = new Location(lastLocation);
+            }
+
+            if(userLocation == null) {
+                proportionMapAndList(100, 0);
+                Toast.makeText(this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
+                result = false;
+            }
+        }
+
+        return result;
     }
 
     private void deleteNode() {
@@ -966,24 +1006,25 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
     @Override
     public void selectedElementsChanged(LinkedList<OSMElement> selectedElements) {
-        if (selectedElements != null && selectedElements.size() > 0) {
-            //fetch the tapped feature
-            OSMElement tappedOSMElement = selectedElements.get(0);
+        if(recordUserLocation()) {
+            if (selectedElements != null && selectedElements.size() > 0) {
+                //fetch the tapped feature
+                OSMElement tappedOSMElement = selectedElements.get(0);
 
-            //zoom into location
-            Geometry geometry = tappedOSMElement.getJTSGeom();
-            Point elementCentroid = geometry.getCentroid();
-            LatLng centroidLatLng = new LatLng(elementCentroid.getCoordinate().y, elementCentroid.getCoordinate().x);
-            mapView.setCenter(centroidLatLng);
+                //zoom into location
+                Geometry geometry = tappedOSMElement.getJTSGeom();
+                Point elementCentroid = geometry.getCentroid();
+                LatLng centroidLatLng = new LatLng(elementCentroid.getCoordinate().y, elementCentroid.getCoordinate().x);
+                mapView.setCenter(centroidLatLng);
 
-            //check whether the user is within the proximity
-            if(isWithinUserProximity(tappedOSMElement)) {
-                //present OSM Feature tags in bottom ListView
-                identifyOSMFeature(tappedOSMElement);
-            } else {
-                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
-                Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
-                proportionMapAndList(100, 0);
+                //check whether the user is within the proximity
+                if (isWithinUserProximity(tappedOSMElement)) {
+                    //present OSM Feature tags in bottom ListView
+                    identifyOSMFeature(tappedOSMElement);
+                } else {
+                    String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
+                    Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
@@ -1133,7 +1174,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
     private void showProgressDialog() {
         if(!isUserLocationEnabled()) {
-            toggleUserLocation();
+            toggleUserLocation(true);
         }
         // custom dialog
         gpsCountdownDialog = new Dialog(this);
@@ -1155,7 +1196,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     @Override
                     public void run() {
                         if (!isUserLocationEnabled()) {
-                            toggleUserLocation();
+                            toggleUserLocation(true);
                         }
                     }
                 });

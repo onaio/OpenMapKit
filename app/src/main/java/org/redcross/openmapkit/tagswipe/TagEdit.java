@@ -360,8 +360,6 @@ public class TagEdit {
     }
     
     private static void updateTagsInOSMElement() {
-        tagSwipeActivity.updateUsersLocation();
-
         for (TagEdit tagEdit : tagEdits) {
             tagEdit.updateTagInOSMElement();
         }
