@@ -123,4 +123,15 @@ public class SettingsTest {
         assertTrue(Settings.singleton().getHiddenMenuItems().contains("osm xml layers"));
         assertTrue(Settings.singleton().getHiddenMenuItems().contains("info"));
     }
+
+    /**
+     * This method tests the isUserLocation method in the settings
+     */
+    @Test
+    public void testIsUserLocation() {
+        assertTrue(Settings.singleton().isUserLocationTag("user_location"));
+        assertTrue(Settings.singleton().isUserLocationTag("location_accuracy"));
+
+        assertFalse(Settings.singleton().isUserLocationTag("spray_status"));
+    }
 }

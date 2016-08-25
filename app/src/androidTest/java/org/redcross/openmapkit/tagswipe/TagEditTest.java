@@ -56,14 +56,6 @@ public class TagEditTest extends AndroidTestCase {
     }
 
     @Test
-    public void testGetReadOnlyValue() throws Exception {
-        assertTrue(TagEdit.getReadOnlyValue(Settings.singleton().getUserLatLngName()));
-        assertTrue(TagEdit.getReadOnlyValue(Settings.singleton().getUserAccuracyName()));
-        assertFalse(TagEdit.getReadOnlyValue("test_tag"));
-        assertFalse(TagEdit.getReadOnlyValue(null));
-    }
-
-    @Test
     public void testLocationToString() throws Exception {
         // Set up your test
         Location loc1 = new Location("Test");

@@ -127,6 +127,8 @@ public class TagEdit {
         tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
         tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
         tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
+
+        tagEditHiddenHash = new LinkedHashMap<>();
         tagEditHiddenHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), "-1.22321132,36.32234233", true));
         tagEditHiddenHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), locationAccuracyToString(32f), true));
     }
@@ -145,6 +147,8 @@ public class TagEdit {
         tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
         tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
         tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
+
+        tagEditHiddenHash = new LinkedHashMap<>();
     }
 
     /**
@@ -161,6 +165,8 @@ public class TagEdit {
         tagEditHash.put("test_tag_6", new TagEdit("test_tag_6", null, false));
         tagEditHash.put("test_tag_7", new TagEdit("test_tag_7", "test", true));
         tagEditHash.put("test_tag_8", new TagEdit("test_tag_8", null, true));
+
+        tagEditHiddenHash = new LinkedHashMap<>();
         tagEditHiddenHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), null, true));
         tagEditHiddenHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), "", true));
     }
@@ -254,7 +260,19 @@ public class TagEdit {
     }
     
     public static TagEdit getTag(String key) {
-        return tagEditHash.get(key);        
+        if(tagEditHash != null && tagEditHash.containsKey(key)) {
+            return tagEditHash.get(key);
+        }
+
+        return null;
+    }
+
+    public static TagEdit getHiddenTag(String key) {
+        if(tagEditHiddenHash != null && tagEditHiddenHash.containsKey(key)) {
+            return tagEditHiddenHash.get(key);
+        }
+
+        return null;
     }
 
     public static Set<String> hiddenTagKeys() {

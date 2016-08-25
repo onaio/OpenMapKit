@@ -17,6 +17,7 @@ import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
 import android.util.Xml;
+import android.widget.EditText;
 
 import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
 
@@ -147,51 +148,11 @@ public class TagSwipeActivityTest {
 
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
 
-                    TagEdit userLocationTag = TagEdit.getTag(Settings.singleton().getUserLatLngName());
+                    TagEdit userLocationTag = TagEdit.getHiddenTag(Settings.singleton().getUserLatLngName());
                     Assert.assertTrue(TagEdit.locationToString(location).equals(userLocationTag.getTagVal()));
 
-                    TagEdit userLocationAccuracy = TagEdit.getTag(Settings.singleton().getUserAccuracyName());
+                    TagEdit userLocationAccuracy = TagEdit.getHiddenTag(Settings.singleton().getUserAccuracyName());
                     Assert.assertTrue(TagEdit.locationAccuracyToString(location.getAccuracy()).equals(userLocationAccuracy.getTagVal()));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(e.getMessage(), false);
-                }
-
-                locationManager.removeTestProvider(testProvider);
-            }
-        });
-    }
-
-    /**
-     * This test checks whether the 'GPS is still searching' dialog is shown when a user presses the
-     * save to ODK button before a location fix is recorded
-     */
-    @Test
-    @Ignore
-    public void testShowGpsSearchingDialog() {
-        Log.i(TAG, "Running test testShowGpsSearchingDialog");
-        startTagSwipeActivity(new OnPostLaunchActivity() {
-            @Override
-            public void run(Activity activity) {
-                final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
-                String testProvider = createTestLocationProvider(tagSwipeActivity);
-                LocationManager locationManager = tagSwipeActivity.getLocationManager();
-
-                TagEdit.cleanUserLocationTags();
-                Espresso.onView(ViewMatchers.withText(R.string.save_to_odk_collect))
-                        .perform(ViewActions.click());
-
-                try {
-                    Thread.sleep(UI_STANDARD_WAIT_TIME);
-                    tagSwipeActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            tagSwipeActivity.setOsmUsername("test");
-                        }
-                    });
-                    Thread.sleep(UI_STANDARD_WAIT_TIME);
-                    Assert.assertTrue(tagSwipeActivity.getGpsSearchingProgressDialog() != null);
-                    Assert.assertTrue(tagSwipeActivity.getGpsSearchingProgressDialog().isShowing());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     Assert.assertTrue(e.getMessage(), false);
@@ -264,6 +225,24 @@ public class TagSwipeActivityTest {
                 }
 
                 locationManager.removeTestProvider(testProvider);
+            }
+        });
+    }
+
+    /**
+     * This method tests whether the user location tags are hidden (should be) or shown
+     */
+    @Test
+    public void testHiddenUserLocationTags() {
+        Log.i(TAG, "Running test testUserLocationTagsInOsmFile");
+        startTagSwipeActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                Assert.assertNull(TagEdit.getTag(Settings.singleton().getUserLatLngName()));
+                Assert.assertNull(TagEdit.getTag(Settings.singleton().getUserAccuracyName()));
+                
+                Assert.assertTrue(TagEdit.getHiddenTag(Settings.singleton().getUserLatLngName()) != null);
+                Assert.assertTrue(TagEdit.getHiddenTag(Settings.singleton().getUserAccuracyName()) != null);
             }
         });
     }
