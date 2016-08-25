@@ -54,6 +54,8 @@ public class Settings {
     }
 
     private Settings() {
+        proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
+        data = new JSONObject();
         if(ODKCollectHandler.isODKCollectMode()) {
             String formFileName = ODKCollectHandler.getODKCollectData().getFormFileName();
             completeInit(formFileName);
@@ -61,12 +63,12 @@ public class Settings {
     }
 
     private Settings(String formFileName) {
+        proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
+        data = new JSONObject();
         completeInit(formFileName);
     }
 
     private void completeInit(String formFileName) {
-        proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
-        data = new JSONObject();
         try {
             File file = ExternalStorage.fetchSettingsFile(formFileName);
             String settingsString = FileUtils.readFileToString(file);

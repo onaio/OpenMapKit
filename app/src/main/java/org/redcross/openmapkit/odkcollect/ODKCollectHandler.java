@@ -56,6 +56,9 @@ public class ODKCollectHandler {
                                                         requiredTags);
                 }
             }
+        } else {
+            ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
+            Settings.initialize();
         }
     }
     
