@@ -159,6 +159,10 @@ public class TagSwipeActivity extends ActionBarActivity {
         return true;
     }
 
+    public Menu getMenu() {
+        return menu;
+    }
+
     private void hideMenuItems() {
         ArrayList<String> hiddenMenuItems = org.redcross.openmapkit.Settings.singleton().getHiddenMenuItems();
         if(hiddenMenuItems.size() > 0) {
@@ -168,10 +172,6 @@ public class TagSwipeActivity extends ActionBarActivity {
                     menu.findItem(currMenuItemId).setVisible(false);
                     hiddenItems++;
                 }
-            }
-
-            if(hiddenItems == MENU_ITEM_IDS.size()) {
-                menu.clear();
             }
         }
     }

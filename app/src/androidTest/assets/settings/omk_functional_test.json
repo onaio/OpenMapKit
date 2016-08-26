@@ -22,7 +22,8 @@
     "osm user name",
     "osm xml downloader",
     "osm xml layers",
-    "info"
+    "info",
+    "save to odk collect"
   ],
   "user_location_tags": {
     "lat_lng": {

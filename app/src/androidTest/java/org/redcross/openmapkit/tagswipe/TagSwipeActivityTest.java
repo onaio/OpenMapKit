@@ -17,6 +17,7 @@ import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
 import android.util.Xml;
+import android.view.Menu;
 import android.widget.EditText;
 
 import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
@@ -44,6 +45,8 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Calendar;
 import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Jason Rogena - jrogena@ona.io on 7/26/16.
@@ -101,8 +104,13 @@ public class TagSwipeActivityTest {
                 final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
                 try {
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
-                    Espresso.onView(ViewMatchers.withText(R.string.save_to_odk_collect))
-                            .perform(ViewActions.click());
+
+                    tagSwipeActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            tagSwipeActivity.saveToODKCollect();
+                        }
+                    });
 
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
                     tagSwipeActivity.runOnUiThread(new Runnable() {
@@ -147,6 +155,30 @@ public class TagSwipeActivityTest {
                 
                 Assert.assertTrue(TagEdit.getHiddenTag(Settings.singleton().getUserLatLngName()) != null);
                 Assert.assertTrue(TagEdit.getHiddenTag(Settings.singleton().getUserAccuracyName()) != null);
+            }
+        });
+    }
+
+    /**
+     * This method checks whether the menu items configured to be hidden in assets/settings/omk_functional_test.json
+     * are actually hidden
+     */
+    @Test
+    public void testHiddenMenuItems() {
+        Log.i(TAG, "Running test testHiddenMenuItems");
+        startTagSwipeActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
+                try {
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Menu menu = tagSwipeActivity.getMenu();
+                    for (int currMenuItemId : TagSwipeActivity.MENU_ITEM_IDS) {
+                        assertEquals(Settings.singleton().getHiddenMenuItems().contains(menu.findItem(currMenuItemId).getTitle().toString().toLowerCase()), !menu.findItem(currMenuItemId).isVisible());
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
