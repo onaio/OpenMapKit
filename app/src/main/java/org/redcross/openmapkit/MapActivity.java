@@ -3,12 +3,15 @@ package org.redcross.openmapkit;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DownloadManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
@@ -16,10 +19,11 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDialog;
+import android.support.v7.view.ContextThemeWrapper;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
@@ -28,6 +32,7 @@ import android.view.TouchDelegate;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -53,6 +58,8 @@ import org.fieldpapers.listeners.FPListener;
 import org.fieldpapers.model.FPAtlas;
 import org.json.JSONException;
 import org.redcross.openmapkit.deployments.DeploymentsActivity;
+import org.redcross.openmapkit.odkcollect.Form;
+import org.redcross.openmapkit.odkcollect.FormOSMDownloader;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.server.MBTilesServer;
@@ -61,17 +68,20 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MapActivity extends AppCompatActivity implements OSMSelectionListener, FPListener {
+public class MapActivity extends AppCompatActivity implements OSMSelectionListener, FPListener, FormOSMDownloader.OnFileDownload {
     protected static final String PREVIOUS_LAT = "org.redcross.openmapkit.PREVIOUS_LAT";
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
+    protected static final String ODK_OMK_QUERY_VAL = "org.redcross.openmapkit.ODK_QUERY_VAL";
     
     private static String version = "";
 
@@ -90,6 +100,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected TextView mTagTextView;
     protected Basemap basemap;
     protected TagListAdapter tagListAdapter;
+    protected Menu menu;
 
     private boolean nodeMode = false;
     private boolean moveNodeMode = false;
@@ -103,6 +114,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private LocationListener locationListener;
     private android.support.v7.app.AlertDialog gpsProviderAlertDialog;
     private Location lastLocation;
+
+    private AppCompatDialog odkQueryDialog;
+    private HashMap<Integer, Form> downloadingForms, successfulForms;
+    private ProgressDialog progressDialog;
+    private DownloadManager downloadManager;
 
     /**
      * Which GPS provider should be used to get the User's current location
@@ -153,6 +169,10 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         // Loads up all the constraints JSON configs.
         Constraints.initialize();
 
+        // Initialize the settings singleton.
+        // Loads up all the settings JSON config
+        Settings.initialize();
+
         //set layout
         setContentView(R.layout.activity_map);
 
@@ -195,24 +215,18 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         positionMap();
 
         initializeListView();
-
-        //Initialize location settings.
-        try {
-            LocationXMLParser.parseXML(this);
-        } catch (XmlPullParserException | IOException e) {
-            e.printStackTrace();
-        }
-
         initLocationManager();
 
         // Proximity is disabled until there is a GPS fix.
-        LocationXMLParser.setProximityEnabled(false);
+        Settings.setProximityEnabled(false);
 
-        if (isGPSEnabled() && LocationXMLParser.getProximityCheck()) {
+        if (isGPSEnabled() && Settings.singleton().getProximityCheck()) {
             // Start GPS progress
-            initialCountdownValue = LocationXMLParser.getGpsTimerDelay();
+            initialCountdownValue = Settings.singleton().getGpsTimerDelay();
             showProgressDialog();
         }
+
+        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
     }
 
     private void initLocationManager() {
@@ -220,15 +234,15 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onLocationChanged(Location location) {
                 lastLocation = location;
-                if(LocationXMLParser.getProximityCheck()) {
-                    if(location.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
-                        if(!LocationXMLParser.isProximityEnabled()) {
+                if(Settings.singleton().getProximityCheck()) {
+                    if(location.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
+                        if(!Settings.singleton().isProximityEnabled()) {
                             //means this is the first time a location fix for the user has been gotten
                             if(!isUserLocationEnabled()) {
                                 toggleUserLocation();//zoom into the user's current position
                             }
                         }
-                        LocationXMLParser.setProximityEnabled(true);
+                        Settings.singleton().setProximityEnabled(true);
                     }
                 }
             }
@@ -277,7 +291,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                             if (isGPSEnabled()) {
                                 dialogInterface.dismiss();
                             } else {
-                                MapActivity.this.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                                MapActivity.this.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                             }
                         }
                     })
@@ -628,9 +642,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
             mapView.setInteractionEnabled(true);
         } else {
-            if(LocationXMLParser.getProximityCheck()) {
+            if(Settings.singleton().getProximityCheck()) {
                 //check user's last location is accurate enough
-                if(lastLocation != null && lastLocation.getAccuracy() <= LocationXMLParser.getGpsProximityAccuracy()) {
+                if(lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
                     if(!isUserLocationEnabled()) {
                         toggleUserLocation();
                     }
@@ -669,7 +683,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void toggleMoveNodeMode() {
-        if(!LocationXMLParser.getProximityCheck()) {
+        if(!Settings.singleton().getProximityCheck()) {
             final ImageButton moveNodeModeBtn = (ImageButton)findViewById(R.id.moveNodeModeBtn);
             final ImageButton moveNodeMarkerBtn = (ImageButton)findViewById(R.id.moveNodeMarkerBtn);
             final Button moveNodeBtn = (Button)findViewById(R.id.moveNodeBtn);
@@ -857,7 +871,16 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_map, menu);
+        this.menu = menu;
+        hideMenuItems();
         return true;
+    }
+
+    private void hideMenuItems() {
+        if(!ODKCollectHandler.isODKCollectMode()
+                || Settings.singleton().getOSMFromODKForms().size() == 0) {
+            menu.findItem(R.id.osmFromODK).setVisible(false);
+        }
     }
 
     /**
@@ -893,6 +916,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         } else if (id == R.id.action_save_to_odk_collect) {
             saveToODKCollectAndExit();
             return true;
+        } else if (id == R.id.osmFromODK) {
+            showOdkQueryDialog();
         }
         return false;
     }
@@ -929,7 +954,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 //present OSM Feature tags in bottom ListView
                 identifyOSMFeature(tappedOSMElement);
             } else {
-                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), LocationXMLParser.getProximityRadius() + "m");
+                String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
                 Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
                 proportionMapAndList(100, 0);
             }
@@ -945,13 +970,13 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      *          the {@link com.spatialdev.osm.model.OSMElement}
      */
     public boolean isWithinUserProximity(OSMElement tappedOSMOsmElement) {
-        if(LocationXMLParser.getProximityCheck()) {
+        if(Settings.singleton().getProximityCheck()) {
             if (tappedOSMOsmElement != null) {
                 Geometry geometry = tappedOSMOsmElement.getJTSGeom();
                 if(geometry != null && lastLocation != null) {
                     Point elementCentroid = geometry.getCentroid();
                     LatLng centroidLatLng = new LatLng(elementCentroid.getCoordinate().y, elementCentroid.getCoordinate().x);
-                    if(centroidLatLng.distanceTo(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())) <= LocationXMLParser.getProximityRadius()) {
+                    if(centroidLatLng.distanceTo(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())) <= Settings.singleton().getProximityRadius()) {
                         return true;
                     }
                 }
@@ -1095,7 +1120,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void doCountDown() {
-        boolean foundGpsLocation = LocationXMLParser.isProximityEnabled();
+        boolean foundGpsLocation = Settings.isProximityEnabled();
         if (initialCountdownValue-- == 0 || foundGpsLocation) {
             gpsCountdownDialog.dismiss();
             if (foundGpsLocation) {
@@ -1152,14 +1177,186 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * from being used (hence leading to potential stale OSM colors being rendered)
      */
     private void forceReloadForColor() {
-        if(ODKCollectHandler.isODKCollectMode()
+        if (ODKCollectHandler.isODKCollectMode()
                 && Constraints.singleton().getFirstColorConfig().isEnabled()) {
             File[] osmFiles = ExternalStorage.fetchOSMXmlFiles();
-            if(osmFiles != null && osmFiles.length > 0) {
-                for(int i = 0; i < osmFiles.length; i++) {
+            if (osmFiles != null && osmFiles.length > 0) {
+                for (int i = 0; i < osmFiles.length; i++) {
                     OSMMapBuilder.removeOSMFileFromModel(osmFiles[i]);
                 }
             }
+        }
+    }
+
+    public void showOdkQueryDialog() {
+        if(Settings.singleton().getOSMFromODKQuery() != null) {
+            final SharedPreferences sharedPreferences = getSharedPreferences("org.redcross.openmapkit.USER_NAME", Context.MODE_PRIVATE);
+            if (odkQueryDialog == null) {
+                final ContextThemeWrapper themedContext;
+                themedContext = new ContextThemeWrapper(this, R.style.CustomDialogStyle);
+                odkQueryDialog = new AppCompatDialog(themedContext);
+                odkQueryDialog.setContentView(R.layout.dialog_odk_query);
+                odkQueryDialog.setTitle(R.string.osm_data_from_odk);
+
+                Button cancelB = (Button) odkQueryDialog.findViewById(R.id.cancelB);
+                cancelB.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
+                        odkQueryDialog.dismiss();
+                    }
+                });
+
+                Button okB = (Button) odkQueryDialog.findViewById(R.id.okB);
+                okB.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
+                        EditText filterET = (EditText) odkQueryDialog.findViewById(R.id.filterET);
+
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString(ODK_OMK_QUERY_VAL, filterET.getText().toString());
+                        editor.commit();
+
+                        odkQueryDialog.dismiss();
+
+                        startDownload();
+                    }
+                });
+            }
+            String queryVal = sharedPreferences.getString(ODK_OMK_QUERY_VAL, null);
+            String instructions = null;
+            if (queryVal == null) {
+                instructions = String.format(getResources().getString(R.string.odk_query_instructions), "enter", Settings.singleton().getOSMFromODKQuery(), "");
+            } else {
+                instructions = String.format(getResources().getString(R.string.odk_query_instructions), "confirm that", Settings.singleton().getOSMFromODKQuery(), " is:");
+            }
+            TextView instructionsTV = (TextView) odkQueryDialog.findViewById(R.id.instructionsTV);
+            instructionsTV.setText(instructions);
+            EditText filterET = (EditText) odkQueryDialog.findViewById(R.id.filterET);
+            filterET.setText(queryVal);
+
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(filterET.getWindowToken(), 0);
+
+            odkQueryDialog.show();
+        } else {
+            startDownload();
+        }
+    }
+
+    public Dialog getOdkQuDialog() {
+        return odkQueryDialog;
+    }
+
+    public ProgressDialog getOSMFromODKProgressDialog() {
+        return progressDialog;
+    }
+
+    private void startDownload() {
+        //stop all previous downloads
+        FormOSMDownloader.clearOngoingDownloads(getApplicationContext());
+
+        ArrayList<Form> forms = Settings.singleton().getOSMFromODKForms();
+        downloadingForms = new HashMap<>();
+        successfulForms = new HashMap<>();
+        for(Form curForm : forms) {
+            downloadingForms.put(curForm.getId(), curForm);
+            final SharedPreferences sharedPreferences = getSharedPreferences("org.redcross.openmapkit.USER_NAME", Context.MODE_PRIVATE);
+            new FormOSMDownloader(getApplicationContext(), curForm, this, sharedPreferences.getString(ODK_OMK_QUERY_VAL, null)).execute();
+        }
+
+        updateOsmFromOdkProgress();
+    }
+
+    @Override
+    public void onStart(Form form) {}
+
+    @Override
+    public void onFail(final Form form) {
+        try {
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+            builder.setMessage("An OSM file failed to download. Do you want to try download it again?");
+            builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    downloadingForms.put(form.getId(), form);
+                    final SharedPreferences sharedPreferences = getSharedPreferences("org.redcross.openmapkit.USER_NAME", Context.MODE_PRIVATE);
+                    new FormOSMDownloader(MapActivity.this.getApplicationContext(), form, MapActivity.this, sharedPreferences.getString(ODK_OMK_QUERY_VAL, null)).execute();
+                    updateOsmFromOdkProgress();
+                }
+            });
+
+            builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    downloadingForms.remove(form.getId());
+                    updateOsmFromOdkProgress();
+                }
+            });
+
+            builder.setCancelable(false);
+            builder.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onSuccess(Form form) {
+        try {
+            downloadingForms.remove(form.getId());
+            successfulForms.put(form.getId(), form);
+            updateOsmFromOdkProgress();
+
+            if(downloadingForms.size() == 0) {//no more forms downloading
+                loadOSMFromODK();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadOSMFromODK() {
+        ArrayList<Form> forms = Settings.singleton().getOSMFromODKForms();
+        Set<File> osmFiles = new HashSet<>();
+        for(Form curForm : forms) {
+            if(curForm.getLocalOsmFile().exists()) {
+                osmFiles.add(curForm.getLocalOsmFile());
+            }
+        }
+
+        if(osmFiles.size() == forms.size()) {
+            OSMMapBuilder.removeOSMFilesFromModel(osmFiles);
+            OSMMapBuilder.addOSMFilesToModel(osmFiles);
+        }
+    }
+
+    private void updateOsmFromOdkProgress() {
+        if(progressDialog == null) {
+            progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage(getResources().getString(R.string.downloading_osm_from_odk));
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setIndeterminate(false);
+        }
+
+        if(downloadingForms != null
+                && successfulForms != null
+                &&(downloadingForms.size() + successfulForms.size()) > 0) {
+            progressDialog.setMax(downloadingForms.size() + successfulForms.size());
+            progressDialog.setProgress(successfulForms.size());
+
+            if(downloadingForms.size() == 0) {
+                progressDialog.dismiss();
+            } else {
+                progressDialog.show();
+            }
+        } else {
+            progressDialog.dismiss();
         }
     }
 }

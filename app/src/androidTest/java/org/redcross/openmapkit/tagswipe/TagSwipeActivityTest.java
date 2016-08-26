@@ -408,9 +408,13 @@ public class TagSwipeActivityTest {
                 } else {
                     Assert.assertTrue("Current context is not TagSwipeActivity", false);
                 }
+
+                activity2.finish();
             } else {
                 Assert.assertTrue("Current context is not MapActivity", false);
             }
+
+            activity1.finish();
         } catch (InterruptedException e) {
             e.printStackTrace();
             Assert.assertTrue(e.getMessage(), false);

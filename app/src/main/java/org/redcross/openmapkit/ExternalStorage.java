@@ -72,6 +72,10 @@ public class ExternalStorage {
         if (!constraintsDir.exists()) {
             constraintsDir.mkdirs();
         }
+        File settingsDir = new File(appDir, SETTINGS_DIR);
+        if (!settingsDir.exists()) {
+            settingsDir.mkdirs();
+        }
     }
 
     public static String getMBTilesDir() {
@@ -368,8 +372,12 @@ public class ExternalStorage {
         return new File(constraintsDir, formName + ".json");
     }
 
-
-
+    public static File fetchSettingsFile(String formName) {
+        File storageDir = Environment.getExternalStorageDirectory();
+        File appDir = new File(storageDir, APP_DIR);
+        File constraintsDir = new File(appDir, SETTINGS_DIR);
+        return new File(constraintsDir, formName + ".json");
+    }
 
     /**
      * From
