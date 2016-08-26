@@ -28,21 +28,6 @@ public class FormOSMDownloaderTest {
         context = InstrumentationRegistry.getContext();
     }
 
-    private void copySettingsDir() {
-        //first remove the existing dir if already exists
-        File dir = new File(ExternalStorage.getSettingsDir());
-        dir.mkdirs();
-        if (dir.exists() && dir.isDirectory()) {
-            String[] children = dir.list();
-            for (int i = 0; i < children.length; i++) {
-                new File(dir, children[i]).delete();
-            }
-        }
-
-        //add the fresh settings dir
-        ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
-    }
-
     /**
      * This method tests:
      *  - whether the OSM file for a form is deleted before the download is started

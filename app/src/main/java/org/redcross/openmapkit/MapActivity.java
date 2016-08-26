@@ -541,6 +541,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      */
     protected void initializeOsmXml() {
         try {
+            forceReloadForColor();
             OSMMapBuilder.buildMapFromExternalStorage(this);
         } catch (Exception e) {
             e.printStackTrace();
@@ -982,6 +983,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             } else {
                 String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
                 Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
+                proportionMapAndList(100, 0);
             }
         }
     }
@@ -1195,6 +1197,22 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
     public AlertDialog getDeleteNodeDialog() {
         return deleteNodeDialog;
+    }
+
+    /**
+     * This method causes OSM data to be reloaded from file so as to prevent in memory map markers
+     * from being used (hence leading to potential stale OSM colors being rendered)
+     */
+    private void forceReloadForColor() {
+        if (ODKCollectHandler.isODKCollectMode()
+                && Constraints.singleton().getFirstColorConfig().isEnabled()) {
+            File[] osmFiles = ExternalStorage.fetchOSMXmlFiles();
+            if (osmFiles != null && osmFiles.length > 0) {
+                for (int i = 0; i < osmFiles.length; i++) {
+                    OSMMapBuilder.removeOSMFileFromModel(osmFiles[i]);
+                }
+            }
+        }
     }
 
     public void showOdkQueryDialog() {

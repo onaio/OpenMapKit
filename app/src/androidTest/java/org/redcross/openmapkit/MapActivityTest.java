@@ -35,12 +35,18 @@ import com.vividsolutions.jts.geom.Point;
 
 import org.hamcrest.CoreMatchers;
 import org.json.JSONArray;
+import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
+import org.hamcrest.object.HasToString;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.redcross.openmapkit.odkcollect.FormOSMDownloader;
+import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -595,7 +601,7 @@ public class MapActivityTest {
                         }
                     });
 
-                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Thread.sleep(UI_LONG_WAIT_TIME);
                     assertFalse(mapActivity.getDeleteNodeDialog().isShowing());
                     Espresso.onView(ViewMatchers.withId(R.id.tagListView))
                             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
@@ -746,6 +752,7 @@ public class MapActivityTest {
                 }
             });
             onPostLaunchActivity.run(activity);
+            activity.finish();
         } else {
             assertTrue("Current activity is not the MapActivity", false);
         }
