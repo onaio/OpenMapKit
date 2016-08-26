@@ -51,6 +51,7 @@ import java.util.Collection;
 @RunWith(AndroidJUnit4.class)
 public class TagSwipeActivityTest {
     private static final String TAG = "TagSwipeActivityTest";
+    private Location userLocation;
     private static final long UI_STANDARD_WAIT_TIME = 100l;//standard time to wait for a UI update
     private static final long UI_LONG_WAIT_TIME = 2000l;
     private Activity currentActivity;
@@ -62,103 +63,28 @@ public class TagSwipeActivityTest {
     public ActivityTestRule<MapActivity> mapActivityTR = new ActivityTestRule<MapActivity>(MapActivity.class, true, false);
 
     /**
-     * This test checks whether the enable GPS provider dialog pops up if the recommended GPS
-     * provider is off
-     */
-    @Test
-    @Ignore
-    public void testCheckLocationProviderDisabled() {
-        Log.i(TAG, "Running test testCheckLocationProviderDisabled");
-        startTagSwipeActivity(new OnPostLaunchActivity() {
-            @Override
-            public void run(Activity activity) {
-                final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
-                String testProvider = createTestLocationProvider(tagSwipeActivity);
-                LocationManager locationManager = tagSwipeActivity.getLocationManager();
-
-                //test to see if dialog is shown when GPS is disabled
-                locationManager.setTestProviderEnabled(testProvider, false);
-
-                try {
-                    Thread.sleep(UI_LONG_WAIT_TIME);
-                    Assert.assertTrue(tagSwipeActivity.isGpsProviderAlertDialogShowing());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(e.getMessage(), false);
-                }
-
-                locationManager.removeTestProvider(testProvider);
-            }
-        });
-    }
-
-    /**
-     * This test checks whether the enable GPS provider dialog pops up if the recommended GPS
-     * provider is on
-     */
-    @Test
-    public void testCheckLocationProviderEnabled() {
-        Log.i(TAG, "Running test testCheckLocationProviderEnabled");
-        startTagSwipeActivity(new OnPostLaunchActivity() {
-            @Override
-            public void run(Activity activity) {
-                TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
-                String testProvider = createTestLocationProvider(tagSwipeActivity);
-                LocationManager locationManager = tagSwipeActivity.getLocationManager();
-
-                //test to see if dialog is shown when GPS is disabled
-                try {
-                    Thread.sleep(UI_LONG_WAIT_TIME);
-                    Assert.assertFalse(tagSwipeActivity.isGpsProviderAlertDialogShowing());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Assert.assertTrue(e.getMessage(), false);
-                }
-
-                locationManager.removeTestProvider(testProvider);
-            }
-        });
-    }
-
-    /**
      * This test checks whether an updated user location updates the user location tags stored in
      * the TagEdit hash map
      */
     @Test
-    public void testUpdateUserLocation() {
-        Log.i(TAG, "Running test testUpdateUserLocation");
+    public void testSetUserLocation() {
+        Log.i(TAG, "Running test testSetUserLocation");
         startTagSwipeActivity(new OnPostLaunchActivity() {
             @Override
             public void run(Activity activity) {
                 final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
-                String testProvider = createTestLocationProvider(tagSwipeActivity);
-                LocationManager locationManager = tagSwipeActivity.getLocationManager();
                 try {
-                    Thread.sleep(UI_STANDARD_WAIT_TIME);
-                    Location location = new Location(testProvider);
-                    location.setLatitude(-0.3212321d);
-                    location.setLongitude(36.324324d);
-                    location.setAccuracy(30.0f);
-                    location.setTime(System.currentTimeMillis());
-                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
-                        location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-
-                    }
-                    locationManager.setTestProviderLocation(testProvider, location);
-
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
 
                     TagEdit userLocationTag = TagEdit.getHiddenTag(Settings.singleton().getUserLatLngName());
-                    Assert.assertTrue(TagEdit.locationToString(location).equals(userLocationTag.getTagVal()));
+                    Assert.assertTrue(TagEdit.locationToString(userLocation).equals(userLocationTag.getTagVal()));
 
                     TagEdit userLocationAccuracy = TagEdit.getHiddenTag(Settings.singleton().getUserAccuracyName());
-                    Assert.assertTrue(TagEdit.locationAccuracyToString(location.getAccuracy()).equals(userLocationAccuracy.getTagVal()));
+                    Assert.assertTrue(TagEdit.locationAccuracyToString(userLocation.getAccuracy()).equals(userLocationAccuracy.getTagVal()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     Assert.assertTrue(e.getMessage(), false);
                 }
-
-                locationManager.removeTestProvider(testProvider);
             }
         });
     }
@@ -173,26 +99,6 @@ public class TagSwipeActivityTest {
             @Override
             public void run(Activity activity) {
                 final TagSwipeActivity tagSwipeActivity = (TagSwipeActivity) activity;
-                String testProvider = createTestLocationProvider(tagSwipeActivity);
-                LocationManager locationManager = tagSwipeActivity.getLocationManager();
-
-                final Location location = new Location(testProvider);
-                location.setLatitude(-0.3212321d);
-                location.setLongitude(36.324324d);
-                location.setAccuracy(9f);
-                location.setTime(System.currentTimeMillis());
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
-                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-
-                }
-
-                tagSwipeActivity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        TagEdit.updateUserLocationTags(location);
-                    }
-                });
-
                 try {
                     Thread.sleep(UI_STANDARD_WAIT_TIME);
                     Espresso.onView(ViewMatchers.withText(R.string.save_to_odk_collect))
@@ -211,7 +117,7 @@ public class TagSwipeActivityTest {
                     if(osmFilePath != null) {
                         try {
                             String contents = getStringFromFile(osmFilePath);
-                            checkLocationTagsInXml(contents, location);
+                            checkLocationTagsInXml(contents, userLocation);
                         } catch (IOException e) {
                             e.printStackTrace();
                             Assert.assertTrue(e.getMessage(), false);
@@ -223,8 +129,6 @@ public class TagSwipeActivityTest {
                     e.printStackTrace();
                     Assert.assertTrue(e.getMessage(), false);
                 }
-
-                locationManager.removeTestProvider(testProvider);
             }
         });
     }
@@ -365,6 +269,8 @@ public class TagSwipeActivityTest {
 
                 gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
 
+                userLocation = new Location(location);
+
                 //launch the TagSwipeActivity by trying to add a new node
                 Thread.sleep(MapActivityTest.GPS_DIALOG_TIMEOUT);
                 Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
@@ -408,53 +314,5 @@ public class TagSwipeActivityTest {
 
     private interface OnPostLaunchActivity {
         void run(Activity activity);
-    }
-
-    /**
-     * This method creates a test provider and attaches it to the LocationManager initialized in the
-     * provided gpsLocationProvider
-     *
-     * @param tagSwipeActivity   Activity containing the LocationManager to attach the test provider
-     * @return  The name of the test provider created
-     *
-     * @see android.location.LocationManager
-     * @see com.mapbox.mapboxsdk.overlay.GpsLocationProvider
-     */
-    public static String createTestLocationProvider(final TagSwipeActivity tagSwipeActivity) {
-        final String providerName = "test_provider" + String.valueOf(Calendar.getInstance().getTimeInMillis());
-
-        Runnable uiRunnable = new Runnable() {
-            @Override
-            public void run() {
-                LocationManager locationManager = tagSwipeActivity.getLocationManager();
-                locationManager.removeUpdates(tagSwipeActivity.getLocationListener());
-
-                if(locationManager.getProvider(providerName) == null) {
-                    locationManager.addTestProvider(providerName, true, false, false, false, true, true,
-                            true, Criteria.POWER_MEDIUM, Criteria.ACCURACY_FINE);
-                    locationManager.setTestProviderEnabled(providerName, true);
-                    tagSwipeActivity.setPreferredLocationProvider(providerName);
-                    locationManager.requestLocationUpdates(providerName,
-                            0,
-                            0,
-                            tagSwipeActivity.getLocationListener());
-                }
-
-                synchronized (this) {
-                    this.notify();
-                }
-            }
-        };
-
-        synchronized (uiRunnable) {
-            tagSwipeActivity.runOnUiThread(uiRunnable);
-
-            try {
-                uiRunnable.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        return providerName;
     }
 }
