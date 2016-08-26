@@ -1,5 +1,6 @@
 package org.redcross.openmapkit.tagswipe;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +42,11 @@ import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 public class TagSwipeActivity extends ActionBarActivity {
     public static final String KEY_USER_LOCATION = "user_location";
+    public static final ArrayList<Integer> MENU_ITEM_IDS;
+    static{
+        MENU_ITEM_IDS = new ArrayList<>();
+        MENU_ITEM_IDS.add(R.id.action_save_to_odk_collect);
+    }
     private List<TagEdit> tagEdits;
     private SharedPreferences userNamePref;
     private AlertDialog gpsProviderAlertDialog;
@@ -48,6 +54,7 @@ public class TagSwipeActivity extends ActionBarActivity {
     private AlertDialog insertOsmUsernameDialog;
     private EditText osmUsernameEditText;
     private String osmFilePath;
+    private Menu menu;
 
     private void setupModel() {
         tagEdits = TagEdit.buildTagEdits();
@@ -147,7 +154,26 @@ public class TagSwipeActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_tag_swipe, menu);
+        this.menu = menu;
+        hideMenuItems();
         return true;
+    }
+
+    private void hideMenuItems() {
+        ArrayList<String> hiddenMenuItems = org.redcross.openmapkit.Settings.singleton().getHiddenMenuItems();
+        if(hiddenMenuItems.size() > 0) {
+            int hiddenItems = 0;
+            for (int currMenuItemId : MENU_ITEM_IDS) {
+                if (hiddenMenuItems.contains(menu.findItem(currMenuItemId).getTitle().toString().toLowerCase())) {
+                    menu.findItem(currMenuItemId).setVisible(false);
+                    hiddenItems++;
+                }
+            }
+
+            if(hiddenItems == MENU_ITEM_IDS.size()) {
+                menu.clear();
+            }
+        }
     }
 
     @Override
