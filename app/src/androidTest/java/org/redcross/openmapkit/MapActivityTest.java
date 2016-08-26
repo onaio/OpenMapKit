@@ -699,36 +699,6 @@ public class MapActivityTest {
                     final Dialog queryDialog = mapActivity.getOdkQuDialog();
                     assertTrue(queryDialog != null);
                     assertTrue(queryDialog.isShowing());
-
-                    Settings.singleton().setOSMFromODKUsername(Settings.DEFAULT_OSM_FROM_ODK_USERNAME);
-                    Settings.singleton().setOSMFromODKPassword(Settings.DEFAULT_OSM_FROM_ODK_PASSWORD);
-                    Settings.singleton().setOSMFromODKQuery(Settings.DEFAULT_OSM_FROM_ODK_QUERY);
-                    Settings.singleton().setOSMFromODKServer(Settings.DEFAULT_OSM_FROM_ODK_SERVER);
-                    JSONArray formArray = new JSONArray();
-                    formArray.put(79639);
-                    formArray.put(80159);
-                    Settings.singleton().setOSMFromODKForms(formArray);
-
-                    //clear all ongoing downloads
-                    FormOSMDownloader.clearOngoingDownloads(mapActivity.getApplicationContext());
-                    assertEquals(FormOSMDownloader.getOngoingDownloadIds().size(), 0);
-
-                    //press the ok button and check if the downloads have started
-                    mapActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Button okButton = (Button) queryDialog.findViewById(R.id.okB);
-                            okButton.performClick();
-                        }
-                    });
-
-                    Thread.sleep(UI_LONG_WAIT_TIME);
-
-                    ProgressDialog progressDialog = mapActivity.getOSMFromODKProgressDialog();
-
-                    assertTrue(progressDialog != null);
-                    assertTrue(progressDialog.isShowing());
-
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
