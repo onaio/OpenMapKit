@@ -307,7 +307,7 @@ public class TagSwipeActivityTest {
                 Thread.sleep(MapActivityTest.GPS_DIALOG_TIMEOUT);
                 Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
                 Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).perform(ViewActions.click());
-                Espresso.onView(ViewMatchers.withText("spray_status")).perform(ViewActions.click());
+                Espresso.onView(ViewMatchers.withId(R.id.tagButton)).perform(ViewActions.click());
 
                 gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
 

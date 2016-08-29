@@ -134,4 +134,14 @@ public class SettingsTest {
 
         assertFalse(Settings.singleton().isUserLocationTag("spray_status"));
     }
+
+    /**
+     * THis method tests whether the getClickableTags method returns the correct clickable_tags
+     * setting
+     */
+    @Test
+    public void testClickableTagsSetting() {
+        assertTrue(Settings.singleton().getClickableTags() != Settings.DEFAULT_CLICKABLE_TAGS);
+        assertFalse(Settings.singleton().getClickableTags());
+    }
 }

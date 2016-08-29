@@ -47,6 +47,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.redcross.openmapkit.odkcollect.FormOSMDownloader;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
+import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -704,6 +705,58 @@ public class MapActivityTest {
                 }
 
                 gpsLocationProvider.getLocationManager().removeTestProvider(testProvider);
+            }
+        });
+    }
+
+    /**
+     * This method tests whether clicking tags with the clickable_tags setting set to false sends
+     * the user to the tagSwipeActivity (shouldn't)
+     */
+    @Test
+    public void testClickingTags() {
+        Log.i(TAG, "Running test testClickingTags");
+        startMapActivity(new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                final MapActivity mapActivity = (MapActivity) activity;
+                GpsLocationProvider gpsLocationProvider = mapActivity.getGpsLocationProvider();
+                String testProvider = createTestLocationProvider(mapActivity);
+
+                //set current location with an accuracy that is larger than the one set in
+                //proximity_settings
+                Location location = new Location(testProvider);
+                location.setLatitude(-0.3212321d);
+                location.setLongitude(36.324324d);
+                location.setAccuracy(9f);//accuracy in settings set to 10
+                location.setTime(System.currentTimeMillis());
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+                    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                }
+                gpsLocationProvider.getLocationManager().setTestProviderLocation(testProvider, location);
+
+                try {
+                    Thread.sleep(GPS_DIALOG_TIMEOUT);
+                    Espresso.onView(ViewMatchers.withId(R.id.nodeModeButton)).perform(ViewActions.click());
+                    Espresso.onView(ViewMatchers.withId(R.id.addNodeBtn)).perform(ViewActions.click());
+                    Espresso.onView(ViewMatchers.withText("spray_status")).perform(ViewActions.click());
+
+                    //check if the activity changed to the TagSwipeActivity
+                    Thread.sleep(UI_LONG_WAIT_TIME);
+                    Activity currActivity = getActivityInstance();
+                    assertTrue(currActivity instanceof MapActivity);
+
+                    //change the clickable tags setting and check if clicking a tag will go th the tagswipe activity
+                    Settings.singleton().setCickableTags(true);
+                    Espresso.onView(ViewMatchers.withText("spray_status")).perform(ViewActions.click());
+
+                    Thread.sleep(UI_LONG_WAIT_TIME);
+                    currActivity = getActivityInstance();
+                    assertTrue(currActivity instanceof TagSwipeActivity);
+                    currActivity.finish();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }

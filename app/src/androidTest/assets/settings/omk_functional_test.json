@@ -34,5 +34,6 @@
       "name": "location_accuracy",
       "label": "Location Accuracy"
     }
-  }
+  },
+  "clickable_tags": false
 }
