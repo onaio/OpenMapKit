@@ -36,6 +36,7 @@ public class Settings {
     public static final ArrayList<String> DEFAULT_HIDDEN_MENU_ITEMS = new ArrayList<>();
     public static final String DEFAULT_USER_LOCATION_TAGS_LAT_LNG = null;
     public static final String DEFAULT_USER_LOCATION_TAGS_ACCURACY = null;
+    public static final boolean DEFAULT_CLICKABLE_TAGS = true;
 
 
     private static Settings instance;
@@ -433,5 +434,36 @@ public class Settings {
         }
 
         return false;
+    }
+
+    /**
+     * This method returns whether tags in the MapActivity are clickable (hence sending the user to
+     * the TagSwipeActivity with the clicked tag in focus)
+     *
+     * @return  TRUE if tags in the MapActivity are clickable
+     */
+    public boolean getClickableTags() {
+        boolean response = DEFAULT_CLICKABLE_TAGS;
+        if(data.has("clickable_tags")) {
+            try {
+                response = data.getBoolean("clickable_tags");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
+    }
+
+    /**
+     * This method temporarily sets the value of clickable_tags. Value will not persist when settings
+     * singleton is re-instantiated
+     * @param value
+     */
+    public void setCickableTags(boolean value) {
+        try {
+            data.put("clickable_tags", value);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

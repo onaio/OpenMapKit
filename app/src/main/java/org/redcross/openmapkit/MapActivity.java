@@ -424,14 +424,16 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (ODKCollectHandler.isODKCollectMode()) {
-                    if (!Settings.singleton().isUserLocationTagsEnabled() || userLocation != null) {
-                        String tappedKey = tagListAdapter.getTagKeyForIndex(position);
-                        Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
-                        tagSwipe.putExtra("TAG_KEY", tappedKey);
-                        tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, userLocation);
-                        startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
-                    } else {
-                        Toast.makeText(MapActivity.this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
+                    if(Settings.singleton().getClickableTags()) {
+                        if (!Settings.singleton().isUserLocationTagsEnabled() || userLocation != null) {
+                            String tappedKey = tagListAdapter.getTagKeyForIndex(position);
+                            Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
+                            tagSwipe.putExtra("TAG_KEY", tappedKey);
+                            tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, userLocation);
+                            startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
+                        } else {
+                            Toast.makeText(MapActivity.this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
+                        }
                     }
                 } else {
                     launchODKCollectSnackbar();
