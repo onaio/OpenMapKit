@@ -94,7 +94,7 @@ public class MapActivityTest {
                                     .isAbove(ViewMatchers.withId(R.id.nodeModeButton)));
                     Espresso.onView(ViewMatchers.withId(R.id.locationButton))
                             .check(PositionAssertions
-                                    .isRightAlignedWith(ViewMatchers.withId(R.id.nodeModeButton)));
+                                    .isRightOf(ViewMatchers.withId(R.id.nodeModeButton)));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
