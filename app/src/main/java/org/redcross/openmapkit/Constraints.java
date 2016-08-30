@@ -107,7 +107,8 @@ public class Constraints {
             Collection<ODKTag> odkTags =  ODKCollectHandler.getODKCollectData().getRequiredTags();
             for (ODKTag odkTag : odkTags) {
                 String odkTagKey = odkTag.getKey();
-                if (cascadeBooleanTagConstraint(odkTagKey, "required", false)) {
+                if (cascadeBooleanTagConstraint(odkTagKey, "required", false)
+                        && tagShouldBeShown(odkTagKey, osmElement)) {
                     String osmTagVal = tags.get(odkTagKey);
                     if (osmTagVal == null || osmTagVal.length() < 1) {
                         missingTags.add(odkTagKey);
