@@ -1,0 +1,32 @@
+{
+  "default_tag":{
+    "default":"1"
+  },
+  "required_tag":{
+    "required":true
+  },
+  "required_hide_if_tag_1":{
+    "required":true,
+    "hide_if":{
+      "default_tag":"1"
+    }
+  },
+  "required_show_if_tag_1":{
+    "required":true,
+    "show_if":{
+      "default_tag":"2"
+    }
+  },
+  "required_hide_if_tag_2":{
+    "required":true,
+    "hide_if":{
+      "default_tag":"2"
+    }
+  },
+  "required_show_if_tag_2":{
+    "required":true,
+    "show_if":{
+      "default_tag":"1"
+    }
+  }
+}

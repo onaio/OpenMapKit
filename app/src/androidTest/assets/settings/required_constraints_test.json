@@ -1,0 +1,8 @@
+{
+  "proximity": {
+    "proximity_check": true,
+    "proximity_radius": 100,
+    "max_gps_timer_delay": 10,
+    "gps_proximity_accuracy": 10
+  }
+}

@@ -19,8 +19,13 @@ import java.util.Iterator;
  * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
  */
 public class ApplicationTest extends ApplicationTestCase<Application> {
+    public static final String DEFAULT_FORM_NAME = "omk_functional_test";
     public ApplicationTest() {
         super(Application.class);
+    }
+
+    public static Intent simulateODKLaunch() {
+        return simulateODKLaunch(DEFAULT_FORM_NAME);
     }
 
     /**
@@ -30,20 +35,21 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
      *  - calling ODKCollectHandler.registerIntent with the created intent
      *  - initializes constraints and settings
      *
+     * @param formName  The name of the ODK Form you want to simulate a launch
      * @return  Intent similar to the one used to launch OpenMapKit from OpenDataKit
      */
-    public static Intent simulateODKLaunch() {
+    public static Intent simulateODKLaunch(String formName) {
         String sdcardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File odkInstanceDir = new File(sdcardPath + "/odk/instances/omk_functional_test");
+        File odkInstanceDir = new File(sdcardPath + "/odk/instances/"+formName);
         odkInstanceDir.mkdirs();
 
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
-        intent.putExtra("FORM_FILE_NAME", "omk_functional_test");
+        intent.putExtra("FORM_FILE_NAME", formName);
         intent.putExtra("FORM_ID", "-1");
         intent.putExtra("INSTANCE_ID", "uuid:6004201f-9942-429d-bfa4-e65b683da37b");
-        intent.putExtra("INSTANCE_DIR", sdcardPath + "/odk/instances/omk_functional_test");
-        intent.putExtra("OSM_EDIT_FILE_NAME", "omk_functional_test.osm");
+        intent.putExtra("INSTANCE_DIR", sdcardPath + "/odk/instances/"+formName);
+        intent.putExtra("OSM_EDIT_FILE_NAME", formName+".osm");
 
         Context context = InstrumentationRegistry.getContext();
 

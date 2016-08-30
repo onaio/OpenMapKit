@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.redcross.openmapkit.ApplicationTest;
+import org.redcross.openmapkit.Constraints;
 import org.redcross.openmapkit.MapActivity;
 import org.redcross.openmapkit.MapActivityTest;
 import org.redcross.openmapkit.R;
@@ -45,8 +46,11 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Jason Rogena - jrogena@ona.io on 7/26/16.
@@ -184,6 +188,32 @@ public class TagSwipeActivityTest {
     }
 
     /**
+     * This method tests whether the required constraint works in the following situations:
+     * - a tag is set as required without any other constraints
+     * - a tag is set as required but is hidden (either by hide_if passing or show_if failing)
+     * - a tag is set as required and is shown (either by hide_if failing or show_if passing)
+     */
+    @Test
+    public void testRequiredTagsNotMet() {
+        startTagSwipeActivity("required_constraints_test", new OnPostLaunchActivity() {
+            @Override
+            public void run(Activity activity) {
+                try {
+                    Thread.sleep(UI_STANDARD_WAIT_TIME);
+                    Set<String> requiredTags = Constraints.singleton().requiredTagsNotMet(TagEdit.getOsmElement());
+                    assertTrue(requiredTags.contains("required_tag"));
+                    assertTrue(requiredTags.contains("required_hide_if_tag_2"));
+                    assertTrue(requiredTags.contains("required_show_if_tag_2"));
+                    assertFalse(requiredTags.contains("required_hide_if_tag_1"));
+                    assertFalse(requiredTags.contains("required_show_if_tag_1"));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
      * This method parses the provided XML string to determine if the provided location is encoded
      * as OSM tags
      *
@@ -270,7 +300,11 @@ public class TagSwipeActivityTest {
     }
 
     private void startTagSwipeActivity(OnPostLaunchActivity onPostLaunchActivity) {
-        Intent intent = ApplicationTest.simulateODKLaunch();
+        startTagSwipeActivity(ApplicationTest.DEFAULT_FORM_NAME, onPostLaunchActivity);
+    }
+
+    private void startTagSwipeActivity(String formName, OnPostLaunchActivity onPostLaunchActivity) {
+        Intent intent = ApplicationTest.simulateODKLaunch(formName);
         mapActivityTR.launchActivity(intent);
         try {
             Thread.sleep(UI_LONG_WAIT_TIME);

@@ -553,5 +553,9 @@ public class TagEdit {
                 odkTag.getItems().size() > 0 &&
                 Constraints.singleton().tagIsSelectMultiple(odkTag.getKey());
     }
+
+    public static OSMElement getOsmElement() {
+        return osmElement;
+    }
     
 }
