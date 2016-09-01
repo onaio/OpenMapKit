@@ -424,7 +424,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (ODKCollectHandler.isODKCollectMode()) {
-                    if(Settings.singleton().getClickableTags()) {
+                    if (Settings.singleton().getClickableTags()) {
                         if (!Settings.singleton().isUserLocationTagsEnabled() || userLocation != null) {
                             String tappedKey = tagListAdapter.getTagKeyForIndex(position);
                             Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
@@ -665,7 +665,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             if(recordUserLocation()) {
                 if (Settings.singleton().getProximityCheck()) {
                     //check user's last location is accurate enough
-                    if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
+                    if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getProximityRadius()) {
                         if (!isUserLocationEnabled()) {
                             toggleUserLocation(true);
                         }
