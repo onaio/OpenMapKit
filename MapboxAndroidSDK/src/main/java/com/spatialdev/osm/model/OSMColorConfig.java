@@ -177,7 +177,7 @@ public class OSMColorConfig {
             this.a = Color.alpha(intColor);
             this.r = Color.red(intColor);
             this.g = Color.green(intColor);
-            this.b = Color.green(intColor);
+            this.b = Color.blue(intColor);
         }
 
         public int getIntValue() {
