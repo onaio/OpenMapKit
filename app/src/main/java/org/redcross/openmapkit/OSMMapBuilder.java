@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,7 @@ import com.google.common.io.CountingInputStream;
 import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMDataSet;
 
+import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 /**
@@ -153,27 +155,21 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
             persistedOSMFiles.remove(absPath);
         }
     }
-    
+
+    /**
+     * This method first sorts the provided set of files based on the time they were last updated
+     * on the File System before adding them to the model
+     * @param files
+     */
     public static void addOSMFilesToModel(Set<File> files) {
-        if (files.size() < 1) {
-            return;
+        File[] sortingArray = files.toArray(new File[0]);
+        Arrays.sort(sortingArray, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
+        ArrayList<File> sortedList = new ArrayList<>();
+        for(int i = 0; i < sortingArray.length; i++) {
+            sortedList.add(sortingArray[i]);
         }
-        for (File f : files) {
-            String absPath = f.getAbsolutePath();
-            // Don't add something that is either in progress
-            // or already on the map.
-            if (persistedOSMFiles.contains(absPath)) {
-                continue;
-            }
-            ++totalFiles;
-            persistedOSMFiles.add(absPath);
-            File xmlFile = new File(absPath);
-            OSMMapBuilder builder = new OSMMapBuilder(false);
-            builder.executeOnExecutor(LARGE_STACK_THREAD_POOL_EXECUTOR, xmlFile);
-        }
-        setupProgressDialog(mapActivity);
-        mapActivity.getMapView().invalidate();
-        updateSharedPreferences();
+
+        addOSMFilesToModel(sortedList);
     }
 
     /**
@@ -181,7 +177,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
      * were provided
      * @param files
      */
-    public static void addOSMFilesToModel(ArrayList<File> files) {
+    private static void addOSMFilesToModel(ArrayList<File> files) {
         if (files.size() < 1) {
             return;
         }

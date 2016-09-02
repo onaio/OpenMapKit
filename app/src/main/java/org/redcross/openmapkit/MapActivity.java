@@ -1276,16 +1276,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             }
 
             OSMMapBuilder.removeOSMFilesFromModel(filesToRemove);
-
-            File[] sortedFilesToAdd = filesToAdd.toArray(new File[0]);
-            Arrays.sort(sortedFilesToAdd, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
-            ArrayList<File> sortedFilesToAddSet = new ArrayList<>();
-            for(int i = 0; i < sortedFilesToAdd.length; i++) {
-                File nextFile = sortedFilesToAdd[i];
-                sortedFilesToAddSet.add(nextFile);
-            }
-
-            OSMMapBuilder.addOSMFilesToModel(sortedFilesToAddSet);
+            OSMMapBuilder.addOSMFilesToModel(filesToAdd);
         }
     }
 
