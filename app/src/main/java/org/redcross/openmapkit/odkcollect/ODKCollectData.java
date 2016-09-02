@@ -64,10 +64,7 @@ public class ODKCollectData {
         if (formFileName == null) {
             return;
         }
-        Log.d("CacheTest", "instanceDir = "+instanceDir);
-        Log.d("CacheTest", "Form ID is "+formId);
-        Log.d("CacheTest", "Instance ID is "+instanceId);
-        Log.d("CacheTest", "previousOSMEditFileName is "+previousOSMEditFileName);
+
         String instanceDirName = new File(instanceDir).getName();
         String instances = new File(instanceDir).getParent();
         File[] instancesDirs = new File(instances).listFiles();
@@ -95,19 +92,16 @@ public class ODKCollectData {
                             //means that none of the OSM files in the ODK instance directory have been
                             //marked as previous. Very fishy. Check if the file is the youngest in the instance directory
                             if(!isLastModifiedOsmFileInDirectory(dir, fname)) {
-                                Log.d("CacheTest", "Not adding "+fname+" because in instance directory but not the youngest");
                                 continue;
                             }
                         }
                         else if(!fname.equals(previousOSMEditFileName)) {
                             //means that the current file is something the user entered then overwrote
                             //with the previousOSMEditFileName
-                            Log.d("CacheTest", "Not adding "+fname+" because in the same instance directory as the previous osm file");
                             continue;
                         }
                     } else {
                         if(!isLastModifiedOsmFileInDirectory(dir, fname)) {
-                            Log.d("CacheTest", "Not adding "+fname+" because not youngest in directory");
                             continue;
                         }
                     }
@@ -116,7 +110,6 @@ public class ODKCollectData {
                 }
             }
         }
-        Log.d("CacheTest", "edited OSM data in " + editedOSM.toString());
     }
 
     /**
@@ -133,7 +126,6 @@ public class ODKCollectData {
             if(dirFiles.length > 0) {
                 Arrays.sort(dirFiles, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
                 if(dirFiles[0].getName().equals(fileName)) {
-                    Log.d("CacheTest", fileName+" is youngest file in "+directory.getName());
                     return true;
                 }
             }

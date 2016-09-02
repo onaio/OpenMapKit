@@ -1266,41 +1266,24 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 File curFile = new File(curPath);
                 filesToRemove.add(curFile);
                 if(curFile.getAbsolutePath().startsWith(parentInstanceDir.getAbsolutePath())) {
-                    Log.d("CacheTest", curFile.getName()+" is an OSM loaded from ODK instances");
                     //is omk file in ODK's instance directory
                     if(loadedODKInstanceOSMFiles.contains(curFile)) {
                         filesToAdd.add(curFile);
-                        Log.d("CacheTest", "Loading back "+curFile.getName()+" from ODK Collect instances");
                     }
                 } else {
-                    Log.d("CacheTest", curFile.getName()+" is not an OSM loaded from ODK instances");
                     filesToAdd.add(curFile);
                 }
             }
 
             OSMMapBuilder.removeOSMFilesFromModel(filesToRemove);
-            Iterator<File> testIterator = filesToAdd.iterator();
-            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-            Log.d("CacheTest", "**********************************************************");
-            while(testIterator.hasNext()) {
-                File nextFile = testIterator.next();
-                Log.d("CacheTest", "Before sort - "+sdf.format(nextFile.lastModified())+" - "+nextFile.getAbsolutePath());
-            }
-            //mapView.clear();
-            Log.d("CacheTest", "----------------------------------------------------------");
+
             File[] sortedFilesToAdd = filesToAdd.toArray(new File[0]);
             Arrays.sort(sortedFilesToAdd, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
             ArrayList<File> sortedFilesToAddSet = new ArrayList<>();
             for(int i = 0; i < sortedFilesToAdd.length; i++) {
                 File nextFile = sortedFilesToAdd[i];
                 sortedFilesToAddSet.add(nextFile);
-                Log.d("CacheTest", "After sort - "+sdf.format(nextFile.lastModified())+" - "+nextFile.getAbsolutePath());
             }
-            Log.d("CacheTest", "----------------------------------------------------------");
-            for(File nextFile : sortedFilesToAddSet) {
-                Log.d("CacheTest", "Again - "+sdf.format(nextFile.lastModified())+" - "+nextFile.getAbsolutePath());
-            }
-            Log.d("CacheTest", "**********************************************************");
 
             OSMMapBuilder.addOSMFilesToModel(sortedFilesToAddSet);
         }
