@@ -1,22 +1,24 @@
 package org.redcross.openmapkit.odkcollect;
 
-import android.os.Environment;
 import android.util.Log;
 
-import com.spatialdev.osm.OSMUtil;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMXmlWriter;
 
+import org.apache.commons.io.comparator.LastModifiedFileComparator;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.redcross.openmapkit.ExternalStorage;
 import org.redcross.openmapkit.MapActivity;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.odkcollect.tag.ODKTagItem;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,7 +64,11 @@ public class ODKCollectData {
         if (formFileName == null) {
             return;
         }
-        Log.d("ODKCollectData", "instanceDir = "+instanceDir);
+        Log.d("CacheTest", "instanceDir = "+instanceDir);
+        Log.d("CacheTest", "Form ID is "+formId);
+        Log.d("CacheTest", "Instance ID is "+instanceId);
+        Log.d("CacheTest", "previousOSMEditFileName is "+previousOSMEditFileName);
+        String instanceDirName = new File(instanceDir).getName();
         String instances = new File(instanceDir).getParent();
         File[] instancesDirs = new File(instances).listFiles();
         for (int i = 0; i < instancesDirs.length; ++i) {
@@ -80,11 +86,59 @@ public class ODKCollectData {
             for (int j = 0; j < files.length; ++j) {
                 String fname = files[j];
                 if (fname.lastIndexOf(".osm") > -1) {
+                    /*
+                    determine whether the current file j is in the same instance directory as
+                    previousOSMEditFileName. If so, don't add it
+                     */
+                    if(dir.getName().equals(instanceDirName)) {
+                        if(previousOSMEditFileName == null) {
+                            //means that none of the OSM files in the ODK instance directory have been
+                            //marked as previous. Very fishy. Check if the file is the youngest in the instance directory
+                            if(!isLastModifiedOsmFileInDirectory(dir, fname)) {
+                                Log.d("CacheTest", "Not adding "+fname+" because in instance directory but not the youngest");
+                                continue;
+                            }
+                        }
+                        else if(!fname.equals(previousOSMEditFileName)) {
+                            //means that the current file is something the user entered then overwrote
+                            //with the previousOSMEditFileName
+                            Log.d("CacheTest", "Not adding "+fname+" because in the same instance directory as the previous osm file");
+                            continue;
+                        }
+                    } else {
+                        if(!isLastModifiedOsmFileInDirectory(dir, fname)) {
+                            Log.d("CacheTest", "Not adding "+fname+" because not youngest in directory");
+                            continue;
+                        }
+                    }
                     File osmFile = new File(dir, fname);
                     editedOSM.add(osmFile);
                 }
             }
         }
+        Log.d("CacheTest", "edited OSM data in " + editedOSM.toString());
+    }
+
+    /**
+     * This method checks whether the provided file is the youngest in the directory
+     *
+     * @param directory The directory to check for the youngest file
+     * @param fileName  The name of the file you want to validate if youngest
+     * @return  TRUE if the file was the last to be modified in the directory
+     */
+    public static boolean isLastModifiedOsmFileInDirectory(File directory, String fileName) {
+        if(directory != null && fileName != null) {
+            FileFilter fileFilter = new WildcardFileFilter("*.osm");
+            File[] dirFiles = directory.listFiles(fileFilter);
+            if(dirFiles.length > 0) {
+                Arrays.sort(dirFiles, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
+                if(dirFiles[0].getName().equals(fileName)) {
+                    Log.d("CacheTest", fileName+" is youngest file in "+directory.getName());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     
     public List<File> getEditedOSM() {

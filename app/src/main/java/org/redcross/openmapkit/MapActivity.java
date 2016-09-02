@@ -53,6 +53,7 @@ import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
 import com.vividsolutions.jts.geom.Point;
 
+import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.fieldpapers.listeners.FPListener;
 import org.fieldpapers.model.FPAtlas;
 import org.json.JSONException;
@@ -66,12 +67,17 @@ import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -234,6 +240,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         }
 
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        cleanOsmFilesFromOdkInstances();
     }
 
     private void initLocationListener() {
@@ -447,6 +454,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * @param osmElement The target OSMElement.
      */
     protected void identifyOSMFeature(OSMElement osmElement) {
+        Log.d("ColorTest", "identifyOSMFeature called");
         // only open it if we render the OSM vectors,
         // otherwise it is confusing for the user
         if (mapView.getZoomLevel() < OSMMapBuilder.MIN_VECTOR_RENDER_ZOOM) {
@@ -553,7 +561,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      */
     protected void initializeOsmXml() {
         try {
-            forceReloadForColor();
             OSMMapBuilder.buildMapFromExternalStorage(this);
         } catch (Exception e) {
             e.printStackTrace();
@@ -1243,18 +1250,59 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     /**
-     * This method causes OSM data to be reloaded from file so as to prevent in memory map markers
-     * from being used (hence leading to potential stale OSM colors being rendered)
+     * This method removes all OSM files that were loaded from ODK instances but not in the list
+     * editedOSM in {@link org.redcross.openmapkit.odkcollect.ODKCollectData}
      */
-    private void forceReloadForColor() {
+    private void cleanOsmFilesFromOdkInstances() {
         if (ODKCollectHandler.isODKCollectMode()
                 && Constraints.singleton().getFirstColorConfig().isEnabled()) {
-            File[] osmFiles = ExternalStorage.fetchOSMXmlFiles();
-            if (osmFiles != null && osmFiles.length > 0) {
-                for (int i = 0; i < osmFiles.length; i++) {
-                    OSMMapBuilder.removeOSMFileFromModel(osmFiles[i]);
+            //remove all osm files loaded from ODK's instance directory and not in the ODKCollectData.editedOSM object
+            Set<String> loadedOsmFiles = OSMMapBuilder.getLoadedOSMFiles();
+            Set<File> filesToRemove = new HashSet<>();
+            Set<File> filesToAdd = new HashSet<>();
+            File parentInstanceDir = new File(ODKCollectHandler.getODKCollectData().getInstanceDir()).getParentFile();
+            List<File> loadedODKInstanceOSMFiles = ODKCollectHandler.getODKCollectData().getEditedOSM();
+            for(String curPath : loadedOsmFiles) {
+                File curFile = new File(curPath);
+                filesToRemove.add(curFile);
+                if(curFile.getAbsolutePath().startsWith(parentInstanceDir.getAbsolutePath())) {
+                    Log.d("CacheTest", curFile.getName()+" is an OSM loaded from ODK instances");
+                    //is omk file in ODK's instance directory
+                    if(loadedODKInstanceOSMFiles.contains(curFile)) {
+                        filesToAdd.add(curFile);
+                        Log.d("CacheTest", "Loading back "+curFile.getName()+" from ODK Collect instances");
+                    }
+                } else {
+                    Log.d("CacheTest", curFile.getName()+" is not an OSM loaded from ODK instances");
+                    filesToAdd.add(curFile);
                 }
             }
+
+            OSMMapBuilder.removeOSMFilesFromModel(filesToRemove);
+            Iterator<File> testIterator = filesToAdd.iterator();
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+            Log.d("CacheTest", "**********************************************************");
+            while(testIterator.hasNext()) {
+                File nextFile = testIterator.next();
+                Log.d("CacheTest", "Before sort - "+sdf.format(nextFile.lastModified())+" - "+nextFile.getAbsolutePath());
+            }
+            //mapView.clear();
+            Log.d("CacheTest", "----------------------------------------------------------");
+            File[] sortedFilesToAdd = filesToAdd.toArray(new File[0]);
+            Arrays.sort(sortedFilesToAdd, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
+            ArrayList<File> sortedFilesToAddSet = new ArrayList<>();
+            for(int i = 0; i < sortedFilesToAdd.length; i++) {
+                File nextFile = sortedFilesToAdd[i];
+                sortedFilesToAddSet.add(nextFile);
+                Log.d("CacheTest", "After sort - "+sdf.format(nextFile.lastModified())+" - "+nextFile.getAbsolutePath());
+            }
+            Log.d("CacheTest", "----------------------------------------------------------");
+            for(File nextFile : sortedFilesToAddSet) {
+                Log.d("CacheTest", "Again - "+sdf.format(nextFile.lastModified())+" - "+nextFile.getAbsolutePath());
+            }
+            Log.d("CacheTest", "**********************************************************");
+
+            OSMMapBuilder.addOSMFilesToModel(sortedFilesToAddSet);
         }
     }
 
@@ -1401,6 +1449,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         }
 
         if(osmFiles.size() == forms.size()) {
+            //might be better to user OSMMapBuilder.prepareMapToShowOnlyTheseOSM
             OSMMapBuilder.removeOSMFilesFromModel(osmFiles);
             OSMMapBuilder.addOSMFilesToModel(osmFiles);
         }
