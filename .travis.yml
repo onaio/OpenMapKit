@@ -39,7 +39,7 @@ script:
   - android-wait-for-emulator
   - adb devices
   - (sleep 120; adb shell input keyevent 82 &) &
-  - ./gradlew connectedAndroidTest -i --stacktrace -x MapboxAndroidSDK:connectedAndroidTest
+  - ./gradlew connectedAndroidTest -i --stacktrace
 
 after_failure:
   - pandoc app/build/reports/androidTests/connected/index.html -t plain
