@@ -74,11 +74,6 @@ public class OSMColorConfig {
     }
 
     public static ARGB getFocusInARGB(OSMElement osmElement, ARGB nonEnabledColor) {
-        if(osmElement != null && osmElement.getOsmColorConfig() != null) {
-            if(osmElement.getOsmColorConfig().enabled == true) {
-                return osmElement.getOsmColorConfig().getOSMElementColor(osmElement);
-            }
-        }
         return nonEnabledColor;
     }
 
