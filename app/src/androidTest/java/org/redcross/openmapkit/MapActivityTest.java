@@ -466,7 +466,7 @@ public class MapActivityTest {
                     GeometryFactory geometryFactory = new GeometryFactory();
 
                     //test close-by node
-                    LatLng latLng1 = new LatLng(-0.3212321, 36.324224);
+                    LatLng latLng1 = new LatLng(-0.3212321, 36.324384);
                     OSMElement osmElement1 = new OSMNode(latLng1, OSMColorConfig.getDefaultConfig());
                     Coordinate coord1 = new Coordinate(latLng1.getLongitude(), latLng1.getLatitude());
                     Point point1 = geometryFactory.createPoint(coord1);

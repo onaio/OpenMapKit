@@ -52,7 +52,7 @@ public class SettingsTest {
         assertTrue(Settings.singleton().getGpsProximityAccuracy() != Settings.DEFAULT_GPS_PROXIMITY_ACCURACY);
 
         //check if the parsed values concur with the ones in omk_functional_test.json
-        assertEquals(Settings.singleton().getProximityRadius(), 100d);
+        assertEquals(Settings.singleton().getProximityRadius(), 10d);
         assertEquals(Settings.singleton().getProximityCheck(), true);
         assertEquals(Settings.singleton().getGpsTimerDelay(), 10);
         assertEquals(Settings.singleton().getGpsProximityAccuracy(), 10d);
