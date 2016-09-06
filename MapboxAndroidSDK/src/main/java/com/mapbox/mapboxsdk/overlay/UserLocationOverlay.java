@@ -55,6 +55,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
     private TrackingMode mTrackingMode = TrackingMode.NONE;
     private boolean mZoomBasedOnAccuracy = true;
     private float mRequiredZoomLevel = 10;
+    private double proximityRadius;
 
     /**
      * Coordinates the feet of the person are located scaled for display density.
@@ -90,7 +91,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         mCirclePaint.setColor(newColor);
     }
 
-    public UserLocationOverlay(GpsLocationProvider myLocationProvider, MapView mapView, int arrowId, int personId) {
+    public UserLocationOverlay(GpsLocationProvider myLocationProvider, MapView mapView, int arrowId, int personId, double proximityRadius) {
         mMapView = mapView;
         mMapController = mapView.getController();
         mContext = mapView.getContext();
@@ -98,6 +99,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         mCirclePaint.setAntiAlias(true);
         mPaint.setAntiAlias(true);
         mPaint.setFilterBitmap(true);
+        this.proximityRadius = proximityRadius;
 
         mPersonHotspot = new PointF(0.5f, 0.5f);
         mDirectionHotspot = new PointF(0.5f, 0.5f);
@@ -113,8 +115,8 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         setOverlayIndex(USERLOCATIONOVERLAY_INDEX);
     }
 
-    public UserLocationOverlay(GpsLocationProvider myLocationProvider, MapView mapView) {
-        this(myLocationProvider, mapView, R.drawable.direction_arrow, R.drawable.location_marker);
+    public UserLocationOverlay(GpsLocationProvider myLocationProvider, MapView mapView, double proximityRadius) {
+        this(myLocationProvider, mapView, R.drawable.direction_arrow, R.drawable.location_marker, proximityRadius);
     }
 
     @Override
@@ -172,7 +174,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         canvas.scale(mapScale, mapScale, mMapCoords.x, mMapCoords.y);
 
         if (mDrawAccuracyEnabled) {
-            final float radius = lastFix.getAccuracy() / (float) Projection.groundResolution(
+            final float radius = getRadiusValue(lastFix.getAccuracy()) / (float) Projection.groundResolution(
                     lastFix.getLatitude(), mapView.getZoomLevel()) * mapView.getScale();
             canvas.save();
             // Rotate the icon
@@ -269,7 +271,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         // Add in the accuracy circle if enabled
         if (mDrawAccuracyEnabled) {
             final float radius = (float) Math.ceil(
-                    lastFix.getAccuracy() / (float) Projection.groundResolution(
+                    getRadiusValue(lastFix.getAccuracy()) / (float) Projection.groundResolution(
                             lastFix.getLatitude(), mMapView.getZoomLevel())
             );
             RectF accuracyRect =
@@ -282,6 +284,13 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         }
 
         return reuse;
+    }
+
+    private float getRadiusValue(float gpsAccuracy) {
+        if(proximityRadius == -1) {
+            return gpsAccuracy;
+        }
+        return (float)proximityRadius;
     }
 
     @Override
@@ -433,7 +442,7 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         if (currentZoom <= mRequiredZoomLevel) {
             double requiredZoom = mRequiredZoomLevel;
             if (mZoomBasedOnAccuracy && mMapView.isLayedOut()) {
-                double delta = (mLocation.getAccuracy() / 110000) * 1.2; // approx. meter per degree latitude, plus some margin
+                double delta = (getRadiusValue(mLocation.getAccuracy()) / 110000) * 1.2; // approx. meter per degree latitude, plus some margin
                 final Projection projection = mMapView.getProjection();
                 LatLng desiredSouthWest = new LatLng(mLocation.getLatitude() - delta,
                         mLocation.getLongitude() - delta);

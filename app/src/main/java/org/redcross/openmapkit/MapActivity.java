@@ -203,6 +203,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         //get map from layout
         mapView = (MapView)findViewById(R.id.mapView);
+        if(Settings.singleton().getProximityCheck()) {
+            mapView.setProximityRadius(Settings.singleton().getProximityRadius());
+        }
 
         // get Field Papers Message
         fieldPapersMsg = (TextView)findViewById(R.id.fieldPapersMsg);

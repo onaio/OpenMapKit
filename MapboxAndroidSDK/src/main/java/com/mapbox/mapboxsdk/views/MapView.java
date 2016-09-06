@@ -183,6 +183,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     private boolean mShouldDisplayBubble = true;
     private final ArrayList<LocationListener> locationListeners;
     private GpsLocationProvider gpsLocationProvider;
+    private double proximityRadius = -1;
 
     /**
      * Constructor for XML layout calls. Should not be used programmatically.
@@ -273,6 +274,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         if(!locationListeners.contains(listener)) {
             locationListeners.add(listener);
         }
+    }
+
+    public void setProximityRadius(double proximityRadius) {
+        this.proximityRadius = proximityRadius;
     }
 
     /**
@@ -1951,7 +1956,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext());
             gpsLocationProvider.addLocationListeners(locationListeners);
             this.gpsLocationProvider = gpsLocationProvider;
-            mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this);
+            mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this, proximityRadius);
             addOverlay(mLocationOverlay);
         }
         return mLocationOverlay;
