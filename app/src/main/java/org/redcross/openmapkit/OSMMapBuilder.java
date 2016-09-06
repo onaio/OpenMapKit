@@ -162,6 +162,18 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
      * @param files
      */
     public static void addOSMFilesToModel(Set<File> files) {
+        ArrayList<File> sortedList = sortOsmFiles(files);
+        addOSMFilesToModel(sortedList);
+    }
+
+    /**
+     * This method sorts the provided files based on the last modified time with the oldest modified
+     * file coming first and the file modified most recently last
+     *
+     * @param files The files to be sorted
+     * @return  A sorted list of files
+     */
+    public static ArrayList<File> sortOsmFiles(Set<File> files) {
         File[] sortingArray = files.toArray(new File[0]);
         Arrays.sort(sortingArray, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
         ArrayList<File> sortedList = new ArrayList<>();
@@ -169,7 +181,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
             sortedList.add(sortingArray[i]);
         }
 
-        addOSMFilesToModel(sortedList);
+        return sortedList;
     }
 
     /**
