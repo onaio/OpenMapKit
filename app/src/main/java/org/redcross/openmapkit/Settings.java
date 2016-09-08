@@ -49,6 +49,12 @@ public class Settings {
         return instance;
     }
 
+    /**
+     * Constructor to be called whenever the settings object is to be initialized before {@link ODKCollectHandler}
+     * has initialized an instance of {@link org.redcross.openmapkit.odkcollect.ODKCollectData}
+     * @param formFileName
+     * @return
+     */
     public static Settings initialize(String formFileName) {
         instance = new Settings(formFileName);
         return instance;
@@ -70,6 +76,7 @@ public class Settings {
     }
 
     private void completeInit(String formFileName) {
+        ExternalStorage.copyFormFileFromOdkMediaDir(formFileName, ExternalStorage.SETTINGS_FILE_NAME_ON_ODK);
         try {
             File file = ExternalStorage.fetchSettingsFile(formFileName);
             String settingsString = FileUtils.readFileToString(file);

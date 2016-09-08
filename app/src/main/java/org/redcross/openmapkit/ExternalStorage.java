@@ -5,6 +5,8 @@ import android.content.res.AssetManager;
 import android.os.Environment;
 import android.util.Log;
 
+import com.google.common.io.Files;
+
 import org.apache.commons.io.FilenameUtils;
 import org.json.JSONObject;
 
@@ -42,6 +44,16 @@ public class ExternalStorage {
     public static final String CONSTRAINTS_DIR = "constraints";
     public static final String DEFAULT_CONSTRAINT = "default.json";
     public static final String SETTINGS_DIR = "settings";
+
+    /**
+     * The name of the form specific constraints file if it were to be delivered as an ODK media file
+     */
+    public static final String CONSTRAINTS_FILE_NAME_ON_ODK = "omk-constraints.json";
+
+    /**
+     * The name of the form specific settings file if it were to be delivered asn an ODK media file
+     */
+    public static final String SETTINGS_FILE_NAME_ON_ODK = "omk-settings.json";
 
     /**
      * Creating the application directory structure.
@@ -377,6 +389,39 @@ public class ExternalStorage {
         File appDir = new File(storageDir, APP_DIR);
         File constraintsDir = new File(appDir, SETTINGS_DIR);
         return new File(constraintsDir, formName + ".json");
+    }
+
+
+
+    /**
+     * This method attempts to fetch the form's constraints file from ODK's media directory for the
+     * form. If the constraints file is found on ODK's media directory for the form, its contents
+     * will overwrite whatever is in OMK's constraints file for the form
+     *
+     * @param formFileName  The name of the ODK form
+     * @return TRUE if there was a successful copy
+     */
+    public static boolean copyFormFileFromOdkMediaDir(String formFileName, String file) {
+        String sdCardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        if(formFileName != null) {
+            String mediaDirPath = sdCardPath + "/odk/forms/" + formFileName + "-media";
+            File mediaDirectory = new File(mediaDirPath);
+            if(mediaDirectory.exists() && mediaDirectory.isDirectory()) {
+                String constraintsFilePath = mediaDirPath + "/" + file;
+                File odkConstraintsFile = new File(constraintsFilePath);
+                if(odkConstraintsFile.exists() && !odkConstraintsFile.isDirectory()) {
+                    File omkConstraintsFile = fetchConstraintsFile(formFileName);
+                    try {
+                        Files.copy(odkConstraintsFile, omkConstraintsFile);
+                        return true;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
