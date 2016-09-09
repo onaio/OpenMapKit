@@ -62,11 +62,11 @@ public class OSMColorConfigTest {
         OSMElement osmElement = new OSMNode(new LatLng(0.222222, 36.222222), defaultConfig);
         Context context = InstrumentationRegistry.getContext();
         Drawable originalDrawable = context.getResources().getDrawable(R.mipmap.maki_star_orange_1);
-        Drawable focusInDrawable = OSMColorConfig.getFocusInDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2));
+        Drawable focusInDrawable = OSMColorConfig.getFocusInDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2), context.getResources().getDrawable(R.mipmap.maki_star_white));
 
         compareDrawableColorFilters(originalDrawable, focusInDrawable, true);
 
-        Drawable focusOutDrawable = OSMColorConfig.getFocusOutDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_3));
+        Drawable focusOutDrawable = OSMColorConfig.getFocusOutDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_3), context.getResources().getDrawable(R.mipmap.maki_star_white));
         compareDrawableColorFilters(originalDrawable, focusOutDrawable, true);
     }
 
@@ -207,7 +207,7 @@ public class OSMColorConfigTest {
         //test the focus in drawable
         osmElement.addOrEditTag("test_tag", "val_1");
 
-        Drawable focusInDrawable = OSMColorConfig.getFocusInDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2));
+        Drawable focusInDrawable = OSMColorConfig.getFocusInDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2), context.getResources().getDrawable(R.mipmap.maki_star_white));
         Drawable val1Drawable = OSMColorConfig.applyColorFilterToDrawable(context.getResources().getDrawable(R.mipmap.maki_star_orange_3), new OSMColorConfig.ARGB(val1Color));
 
         compareDrawableColorFilters(focusInDrawable, originalDrawable, false);
@@ -276,7 +276,7 @@ public class OSMColorConfigTest {
         //test the default drawable for unknown values
         osmElement.addOrEditTag("test_tag", "fddfsdfds");
 
-        Drawable unknownDrawable = OSMColorConfig.getFocusInDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2));
+        Drawable unknownDrawable = OSMColorConfig.getFocusInDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2), context.getResources().getDrawable(R.mipmap.maki_star_white));
         Drawable defaultDrawable = OSMColorConfig.applyColorFilterToDrawable(context.getResources().getDrawable(R.mipmap.maki_star_orange_3), new OSMColorConfig.ARGB(defaultColor));
 
         compareDrawableColorFilters(unknownDrawable, originalDrawable, false);

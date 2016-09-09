@@ -1,5 +1,6 @@
 package com.spatialdev.osm.renderer;
 
+import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 
@@ -63,25 +64,15 @@ public class OSMLine extends OSMPath {
         width = DEFAULT_WIDTH;
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
-        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusOutARGB(osmElement, new OSMColorConfig.ARGB(a, r, g, b));
-        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
         setStrokeWidth(width);
     }
 
     @Override
     public void select() {
-        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
-        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusInARGB(osmElement, nonEnabled);
-        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
-        setStrokeWidth(DEFAULT_SELECTED_WIDTH);
     }
 
     @Override
     public void deselect() {
-        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(a, r, g, b);
-        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusOutARGB(osmElement, nonEnabled);
-        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
-        setStrokeWidth(width);
     }
 
     /**
@@ -147,5 +138,23 @@ public class OSMLine extends OSMPath {
              * it was also outside of the viewport, obviously we do nothing...* *
              */
         }
+    }
+
+    @Override
+    public void draw(Canvas c) {
+        //set the color
+        OSMColorConfig.ARGB nonEnabled;
+        OSMColorConfig.ARGB argb;
+        if(osmElement.isSelected()) {
+            setStrokeWidth(DEFAULT_SELECTED_WIDTH);
+            nonEnabled = new OSMColorConfig.ARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
+            argb = OSMColorConfig.getFocusInARGB(osmElement, nonEnabled);
+        } else {
+            setStrokeWidth(width);
+            nonEnabled = new OSMColorConfig.ARGB(a, r, g, b);
+            argb = OSMColorConfig.getFocusOutARGB(osmElement, nonEnabled);
+        }
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
+        super.draw(c);
     }
 }

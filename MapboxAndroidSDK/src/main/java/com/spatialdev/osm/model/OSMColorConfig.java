@@ -81,36 +81,27 @@ public class OSMColorConfig {
         if(osmElement != null && osmElement.getOsmColorConfig() != null) {
             if(osmElement.getOsmColorConfig().enabled == true) {
                 ARGB color = osmElement.getOsmColorConfig().getOSMElementColor(osmElement);
-                return new ARGB(
-                        color.a - FOCUS_OUT_ALPHA_DELTA,
-                        color.r,
-                        color.g,
-                        color.b);
+                return color;
             }
         }
         return nonEnabledColor;
     }
 
-    public static Drawable getFocusInDrawable(OSMElement osmElement, Drawable originalDrawable) {
-        if(osmElement != null && osmElement.getOsmColorConfig() != null) {
-            if(osmElement.getOsmColorConfig().enabled) {
-                originalDrawable = originalDrawable.mutate();
-                ARGB argb = getFocusInARGB(osmElement, osmElement.getOsmColorConfig().defaultArgb);
-                originalDrawable = applyColorFilterToDrawable(originalDrawable, argb);
-            }
-        }
-        return originalDrawable;
+    public static Drawable getFocusInDrawable(OSMElement osmElement, Drawable originalDrawable, Drawable coloringDrawable) {
+        Drawable returnDrawable = originalDrawable;
+        return returnDrawable;
     }
 
-    public static Drawable getFocusOutDrawable(OSMElement osmElement, Drawable originalDrawable) {
+    public static Drawable getFocusOutDrawable(OSMElement osmElement, Drawable originalDrawable, Drawable coloringDrawable) {
+        Drawable returnDrawable = originalDrawable;
         if(osmElement != null && osmElement.getOsmColorConfig() != null) {
             if(osmElement.getOsmColorConfig().enabled) {
-                originalDrawable = originalDrawable.mutate();
+                coloringDrawable = coloringDrawable.mutate();
                 ARGB argb = getFocusOutARGB(osmElement, osmElement.getOsmColorConfig().defaultArgb);
-                originalDrawable = applyColorFilterToDrawable(originalDrawable, argb);
+                returnDrawable = applyColorFilterToDrawable(coloringDrawable, argb);
             }
         }
-        return originalDrawable;
+        return returnDrawable;
     }
 
     public static Drawable applyColorFilterToDrawable(Drawable drawable, ARGB argb) {
@@ -177,6 +168,11 @@ public class OSMColorConfig {
 
         public int getIntValue() {
             return Color.argb(a, r, g, b);
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(a)+","+String.valueOf(r)+","+String.valueOf(g)+","+String.valueOf(b);
         }
     }
 }

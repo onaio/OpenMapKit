@@ -272,6 +272,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
     }
 
     protected static void setupProgressDialog(MapActivity mapActivity) {
+        Log.d("CleanTest", "setupProgressDialog called");
         if(progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
         progressDialog = new ProgressDialog(mapActivity);
         progressDialog.setTitle("Loading OSM Data");

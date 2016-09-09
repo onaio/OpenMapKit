@@ -128,7 +128,7 @@ public class OSMOverlay extends Overlay {
         viewPortNodes.add(node);
         if (node.getMarker() == null) {
             OSMMarker marker = new OSMMarker(mapView, node);
-            marker.setMarker(OSMColorConfig.getFocusOutDrawable(node, mapView.getContext().getResources().getDrawable(R.mipmap.maki_star_blue)));
+            marker.setMarker(OSMColorConfig.getFocusOutDrawable(node, mapView.getContext().getResources().getDrawable(R.mipmap.maki_star_blue), mapView.getContext().getResources().getDrawable(R.mipmap.maki_star_white)));
             /**
              * Issue #81
              * setMarker doesn't position bitmaps in the same way as setIcon.

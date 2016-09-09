@@ -29,6 +29,7 @@ public class OSMNode extends OSMElement {
 
     // This is only for standalone nodes.
     private OSMMarker marker;
+    private boolean markerToBeUpdated = true;
 
     /**
      * This constructor is used by OSMDataSet in the XML parsing process.
@@ -139,6 +140,14 @@ public class OSMNode extends OSMElement {
      * @return
      */
     public Marker getMarker() {
+        if(marker != null && markerToBeUpdated == true) {
+            markerToBeUpdated = false;
+            if(isSelected()) {
+                marker.setMarker(OSMColorConfig.getFocusInDrawable(this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange), marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_white)));
+            } else {
+                marker.setMarker(OSMColorConfig.getFocusOutDrawable(this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_blue), marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_white)));
+            }
+        }
         return marker;
     }
 
@@ -173,16 +182,15 @@ public class OSMNode extends OSMElement {
 
     @Override
     public void select() {
+        markerToBeUpdated = true;
         super.select();
-        if (marker != null) {
-            marker.setMarker(OSMColorConfig.getFocusInDrawable(this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange)));
-        } else {
+        if (marker == null) {
             // Very wretched hack. Something is wrong with Mapbox Android SDK (Deprecated). Satisfies #98
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
                     if (marker != null) {
-                        marker.setMarker(OSMColorConfig.getFocusInDrawable(OSMNode.this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange)));
+                        marker.setMarker(OSMColorConfig.getFocusInDrawable(OSMNode.this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_orange), marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_white)));
                     }
                 }
             }, 100);
@@ -191,9 +199,7 @@ public class OSMNode extends OSMElement {
 
     @Override
     public void deselect() {
+        markerToBeUpdated = true;
         super.deselect();
-        if (marker != null) {
-            marker.setMarker(OSMColorConfig.getFocusOutDrawable(this, marker.getMapView().getContext().getResources().getDrawable(R.mipmap.maki_star_blue)));
-        }
     }
 }

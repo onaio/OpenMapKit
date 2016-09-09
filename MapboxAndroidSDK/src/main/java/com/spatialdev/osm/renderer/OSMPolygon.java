@@ -1,5 +1,6 @@
 package com.spatialdev.osm.renderer;
 
+import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 
@@ -64,19 +65,26 @@ public class OSMPolygon extends OSMPath {
 
     @Override
     public void select() {
-        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
-        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusInARGB(osmElement, nonEnabled);
-        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
     }
 
     @Override
     public void deselect() {
-        OSMColorConfig.ARGB nonEnabled = new OSMColorConfig.ARGB(a, r, g, b);
-        OSMColorConfig.ARGB argb = OSMColorConfig.getFocusOutARGB(osmElement, nonEnabled);
-        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
     }
 
-
+    @Override
+    public void draw(Canvas c) {
+        OSMColorConfig.ARGB argb;
+        OSMColorConfig.ARGB nonEnabledArgb;
+        if(osmElement.isSelected()) {
+            nonEnabledArgb = new OSMColorConfig.ARGB(DEFAULT_SELECTED_A, DEFAULT_SELECTED_R, DEFAULT_SELECTED_G, DEFAULT_SELECTED_B);
+            argb = OSMColorConfig.getFocusInARGB(osmElement, nonEnabledArgb);
+        } else {
+            nonEnabledArgb = new OSMColorConfig.ARGB(a, r, g, b);
+            argb = OSMColorConfig.getFocusOutARGB(osmElement, nonEnabledArgb);
+        }
+        paint.setARGB(argb.a, argb.r, argb.g, argb.b);
+        super.draw(c);
+    }
 
     /**
      * For now, we are drawing all of the polygons, even those outside of the canvas.
