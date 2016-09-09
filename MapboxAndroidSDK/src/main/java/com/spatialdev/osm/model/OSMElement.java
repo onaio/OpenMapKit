@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.spatialdev.osm.OSMUtil;
 import com.spatialdev.osm.renderer.OSMPath;
@@ -26,13 +27,6 @@ public abstract class OSMElement {
     
     private static LinkedList<OSMElement> modifiedElements = new LinkedList<>();
     private static LinkedList<OSMElement> modifiedElementsInInstance = new LinkedList<>();
-
-
-    /**
-     * When creating a new OSMElement, it needs to be assigned a unique negative ID within
-     * the dataset. This should only be access by OSMElement#getUniqueNegativeId().
-     */
-    private static long negativeId = -1;
 
     protected final OSMColorConfig osmColorConfig;
     protected long id;
@@ -173,8 +167,15 @@ public abstract class OSMElement {
         this.osmColorConfig = osmColorConfig;
     }
 
-    protected static long getUniqueNegativeId() {
-        return negativeId--;
+    public static long getUniqueNegativeId() {
+        /*negativeId--;
+        return uniqueDevId + negativeId;*/
+        long random = UUID.randomUUID().getMostSignificantBits();
+        if(random < 0){
+            return random;
+        } else {
+            return random * -1;
+        }
     }
 
     /**
