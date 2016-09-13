@@ -407,12 +407,17 @@ public class ExternalStorage {
             String mediaDirPath = sdCardPath + "/odk/forms/" + formFileName + "-media";
             File mediaDirectory = new File(mediaDirPath);
             if(mediaDirectory.exists() && mediaDirectory.isDirectory()) {
-                String constraintsFilePath = mediaDirPath + "/" + file;
-                File odkConstraintsFile = new File(constraintsFilePath);
-                if(odkConstraintsFile.exists() && !odkConstraintsFile.isDirectory()) {
-                    File omkConstraintsFile = fetchConstraintsFile(formFileName);
+                File odkMediaFile = new File(mediaDirectory, file);
+                if(odkMediaFile.exists() && !odkMediaFile.isDirectory()) {
+                    File destinationFile = null;
+                    if(file.equals(SETTINGS_FILE_NAME_ON_ODK)) {
+                        destinationFile = fetchSettingsFile(formFileName);
+                    }
+                    else if(file.equals(CONSTRAINTS_FILE_NAME_ON_ODK)) {
+                        destinationFile = fetchConstraintsFile(formFileName);
+                    }
                     try {
-                        Files.copy(odkConstraintsFile, omkConstraintsFile);
+                        Files.copy(odkMediaFile, destinationFile);
                         return true;
                     } catch (IOException e) {
                         e.printStackTrace();
