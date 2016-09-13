@@ -56,6 +56,10 @@ public class SettingsTest {
         assertEquals(Settings.singleton().getProximityCheck(), true);
         assertEquals(Settings.singleton().getGpsTimerDelay(), 10);
         assertEquals(Settings.singleton().getGpsProximityAccuracy(), 10d);
+
+        //check if setting GPS to disabled will have an effect on proximity check
+        Settings.singleton().setGpsEnabled(false);
+        assertEquals(Settings.singleton().getProximityCheck(), false);
     }
 
     /**
@@ -129,10 +133,15 @@ public class SettingsTest {
      */
     @Test
     public void testIsUserLocation() {
+        assertTrue(Settings.singleton().isUserLocationTagsEnabled());
         assertTrue(Settings.singleton().isUserLocationTag("user_location"));
         assertTrue(Settings.singleton().isUserLocationTag("location_accuracy"));
 
         assertFalse(Settings.singleton().isUserLocationTag("spray_status"));
+
+        //test if setting GPS to disabled will have an effect on isUserLocationTagsEnabled
+        Settings.singleton().setGpsEnabled(false);
+        assertFalse(Settings.singleton().isUserLocationTagsEnabled());
     }
 
     /**

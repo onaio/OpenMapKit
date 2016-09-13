@@ -1,5 +1,7 @@
 package org.redcross.openmapkit;
 
+import android.content.Context;
+import android.location.LocationManager;
 import android.util.Log;
 
 import org.apache.commons.io.FileUtils;
@@ -44,6 +46,7 @@ public class Settings {
     private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
 
     private JSONObject data;
+    private boolean gpsEnabled;
 
     public static Settings initialize() {
         instance = new Settings();
@@ -275,7 +278,7 @@ public class Settings {
         boolean proximityCheck = DEFAULT_PROXIMITY_CHECK;
         try {
             JSONObject proximitySettings = getProximitySub();
-            if(proximitySettings.has("proximity_check")) {
+            if(isGpsEnabled() && proximitySettings.has("proximity_check")) {
                 proximityCheck = proximitySettings.getBoolean("proximity_check");
             }
         } catch (JSONException e) {
@@ -369,10 +372,7 @@ public class Settings {
         boolean result = false;
         if(getUserLatLngName() != null
                 || getUserAccuracyName() != null) {
-            Log.d("LocTest", "User location enabled");
-            result = true;
-        } else {
-            Log.d("LocTest", "User location is not enabled");
+            if(isGpsEnabled()) result = true;
         }
         return result;
     }
@@ -485,5 +485,13 @@ public class Settings {
             }
         }
         return response;
+    }
+
+    public boolean isGpsEnabled() {
+        return gpsEnabled;
+    }
+
+    public void setGpsEnabled(boolean gpsEnabled) {
+        this.gpsEnabled = gpsEnabled;
     }
 }

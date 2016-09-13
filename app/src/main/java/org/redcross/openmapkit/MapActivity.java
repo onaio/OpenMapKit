@@ -231,8 +231,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         // Proximity is disabled until there is a GPS fix.
         Settings.setProximityEnabled(false);
-
-        if (isGPSEnabled() && Settings.singleton().getProximityCheck()) {
+        Settings.singleton().setGpsEnabled(isGPSEnabled());
+        if (Settings.singleton().getProximityCheck()) {
             // Start GPS progress
             initialCountdownValue = Settings.singleton().getGpsTimerDelay();
             showProgressDialog();
@@ -243,6 +243,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void initLocationListener() {
+        checkLocationProviderEnabled();
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -263,15 +264,20 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
                 checkLocationProviderEnabled();
+                Settings.singleton().setGpsEnabled(isGPSEnabled());
             }
 
             @Override
             public void onProviderEnabled(String s) {
+                Log.d("GPSTest", "onProviderEnabled called");
+                Settings.singleton().setGpsEnabled(isGPSEnabled());
             }
 
             @Override
             public void onProviderDisabled(String s) {
+                Log.d("GPSTest", "onProviderDisabled called");
                 checkLocationProviderEnabled();
+                Settings.singleton().setGpsEnabled(isGPSEnabled());
             }
         };
 
@@ -298,7 +304,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         if(gpsProviderAlertDialog == null) {
             gpsProviderAlertDialog = new android.support.v7.app.AlertDialog.Builder(MapActivity.this)
                     .setMessage(getResources().getString(R.string.enable_gps))
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    .setPositiveButton("Enable GPS", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             if (isGPSEnabled()) {
@@ -306,6 +312,13 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                             } else {
                                 MapActivity.this.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                             }
+                            MapActivity.this.finish();
+                        }
+                    })
+                    .setNegativeButton("Continue",  new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
                         }
                     })
                     .setCancelable(false)

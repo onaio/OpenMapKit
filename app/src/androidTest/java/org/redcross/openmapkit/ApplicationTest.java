@@ -66,6 +66,7 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         ExternalStorage.copyConstraintsToExternalStorageIfNeeded(context);
 
         ODKCollectHandler.registerIntent(context, intent);
+        Settings.singleton().setGpsEnabled(true);
 
         // Initialize the constraints singleton.
         // Loads up all the constraints JSON configs.
