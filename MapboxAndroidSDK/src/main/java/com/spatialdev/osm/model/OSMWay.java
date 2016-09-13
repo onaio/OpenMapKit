@@ -233,4 +233,8 @@ public class OSMWay extends OSMElement {
         super.setAsModified();
         modifiedWayIdSet.add(id);
     }
+
+    public static void resetModifiedElements() {
+        modifiedWayIdSet.clear();
+    }
 }

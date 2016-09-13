@@ -41,6 +41,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.spatialdev.osm.model.OSMWay;
 import com.vividsolutions.jts.geom.Geometry;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -1279,6 +1280,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             }
 
             OSMMapBuilder.removeOSMFilesFromModel(filesToRemove);
+            //Calling resetModifiedElements prevents OMK from hiding a polygon that was tagged (but
+            // is now not tagged due to retagging)
+            OSMWay.resetModifiedElements();
             OSMMapBuilder.addOSMFilesToModel(filesToAdd);
         }
     }
