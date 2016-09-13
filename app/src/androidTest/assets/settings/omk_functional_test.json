@@ -35,5 +35,6 @@
       "label": "Location Accuracy"
     }
   },
-  "clickable_tags": false
+  "clickable_tags": false,
+  "min_vector_render_zoom":1
 }

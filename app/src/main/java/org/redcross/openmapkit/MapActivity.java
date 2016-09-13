@@ -54,7 +54,6 @@ import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
 import com.vividsolutions.jts.geom.Point;
 
-import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.fieldpapers.listeners.FPListener;
 import org.fieldpapers.model.FPAtlas;
 import org.json.JSONException;
@@ -68,15 +67,11 @@ import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -461,7 +456,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         Log.d("ColorTest", "identifyOSMFeature called");
         // only open it if we render the OSM vectors,
         // otherwise it is confusing for the user
-        if (mapView.getZoomLevel() < OSMMapBuilder.MIN_VECTOR_RENDER_ZOOM) {
+        if (mapView.getZoomLevel() < Settings.singleton().getMinVectorRenderZoom()) {
             return;
         }
 
@@ -1014,7 +1009,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     public void zoomToRecommendedLevel() {
-        mapView.setZoom(OSMMapBuilder.MIN_VECTOR_RENDER_ZOOM);
+        mapView.setZoom(Settings.singleton().getMinVectorRenderZoom());
     }
 
     @Override

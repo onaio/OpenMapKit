@@ -30,7 +30,6 @@ public class ODKCollectHandler {
     private static ODKCollectData odkCollectData;
     
     public static void registerIntent(Context context, Intent intent) {
-        Log.d("TestIntent", intent.toString());
         String action = intent.getAction();
         if(action != null && action.equals("android.intent.action.SEND")) {
             if (intent.getType().equals("text/plain")) {

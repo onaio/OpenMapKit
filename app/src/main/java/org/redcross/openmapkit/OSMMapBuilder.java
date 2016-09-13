@@ -11,11 +11,9 @@ import com.spatialdev.osm.model.JTSModel;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,8 +37,8 @@ import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
  * nhallahan@spatialdev.com* 
  */
 public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
-    
-    public static final float MIN_VECTOR_RENDER_ZOOM = 18;
+
+    public static final float DEFAULT_MIN_VECTOR_RENDER_ZOOM = 18;
     private static final String PERSISTED_OSM_FILES = "org.redcross.openmapkit.PERSISTED_OSM_FILES";
 
     private static MapActivity mapActivity;
@@ -98,7 +96,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         if (totalFiles > 0) {
             setupProgressDialog(mapActivity);
         } else {
-            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), jtsModel, mapActivity, MIN_VECTOR_RENDER_ZOOM, Constraints.singleton().getFirstColorConfig());
+            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), jtsModel, mapActivity, Settings.singleton().getMinVectorRenderZoom(), Constraints.singleton().getFirstColorConfig());
             mapActivity.setOSMMap(osmMap);
         }
     }
@@ -332,7 +330,7 @@ public class OSMMapBuilder extends AsyncTask<File, Long, JTSModel> {
         // do this when everything is done loading
         if (completedFiles == totalFiles) {
             finishAndResetStaticState();
-            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), model, mapActivity, MIN_VECTOR_RENDER_ZOOM, osmColorConfig);
+            OSMMap osmMap = new OSMMap(mapActivity.getMapView(), model, mapActivity, Settings.singleton().getMinVectorRenderZoom(), osmColorConfig);
             mapActivity.setOSMMap(osmMap);
         }
     }

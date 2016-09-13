@@ -37,6 +37,7 @@ public class Settings {
     public static final String DEFAULT_USER_LOCATION_TAGS_LAT_LNG = null;
     public static final String DEFAULT_USER_LOCATION_TAGS_ACCURACY = null;
     public static final boolean DEFAULT_CLICKABLE_TAGS = true;
+    public static final float DEFAULT_MIN_VECTOR_RENDER_ZOOM = OSMMapBuilder.DEFAULT_MIN_VECTOR_RENDER_ZOOM;
 
 
     private static Settings instance;
@@ -472,5 +473,17 @@ public class Settings {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public float getMinVectorRenderZoom() {
+        float response = DEFAULT_MIN_VECTOR_RENDER_ZOOM;
+        if(data.has("min_vector_render_zoom")) {
+            try {
+                response = (float)data.getDouble("min_vector_render_zoom");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
     }
 }
