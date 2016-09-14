@@ -5,10 +5,7 @@
 
 package com.spatialdev.osm.model;
 
-import android.util.Log;
-
 import com.mapbox.mapboxsdk.api.ILatLng;
-import com.spatialdev.osm.marker.OSMMarker;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -19,6 +16,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +25,7 @@ public class JTSModel {
 
     private static final int TAP_PIXEL_TOLERANCE = 24;
 
+    private Map<Long, OSMElement> elementHashMap;
     private Map<String, OSMDataSet> dataSetHash;
     private GeometryFactory geometryFactory;
     private Quadtree spatialIndex;
@@ -35,6 +34,7 @@ public class JTSModel {
         geometryFactory = new GeometryFactory();
         spatialIndex = new Quadtree();
         dataSetHash = new ConcurrentHashMap<>();
+        elementHashMap = new ConcurrentHashMap<>();
     }
 
     public synchronized void addOSMDataSet(String filePath, OSMDataSet ds) {
@@ -66,31 +66,13 @@ public class JTSModel {
         List<OSMWay> openWays = ds.getOpenWays();
         List<OSMNode> standaloneNodes = ds.getStandaloneNodes();
         for (OSMWay w : closedWays) {
-            try {
-                Geometry geom = w.getJTSGeom();
-                Envelope env = geom.getEnvelopeInternal();
-                spatialIndex.remove(env, w);
-            } catch (Exception e) {
-                Log.e("NO_GEOM", "Cannot remove a closed way with no JTS geom.");
-            }
+            removeOSMElement(w);
         }
         for (OSMWay w : openWays) {
-            try {
-                Geometry geom = w.getJTSGeom();
-                Envelope env = geom.getEnvelopeInternal();
-                spatialIndex.remove(env, w);
-            } catch (Exception e) {
-                Log.e("NO_GEOM", "Cannot remove an open way with no JTS geom.");
-            }
+            removeOSMElement(w);
         }
         for (OSMNode n : standaloneNodes) {
-            try {
-                Geometry geom = n.getJTSGeom();
-                Envelope env = geom.getEnvelopeInternal();
-                spatialIndex.remove(env, n);
-            } catch (Exception e) {
-                Log.e("NO_GEOM", "Cannot remove a standalone node with no JTS geom.");
-            }
+            removeOSMElement(n);
         }
     }
     
@@ -98,11 +80,7 @@ public class JTSModel {
         for (OSMWay w : ways) {
             OSMWay oldWay = existingDataSet.getWay(w.getId());
             if (oldWay != null) {
-                Geometry geom = oldWay.getJTSGeom();
-                if (geom != null) {
-                    Envelope env = geom.getEnvelopeInternal();
-                    spatialIndex.remove(env, oldWay);
-                }
+                removeOSMElement(oldWay);
             }
         }
     }
@@ -208,6 +186,9 @@ public class JTSModel {
     private void addOSMClosedWays(OSMDataSet ds) {
         List<OSMWay> closedWays = ds.getClosedWays();
         for (OSMWay w : closedWays) {
+            if(elementAlreadyAdded(elementHashMap, w)) {
+                continue;
+            }
             if (!w.isModified() && OSMWay.containsModifiedWay(w.getId())) {
                 continue;    
             }
@@ -215,18 +196,27 @@ public class JTSModel {
             if (w.incomplete()) {
                 continue;
             }
+
+            if(elementHashMap.containsKey(w.getId())) {
+                removeOSMElement(elementHashMap.get(w.getId()));
+            }
+
             List<OSMNode> nodes = w.getNodes();
             Coordinate[] coords = coordArrayFromNodeList(nodes);
             Polygon poly = geometryFactory.createPolygon(coords);
             w.setJTSGeom(poly);
             Envelope envelope = poly.getEnvelopeInternal();
             spatialIndex.insert(envelope, w);
+            elementHashMap.put(w.getId(), w);
         }
     }
 
     private void addOSMOpenWays(OSMDataSet ds) {
         List<OSMWay> openWays = ds.getOpenWays();
         for (OSMWay w : openWays) {
+            if(elementAlreadyAdded(elementHashMap, w)) {
+                continue;
+            }
             if (!w.isModified() && OSMWay.containsModifiedWay(w.getId())) {
                 continue;
             }
@@ -234,12 +224,18 @@ public class JTSModel {
             if (w.incomplete()) {
                 continue;
             }
+
+            if(elementHashMap.containsKey(w.getId())) {
+                removeOSMElement(elementHashMap.get(w.getId()));
+            }
+
             List<OSMNode> nodes = w.getNodes();
             Coordinate[] coords = coordArrayFromNodeList(nodes);
             LineString line = geometryFactory.createLineString(coords);
             w.setJTSGeom(line);
             Envelope envelope = line.getEnvelopeInternal();
             spatialIndex.insert(envelope, w);
+            elementHashMap.put(w.getId(), w);
         }
     }
 
@@ -258,6 +254,14 @@ public class JTSModel {
     private void addOSMStandaloneNodes(OSMDataSet ds) {
         List<OSMNode> standaloneNodes = ds.getStandaloneNodes();
         for (OSMNode n : standaloneNodes) {
+            if(elementAlreadyAdded(elementHashMap, n)) {
+                continue;
+            }
+
+            if(elementHashMap.containsKey(n.getId())) {
+                removeOSMElement(elementHashMap.get(n.getId()));
+            }
+
             double lat = n.getLat();
             double lng = n.getLng();
             Coordinate coord = new Coordinate(lng, lat);
@@ -265,6 +269,7 @@ public class JTSModel {
             n.setJTSGeom(point);
             Envelope envelope = point.getEnvelopeInternal();
             spatialIndex.insert(envelope, n);
+            elementHashMap.put(n.getId(), n);
         }
     }
 
@@ -293,9 +298,40 @@ public class JTSModel {
     public void removeOSMElement(OSMElement el) {
         Geometry geom = el.getJTSGeom();
         if (geom != null) {
-            Envelope env = geom.getEnvelopeInternal();
-            spatialIndex.remove(env, el);
+            try {
+                Envelope env = geom.getEnvelopeInternal();
+                spatialIndex.remove(env, el);
+                if(elementHashMap.containsKey(el.getId())) {
+                    elementHashMap.remove(el.getId());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    /**
+     * This method checks whether an updated version of the {@link OSMElement} is already rendered
+     *
+     * @param elementHashMap    A {@link Map} of all the elements already added to the model (rendered on the map)
+     * @param el                The {@link OSMElement} to check if already rendered
+     * @return  TRUE if there as already an up-to-date version of the element rendered
+     */
+    public static boolean elementAlreadyAdded(Map<Long, OSMElement> elementHashMap, OSMElement el) {
+        if(el != null) {
+            if(elementHashMap.containsKey(el.getId())) {
+                Date newElDate = el.getTimestampDate();
+                Date existingElDate = elementHashMap.get(el.getId()).getTimestampDate();
+                if(newElDate == null) {
+                    return true;
+                } else if(existingElDate == null || newElDate.getTime() > existingElDate.getTime()) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

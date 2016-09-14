@@ -14,6 +14,7 @@ import com.spatialdev.osm.model.OSMNode;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMWay;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,6 +34,18 @@ public class OSMUtil {
     public static String nowTimestamp() {
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return dateFormat.format(new Date());
+    }
+
+    /**
+     * This method converts a time created by nowTimestamp() to a {@link Date} object
+     *
+     * @param timestamp The timestamp string to be converted to a Date object
+     * @return  A {@link Date} object representing the provided timestamp
+     * @throws ParseException If a parse exception is thrown during the conversion
+     */
+    public static Date dateFromTimestamp(String timestamp) throws ParseException{
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormatStr);
+        return simpleDateFormat.parse(timestamp);
     }
 
 

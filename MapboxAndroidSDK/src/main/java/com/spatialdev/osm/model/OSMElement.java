@@ -5,7 +5,9 @@
 package com.spatialdev.osm.model;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -238,11 +240,8 @@ public abstract class OSMElement {
          * is serialized. If it has not been modified or was modified in a previous session,
          * we want to stay with the previously recorded timestamp.
          */
-        if (modifiedInInstance) {
-            xmlSerializer.attribute(null, "timestamp", OSMUtil.nowTimestamp());
-        } else if (timestamp != null) {
-            xmlSerializer.attribute(null, "timestamp", timestamp);
-        }
+        xmlSerializer.attribute(null, "timestamp", getTimestamp());
+
         /**
          * We want to put the OSM user set in OMK Android for all of the elements we are writing.
          * This is important, because when we are filtering in OMK iD, we need to be able to filter
@@ -251,6 +250,37 @@ public abstract class OSMElement {
          * as well (so that filtering gets the complete geometry in).
          */
         xmlSerializer.attribute(null, "user", omkOsmUser);
+    }
+
+    /**
+     * This method returns the relevant timestamp for this element depending on whether it's been
+     * modified or not
+     *
+     * @return
+     */
+    public String getTimestamp() {
+        if(modifiedInInstance == true || timestamp == null) {
+            return OSMUtil.nowTimestamp();
+        } else {
+            return timestamp;
+        }
+    }
+
+    /**
+     * This method returns the date object representing the timestamp
+     *
+     * @return  The {@link Date} object representing the timestamp or null if an error occurred
+     */
+    public Date getTimestampDate() {
+        String timestamp = getTimestamp();
+        if(timestamp != null) {
+            try {
+                return OSMUtil.dateFromTimestamp(timestamp);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     /**

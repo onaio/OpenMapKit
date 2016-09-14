@@ -238,7 +238,7 @@ public class OSMColorConfigTest {
         //test the focus out drawable
         osmElement.addOrEditTag("test_tag", "val_3");
 
-        Drawable focusOutDrawable = OSMColorConfig.getFocusOutDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2));
+        Drawable focusOutDrawable = OSMColorConfig.getFocusOutDrawable(osmElement, context.getResources().getDrawable(R.mipmap.maki_star_orange_2), context.getResources().getDrawable(R.mipmap.maki_star_white));
         OSMColorConfig.ARGB val3ArgbFocused = new OSMColorConfig.ARGB(val3Color);
         OSMColorConfig.ARGB val3Argb = new OSMColorConfig.ARGB(
                 val3ArgbFocused.a - OSMColorConfig.FOCUS_OUT_ALPHA_DELTA,
