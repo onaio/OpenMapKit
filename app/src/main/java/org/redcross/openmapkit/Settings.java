@@ -48,8 +48,8 @@ public class Settings {
     private JSONObject data;
     private boolean gpsEnabled;
 
-    public static Settings initialize() {
-        instance = new Settings();
+    public static Settings initialize(Context context) {
+        instance = new Settings(context);
         return instance;
     }
 
@@ -59,13 +59,14 @@ public class Settings {
      * @param formFileName
      * @return
      */
-    public static Settings initialize(String formFileName) {
-        instance = new Settings(formFileName);
+    public static Settings initialize(Context context, String formFileName) {
+        instance = new Settings(context, formFileName);
         return instance;
     }
 
-    private Settings() {
+    private Settings(Context context) {
         proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
+        updateGpsEnabled(context);
         data = new JSONObject();
         if(ODKCollectHandler.isODKCollectMode()) {
             String formFileName = ODKCollectHandler.getODKCollectData().getFormFileName();
@@ -73,8 +74,19 @@ public class Settings {
         }
     }
 
-    private Settings(String formFileName) {
+    public void updateGpsEnabled(Context context) {
+        gpsEnabled = false;
+        LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if ( manager.isProviderEnabled(MapActivity.preferredLocationProvider) ) {
+            gpsEnabled = true;
+        } else {
+            gpsEnabled = false;
+        }
+    }
+
+    private Settings(Context context, String formFileName) {
         proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
+        updateGpsEnabled(context);
         data = new JSONObject();
         completeInit(formFileName);
     }
@@ -369,10 +381,20 @@ public class Settings {
      * @return TRUE if user location tags are supposed to be inserted into the OSM data
      */
     public boolean isUserLocationTagsEnabled() {
+        return isUserLocationTagsEnabled(false);
+    }
+
+    /**
+     * This method checks whether user location tags are enabled
+     *
+     * @param shouldIgnoreGpsStatus Whether to ignore if gps is on or off
+     * @return  TRUE if user location tags are supposed to be inserted into the OSM data
+     */
+    public boolean isUserLocationTagsEnabled(boolean shouldIgnoreGpsStatus) {
         boolean result = false;
         if(getUserLatLngName() != null
                 || getUserAccuracyName() != null) {
-            if(isGpsEnabled()) result = true;
+            if(shouldIgnoreGpsStatus == true || isGpsEnabled()) result = true;
         }
         return result;
     }
@@ -434,7 +456,7 @@ public class Settings {
     }
 
     public boolean isUserLocationTag(String name) {
-        if(isUserLocationTagsEnabled()) {
+        if(isUserLocationTagsEnabled(true)) {
             if((getUserLatLngName() != null && name.equals(getUserLatLngName()))
                     || (getUserAccuracyName() != null && name.equals(getUserAccuracyName()))) {
                 return true;
@@ -489,9 +511,5 @@ public class Settings {
 
     public boolean isGpsEnabled() {
         return gpsEnabled;
-    }
-
-    public void setGpsEnabled(boolean gpsEnabled) {
-        this.gpsEnabled = gpsEnabled;
     }
 }

@@ -136,7 +136,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     /**
      * Which GPS provider should be used to get the User's current location
      */
-    private String preferredLocationProvider = LocationManager.GPS_PROVIDER;
+    public static String preferredLocationProvider = LocationManager.GPS_PROVIDER;
 
     /**
      * intent request codes
@@ -228,7 +228,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         // Proximity is disabled until there is a GPS fix.
         Settings.setProximityEnabled(false);
-        Settings.singleton().setGpsEnabled(isGPSEnabled());
         if (Settings.singleton().getProximityCheck()) {
             mapView.setProximityRadius(Settings.singleton().getProximityRadius());
             // Start GPS progress
@@ -262,20 +261,20 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
                 checkLocationProviderEnabled();
-                Settings.singleton().setGpsEnabled(isGPSEnabled());
+                Settings.singleton().updateGpsEnabled(MapActivity.this);
             }
 
             @Override
             public void onProviderEnabled(String s) {
                 Log.d("GPSTest", "onProviderEnabled called");
-                Settings.singleton().setGpsEnabled(isGPSEnabled());
+                Settings.singleton().updateGpsEnabled(MapActivity.this);
             }
 
             @Override
             public void onProviderDisabled(String s) {
                 Log.d("GPSTest", "onProviderDisabled called");
                 checkLocationProviderEnabled();
-                Settings.singleton().setGpsEnabled(isGPSEnabled());
+                Settings.singleton().updateGpsEnabled(MapActivity.this);
             }
         };
 
@@ -418,7 +417,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     if(!Settings.singleton().isUserLocationTagsEnabled() || userLocation != null) {
                         //launch the TagSwipeActivity
                         Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
-                        tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, userLocation);
+                        if(userLocation != null) tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, userLocation);
                         startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
                     } else {
                         Toast.makeText(MapActivity.this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();

@@ -44,7 +44,7 @@ public class ODKCollectHandler {
 
                     //initialize settings
                     ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
-                    Settings.initialize(formFileName);
+                    Settings.initialize(context, formFileName);
 
                     LinkedHashMap<String, ODKTag> requiredTags = generateRequiredOSMTagsFromBundle(extras);
                     odkCollectData = new ODKCollectData(formId, 
@@ -57,7 +57,7 @@ public class ODKCollectHandler {
             }
         } else {
             ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
-            Settings.initialize();
+            Settings.initialize(context);
         }
     }
     
