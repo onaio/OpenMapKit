@@ -199,9 +199,6 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         //get map from layout
         mapView = (MapView)findViewById(R.id.mapView);
-        if(Settings.singleton().getProximityCheck()) {
-            mapView.setProximityRadius(Settings.singleton().getProximityRadius());
-        }
 
         // get Field Papers Message
         fieldPapersMsg = (TextView)findViewById(R.id.fieldPapersMsg);
@@ -233,6 +230,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         Settings.setProximityEnabled(false);
         Settings.singleton().setGpsEnabled(isGPSEnabled());
         if (Settings.singleton().getProximityCheck()) {
+            mapView.setProximityRadius(Settings.singleton().getProximityRadius());
             // Start GPS progress
             initialCountdownValue = Settings.singleton().getGpsTimerDelay();
             showProgressDialog();
@@ -315,7 +313,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                             MapActivity.this.finish();
                         }
                     })
-                    .setNegativeButton("Continue",  new DialogInterface.OnClickListener() {
+                    .setNegativeButton("Continue", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
@@ -363,7 +361,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         if (lat == -999 || lng == -999 || z == -999) {
             mapView.setUserLocationEnabled(true);
             mapView.goToUserLocation(true);
-        } 
+        }
         // there is a shared pref
         else {
             LatLng c = new LatLng(lat, lng);

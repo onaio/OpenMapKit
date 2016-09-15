@@ -372,4 +372,12 @@ public class OverlayManager extends AbstractList<Overlay> {
 
         return false;
     }
+
+    public void setProximityRadius(double proximityRadius) {
+        for(int i = 0; i < mOverlayList.size(); i++) {
+            if(mOverlayList.get(i) instanceof UserLocationOverlay) {
+                ((UserLocationOverlay)mOverlayList.get(i)).setProximityRadius(proximityRadius);
+            }
+        }
+    }
 }

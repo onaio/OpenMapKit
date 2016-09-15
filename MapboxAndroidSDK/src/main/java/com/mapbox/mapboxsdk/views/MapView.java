@@ -278,6 +278,9 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     public void setProximityRadius(double proximityRadius) {
         this.proximityRadius = proximityRadius;
+        if(mOverlayManager != null) {
+            mOverlayManager.setProximityRadius(proximityRadius);
+        }
     }
 
     /**

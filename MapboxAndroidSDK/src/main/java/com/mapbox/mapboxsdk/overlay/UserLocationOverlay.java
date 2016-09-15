@@ -115,6 +115,10 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         setOverlayIndex(USERLOCATIONOVERLAY_INDEX);
     }
 
+    public void setProximityRadius(double proximityRadius) {
+        this.proximityRadius = proximityRadius;
+    }
+
     public UserLocationOverlay(GpsLocationProvider myLocationProvider, MapView mapView, double proximityRadius) {
         this(myLocationProvider, mapView, R.drawable.direction_arrow, R.drawable.location_marker, proximityRadius);
     }
