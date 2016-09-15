@@ -2,6 +2,7 @@ package com.mapbox.mapboxsdk.overlay;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -75,6 +76,13 @@ public class OverlayManager extends AbstractList<Overlay> {
         Overlay[] array = mOverlayList.toArray(new Overlay[mOverlayList.size()]);
         Arrays.sort(array, new Comparator<Overlay>() {
             public int compare(Overlay lhs, Overlay rhs) {
+                //make sure that if it's the user location overlay, it always appears on top of all
+                //other overlays
+                if(lhs instanceof UserLocationOverlay) {
+                    return 1;
+                } else if(rhs instanceof UserLocationOverlay) {
+                    return -1;
+                }
                 return (Integer.valueOf(lhs.getOverlayIndex()).compareTo(rhs.getOverlayIndex()));
             }
         });
