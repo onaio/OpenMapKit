@@ -42,6 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.spatialdev.osm.model.OSMWay;
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -1042,6 +1043,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 } else {
                     String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
                     Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
+                    proportionMapAndList(100, 0);
                 }
             }
         }
@@ -1060,10 +1062,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             if (tappedOSMOsmElement != null) {
                 Geometry geometry = tappedOSMOsmElement.getJTSGeom();
                 if(geometry != null && lastLocation != null) {
-                    Point elementCentroid = geometry.getCentroid();
-                    LatLng centroidLatLng = new LatLng(elementCentroid.getCoordinate().y, elementCentroid.getCoordinate().x);
-                    if(centroidLatLng.distanceTo(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())) <= Settings.singleton().getProximityRadius()) {
-                        return true;
+                    Coordinate[] coordinates = geometry.getCoordinates();
+                    LatLng lastLocLatLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+                    for(int i = 0; i < coordinates.length; i++) {
+                        Coordinate curCoordinate = coordinates[i];
+                        LatLng curLatLng = new LatLng(curCoordinate.y, curCoordinate.x);
+                        if(curLatLng.distanceTo(lastLocLatLng) <= Settings.singleton().getProximityRadius()) {
+                            return true;
+                        }
                     }
                 }
             }
