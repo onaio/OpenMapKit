@@ -94,5 +94,6 @@
     <string name="downloading_osm_from_odk">Downloading OSM data from the ODK server</string>
     <string name="deleted_node">Deleted %1$s</string>
     <string name="could_not_append_location">Could not append your location. Please re-tag the %1$s</string>
+    <string name="copying_odk_media_files">Copying ODK media files</string>
 
 </resources>

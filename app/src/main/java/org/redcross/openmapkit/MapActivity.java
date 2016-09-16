@@ -184,7 +184,12 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         // Copy over OSM files from ODK media directory
         if(ODKCollectHandler.isODKCollectMode()) {
-            ExternalStorage.copyOsmFilesFromOdkMediaDir(ODKCollectHandler.getODKCollectData().getFormFileName());
+            ArrayList<File[]> mediaFilesToCopy = new ArrayList<>();
+            mediaFilesToCopy.addAll(ExternalStorage.getMbtilesFilesToCopyFromOdkMediaDir(ODKCollectHandler.getODKCollectData().getFormFileName()));
+            mediaFilesToCopy.addAll(ExternalStorage.getOsmFilesToCopyFromOdkMediaDir(ODKCollectHandler.getODKCollectData().getFormFileName()));
+            if(mediaFilesToCopy.size() > 0) {
+                new ExternalStorage.FileCopyAsyncTask(this, mediaFilesToCopy).execute();
+            }
         }
 
         // Initialize the constraints singleton.

@@ -1,7 +1,9 @@
 package org.redcross.openmapkit;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
@@ -439,12 +441,12 @@ public class ExternalStorage {
      * @param formFileName  The name of the ODK form to check its media directory
      * @return  TRUE if at least one file is copied
      */
-    public static boolean copyOsmFilesFromOdkMediaDir(String formFileName) {
+    public static ArrayList<File[]> getOsmFilesToCopyFromOdkMediaDir(String formFileName) {
+        ArrayList<File[]> files = new ArrayList<>();
         String sdCardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         File storageDir = Environment.getExternalStorageDirectory();
         File appDir = new File(storageDir, APP_DIR);
         File osmDir = new File(appDir, OSM_DIR);
-        boolean returnValue = false;
         if(formFileName != null) {
             String mediaDirPath = sdCardPath + "/odk/forms/" + formFileName + "-media";
             File mediaDirectory = new File(mediaDirPath);
@@ -453,14 +455,10 @@ public class ExternalStorage {
                 String[] mediaList = mediaDirectory.list();
                 for(int i = 0; i < mediaList.length; i++) {
                     if(mediaList[i].endsWith(".osm")) {
-                        Log.d("FilesTest", "about to copy "+mediaList[i]);
                         File curFile = new File(mediaDirectory, mediaList[i]);
                         File destination = new File(osmDir, mediaList[i]);
-                        try {
-                            Files.copy(curFile, destination);
-                            returnValue = true;
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        if(!destination.exists()) {
+                            files.add(new File[]{curFile, destination});
                         }
                     }
                 }
@@ -468,7 +466,41 @@ public class ExternalStorage {
             }
         }
 
-        return returnValue;
+        return files;
+    }
+
+    /**
+     * This method copies mbtiles files from an ODK form's media directory into OMK's OSM directory
+     *
+     * @param formFileName  The name of the ODK form to check its media directory
+     * @return  TRUE if at least one file is copied
+     */
+    public static ArrayList<File[]> getMbtilesFilesToCopyFromOdkMediaDir(String formFileName) {
+        ArrayList<File[]> files = new ArrayList<>();
+        String sdCardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File storageDir = Environment.getExternalStorageDirectory();
+        File appDir = new File(storageDir, APP_DIR);
+        File mbtilesDir = new File(appDir, MBTILES_DIR);
+        if(formFileName != null) {
+            String mediaDirPath = sdCardPath + "/odk/forms/" + formFileName + "-media";
+            File mediaDirectory = new File(mediaDirPath);
+            if(mediaDirectory.exists() && mediaDirectory.isDirectory()) {
+                //check all files in the directory for those with the .osm extension
+                String[] mediaList = mediaDirectory.list();
+                for(int i = 0; i < mediaList.length; i++) {
+                    if(mediaList[i].endsWith(".mbtiles")) {
+                        File curFile = new File(mediaDirectory, mediaList[i]);
+                        File destination = new File(mbtilesDir, mediaList[i]);
+                        if(!destination.exists()) {
+                            files.add(new File[]{curFile, destination});
+                        }
+                    }
+                }
+
+            }
+        }
+
+        return files;
     }
 
     /**
@@ -555,6 +587,54 @@ public class ExternalStorage {
         return Environment.getExternalStorageDirectory() + "/"
                 + APP_DIR + "/"
                 + SETTINGS_DIR + "/";
+    }
+
+    public static class FileCopyAsyncTask extends AsyncTask<Void, Integer, Void> {
+        private ArrayList<File[]> files;
+        private ProgressDialog progressDialog;
+
+        public FileCopyAsyncTask(Context context, ArrayList<File[]> files) {
+            this.files = files;
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setMessage(context.getResources().getString(R.string.copying_odk_media_files));
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setIndeterminate(false);
+            progressDialog.setMax(files.size());
+            progressDialog.setProgress(0);
+            progressDialog.setCancelable(true);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            for(int i = 0; i < files.size(); i++) {
+                publishProgress(i+1);
+                File[] pair = files.get(i);
+                try {
+                    Files.copy(pair[0], pair[1]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            progressDialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            progressDialog.dismiss();
+        }
     }
 }
 
