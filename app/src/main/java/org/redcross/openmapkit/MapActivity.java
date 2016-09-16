@@ -175,9 +175,17 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         // Move constraints assets to ExternalStorage if necessary
         ExternalStorage.copyConstraintsToExternalStorageIfNeeded(this);
 
+        // Move OSM files in assets to external storage
+        ExternalStorage.copyOsmToExternalStorageIfNeeded(this);
+
         // Register the intent to the ODKCollect handler
         // This will determine if we are in ODK Collect Mode or not.
         ODKCollectHandler.registerIntent(getApplicationContext(), getIntent());
+
+        // Copy over OSM files from ODK media directory
+        if(ODKCollectHandler.isODKCollectMode()) {
+            ExternalStorage.copyOsmFilesFromOdkMediaDir(ODKCollectHandler.getODKCollectData().getFormFileName());
+        }
 
         // Initialize the constraints singleton.
         // Loads up all the constraints JSON configs.
@@ -238,6 +246,28 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         cleanOsmFilesFromOdkInstances();
+        checkIfOsmFilesNeedLoading();
+    }
+
+    /**
+     * This method checks if there are currently no loaded OSM files
+     */
+    private void checkIfOsmFilesNeedLoading() {
+        final File[] osmFiles = ExternalStorage.fetchOSMXmlFiles();
+        if(osmFiles.length > 0) {
+            final boolean[] checkedOsmFiles = OSMMapBuilder.isFileArraySelected(osmFiles);
+            boolean needsPresenting = true;
+            for(int i = 0; i < checkedOsmFiles.length; i++) {
+                if(checkedOsmFiles[i]) {
+                    needsPresenting = false;
+                    break;
+                }
+            }
+
+            if(needsPresenting) {
+                presentOSMOptions();
+            }
+        }
     }
 
     private void initLocationListener() {

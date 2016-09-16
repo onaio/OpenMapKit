@@ -330,6 +330,10 @@ public class ExternalStorage {
         }
     }
 
+    public static void copyOsmToExternalStorageIfNeeded(Context context) {
+        copyAssetsFileOrDirToExternalStorage(context, OSM_DIR);
+    }
+
     public static void copyAssetsFileOrDirToExternalStorage(Context context, String path) {
         AssetManager assetManager = context.getAssets();
         String assets[] = null;
@@ -427,6 +431,44 @@ public class ExternalStorage {
         }
 
         return false;
+    }
+
+    /**
+     * This method copies OSM files from an ODK form's media directory into OMK's OSM directory
+     *
+     * @param formFileName  The name of the ODK form to check its media directory
+     * @return  TRUE if at least one file is copied
+     */
+    public static boolean copyOsmFilesFromOdkMediaDir(String formFileName) {
+        String sdCardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File storageDir = Environment.getExternalStorageDirectory();
+        File appDir = new File(storageDir, APP_DIR);
+        File osmDir = new File(appDir, OSM_DIR);
+        boolean returnValue = false;
+        if(formFileName != null) {
+            String mediaDirPath = sdCardPath + "/odk/forms/" + formFileName + "-media";
+            File mediaDirectory = new File(mediaDirPath);
+            if(mediaDirectory.exists() && mediaDirectory.isDirectory()) {
+                //check all files in the directory for those with the .osm extension
+                String[] mediaList = mediaDirectory.list();
+                for(int i = 0; i < mediaList.length; i++) {
+                    if(mediaList[i].endsWith(".osm")) {
+                        Log.d("FilesTest", "about to copy "+mediaList[i]);
+                        File curFile = new File(mediaDirectory, mediaList[i]);
+                        File destination = new File(osmDir, mediaList[i]);
+                        try {
+                            Files.copy(curFile, destination);
+                            returnValue = true;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+            }
+        }
+
+        return returnValue;
     }
 
     /**
