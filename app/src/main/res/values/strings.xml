@@ -95,5 +95,7 @@
     <string name="deleted_node">Deleted %1$s</string>
     <string name="could_not_append_location">Could not append your location. Please re-tag the %1$s</string>
     <string name="copying_odk_media_files">Copying ODK media files</string>
+    <string name="files_copying_in_background">Files being copied in the background</string>
+    <string name="done_copying_media_files">Done copying media files</string>
 
 </resources>

@@ -1,11 +1,14 @@
 package org.redcross.openmapkit;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.common.io.Files;
 
@@ -592,22 +595,35 @@ public class ExternalStorage {
     public static class FileCopyAsyncTask extends AsyncTask<Void, Integer, Void> {
         private ArrayList<File[]> files;
         private ProgressDialog progressDialog;
+        private boolean copying;
+        private final Context context;
 
         public FileCopyAsyncTask(Context context, ArrayList<File[]> files) {
+            this.context = context;
             this.files = files;
-            progressDialog = new ProgressDialog(context);
+            progressDialog = new ProgressDialog(this.context);
             progressDialog.setMessage(context.getResources().getString(R.string.copying_odk_media_files));
             progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             progressDialog.setIndeterminate(false);
             progressDialog.setMax(files.size());
             progressDialog.setProgress(0);
             progressDialog.setCancelable(true);
+            progressDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    if(copying == true) {
+                        Toast.makeText(FileCopyAsyncTask.this.context, R.string.files_copying_in_background, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+            copying = false;
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             progressDialog.show();
+            copying = true;
         }
 
         @Override
@@ -633,7 +649,12 @@ public class ExternalStorage {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            progressDialog.dismiss();
+            copying = false;
+            if(progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            } else {
+                Toast.makeText(context, R.string.done_copying_media_files, Toast.LENGTH_LONG).show();
+            }
         }
     }
 }
