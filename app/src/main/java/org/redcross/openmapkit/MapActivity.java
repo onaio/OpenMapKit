@@ -114,6 +114,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected Basemap basemap;
     protected TagListAdapter tagListAdapter;
     protected Menu menu;
+    protected TextView gpsAccuracyView;
 
     private boolean nodeMode = false;
     private boolean moveNodeMode = false;
@@ -234,6 +235,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         initializeAddNodeButtons();
         initializeMoveNodeButtons();
         initializeDeleteNodeButton();
+        initializeGpsAccuracyView();
 
         positionMap();
 
@@ -281,6 +283,12 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             @Override
             public void onLocationChanged(Location location) {
                 lastLocation = location;
+                if(lastLocation != null) {
+                    gpsAccuracyView.setText("GPS Accuracy "+lastLocation.getAccuracy()+"m");
+                } else {
+                    gpsAccuracyView.setText("GPS Accuracy Unknown");
+                }
+
                 if(Settings.singleton().getProximityCheck()) {
                     if(location.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
                         if(!Settings.singleton().isProximityEnabled()) {
@@ -492,6 +500,15 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 }
             }
         });
+    }
+
+    private void initializeGpsAccuracyView() {
+        gpsAccuracyView = (TextView) findViewById(R.id.gpsAccuracyView);
+        if(Settings.singleton().getProximityCheck()) {
+            gpsAccuracyView.setVisibility(View.VISIBLE);
+        } else {
+            gpsAccuracyView.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -717,7 +734,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             if(recordUserLocation()) {
                 if (Settings.singleton().getProximityCheck()) {
                     //check user's last location is accurate enough
-                    if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getProximityRadius()) {
+                    if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
                         if (!isUserLocationEnabled()) {
                             toggleUserLocation(true);
                         }
@@ -755,11 +772,17 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
             if(lastLocation != null && (Calendar.getInstance().getTimeInMillis() - lastLocation.getTime()) < 60000l) {
                 userLocation = new Location(lastLocation);
+            } else if(Settings.singleton().getProximityCheck()
+                    && (Calendar.getInstance().getTimeInMillis() - lastLocation.getTime()) >= 60000l) {
+                gpsAccuracyView.setText("GPS Location Expired");
+                double timeDiff = ((double)(Calendar.getInstance().getTimeInMillis() - lastLocation.getTime())/60000);
+                Toast.makeText(this, "Last location was collected "+((int)timeDiff)+"min ago", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
             }
 
             if(userLocation == null) {
                 proportionMapAndList(100, 0);
-                Toast.makeText(this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
                 result = false;
             }
         }
@@ -1126,9 +1149,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         String osmXmlFileFullPath = ODKCollectHandler.getODKCollectData().getOSMFileFullPath();
         String osmXmlFileName = ODKCollectHandler.getODKCollectData().getOSMFileName();
         Intent resultIntent = new Intent();
-        resultIntent.putExtra("OSM_PATH", osmXmlFileFullPath);
-        resultIntent.putExtra("OSM_FILE_NAME", osmXmlFileName);
-        setResult(Activity.RESULT_OK, resultIntent);
+        if(osmXmlFileName != null && !osmXmlFileName.equals("null.osm")) {
+            resultIntent.putExtra("OSM_PATH", osmXmlFileFullPath);
+            resultIntent.putExtra("OSM_FILE_NAME", osmXmlFileName);
+            setResult(Activity.RESULT_OK, resultIntent);
+        } else {
+            Toast.makeText(this, String.format(getResources().getString(R.string.an_error_occurred_retag), Settings.singleton().getNodeName()), Toast.LENGTH_LONG).show();
+            setResult(Activity.RESULT_CANCELED, resultIntent);
+        }
         finish();
     }
     

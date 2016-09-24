@@ -97,5 +97,6 @@
     <string name="copying_odk_media_files">Copying ODK media files</string>
     <string name="files_copying_in_background">Files being copied in the background</string>
     <string name="done_copying_media_files">Done copying media files</string>
+    <string name="an_error_occurred_retag">An error occurred. Please re-tag the %1$s</string>
 
 </resources>
