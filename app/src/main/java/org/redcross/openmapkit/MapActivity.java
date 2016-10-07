@@ -772,7 +772,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
             if(lastLocation != null && (Calendar.getInstance().getTimeInMillis() - lastLocation.getTime()) < 60000l) {
                 userLocation = new Location(lastLocation);
-            } else if(Settings.singleton().getProximityCheck()
+            } else if(lastLocation != null
+                    && Settings.singleton().getProximityCheck()
                     && (Calendar.getInstance().getTimeInMillis() - lastLocation.getTime()) >= 60000l) {
                 gpsAccuracyView.setText("GPS Location Expired");
                 double timeDiff = ((double)(Calendar.getInstance().getTimeInMillis() - lastLocation.getTime())/60000);
