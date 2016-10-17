@@ -5,6 +5,8 @@
 
 package com.spatialdev.osm.model;
 
+import android.util.Log;
+
 import com.mapbox.mapboxsdk.api.ILatLng;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -17,8 +19,10 @@ import com.vividsolutions.jts.index.quadtree.Quadtree;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class JTSModel {
@@ -43,7 +47,7 @@ public class JTSModel {
         addOSMOpenWays(ds);
         addOSMStandaloneNodes(ds);
     }
-    
+
     public synchronized void mergeEditedOSMDataSet(String absPath, OSMDataSet ds) {
         Collection<OSMDataSet> dataSets = dataSetHash.values();
         for (OSMDataSet existingDataSet : dataSets) {
@@ -190,10 +194,12 @@ public class JTSModel {
                 continue;
             }
             if (!w.isModified() && OSMWay.containsModifiedWay(w.getId())) {
+                Log.d("RenderTest", "Open way with id "+w.getId()+" is not modified");
                 continue;    
             }
             // Don't render or index ways that do not have all of their referenced nodes.
             if (w.incomplete()) {
+                Log.d("RenderTest", "Open way with id "+w.getId()+" is incomplete");
                 continue;
             }
 
@@ -218,10 +224,12 @@ public class JTSModel {
                 continue;
             }
             if (!w.isModified() && OSMWay.containsModifiedWay(w.getId())) {
+                Log.d("RenderTest", "Open way with id "+w.getId()+" is not modified");
                 continue;
             }
             // Don't render or index ways that do not have all of their referenced nodes.
             if (w.incomplete()) {
+                Log.d("RenderTest", "Open way with id "+w.getId()+" is incomplete");
                 continue;
             }
 
@@ -320,16 +328,66 @@ public class JTSModel {
     public static boolean elementAlreadyAdded(Map<Long, OSMElement> elementHashMap, OSMElement el) {
         if(el != null) {
             if(elementHashMap.containsKey(el.getId())) {
+                String mainTagKey = "spray_status";
+                String mainTagValue = "sprayed";
+                Set<String> tagKeys = el.getTags().keySet();
+                Set<String> existingTagKeys = elementHashMap.get(el.getId()).getTags().keySet();
                 Date newElDate = el.getTimestampDate();
                 Date existingElDate = elementHashMap.get(el.getId()).getTimestampDate();
                 if(newElDate == null) {
                     return true;
+                } else {
+                    if (tagKeys.contains(mainTagKey)) {
+                        if (el.getTags().get(mainTagKey) != null
+                                && el.getTags().get(mainTagKey).equals(mainTagValue)
+                                && (!existingTagKeys.contains(mainTagKey)
+                                || elementHashMap.get(el.getId()).getTags().get(mainTagKey) == null
+                                || !elementHashMap.get(el.getId()).getTags().get(mainTagKey).equals(mainTagValue))) {
+                            return false;//if new element has main tag value and existing tag has another value then just use the new one
+                        } else if (existingTagKeys.contains(mainTagKey)
+                                && elementHashMap.get(el.getId()).getTags().get(mainTagKey) != null
+                                && elementHashMap.get(el.getId()).getTags().get(mainTagKey).equals(mainTagValue)
+                                && (el.getTags().get(mainTagKey) == null
+                                || !el.getTags().get(mainTagKey).equals(mainTagValue))) {
+                            return true;//if existing element has main tag value and the new element has something else then use existing element
+                        }
+                    }
+
+                    //if we've reached here then it means the mainTagKey value was not met by either the existing or new element
+                    if (existingElDate == null || newElDate.getTime() > existingElDate.getTime()) {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+
+            /* what is to be used by other projects except for mSpray
+            Date newElDate = el.getTimestampDate();
+                Date existingElDate = elementHashMap.get(el.getId()).getTimestampDate();
+                if(newElDate == null) {
+                    return true;
+                } else if(tagKeys.contains(mainTagKey)){//Akros hack (all )
+                    if(el.getTags().get(mainTagKey)!= null
+                            && el.getTags().get(mainTagKey).equals(mainTagValue)
+                            && (!existingTagKeys.contains(mainTagKey)
+                                || elementHashMap.get(el.getId()).getTags().get(mainTagKey) == null
+                                || !elementHashMap.get(el.getId()).getTags().get(mainTagKey).equals(mainTagValue))) {
+                        return false;//if new element has main tag value and existing tag has another value then just use the new one
+                    } else if(existingTagKeys.contains(mainTagKey)
+                            && elementHashMap.get(el.getId()).getTags().get(mainTagKey) != null
+                            && elementHashMap.get(el.getId()).getTags().get(mainTagKey).equals(mainTagValue)
+                            && (el.getTags().get(mainTagKey) == null
+                                || !el.getTags().get(mainTagKey).equals(mainTagValue))) {
+                        return true;//if existing element has main tag value and the new element has something else then use existing element
+                    }
                 } else if(existingElDate == null || newElDate.getTime() > existingElDate.getTime()) {
                     return false;
                 }
             } else {
                 return false;
             }
+             */
         }
         return true;
     }
