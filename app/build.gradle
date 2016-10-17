@@ -13,7 +13,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 21
         versionCode 29
-        versionName "1.1.17-ona"
+        versionName "1.1.17-mspray"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
