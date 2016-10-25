@@ -1147,18 +1147,36 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     protected void saveToODKCollectAndExit() {
-        String osmXmlFileFullPath = ODKCollectHandler.getODKCollectData().getOSMFileFullPath();
-        String osmXmlFileName = ODKCollectHandler.getODKCollectData().getOSMFileName();
-        Intent resultIntent = new Intent();
+        final String osmXmlFileFullPath = ODKCollectHandler.getODKCollectData().getOSMFileFullPath();
+        final String osmXmlFileName = ODKCollectHandler.getODKCollectData().getOSMFileName();
         if(osmXmlFileName != null && !osmXmlFileName.equals("null.osm")) {
-            resultIntent.putExtra("OSM_PATH", osmXmlFileFullPath);
-            resultIntent.putExtra("OSM_FILE_NAME", osmXmlFileName);
-            setResult(Activity.RESULT_OK, resultIntent);
+            PullCsvBuilder.updateCsv(OSMElement.getSelectedElements().getFirst(), osmXmlFileName, new PullCsvBuilder.OnPostUpdateListener() {
+                private void sendData() {
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("OSM_PATH", osmXmlFileFullPath);
+                    resultIntent.putExtra("OSM_FILE_NAME", osmXmlFileName);
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
+                }
+
+                @Override
+                public void onUpdate(boolean status) {
+                    sendData();
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(MapActivity.this, "An error occurred while trying to save Pull CSV data", Toast.LENGTH_LONG).show();
+                    sendData();
+                }
+            });
         } else {
+            Intent resultIntent = new Intent();
             Toast.makeText(this, String.format(getResources().getString(R.string.an_error_occurred_retag), Settings.singleton().getNodeName()), Toast.LENGTH_LONG).show();
             setResult(Activity.RESULT_CANCELED, resultIntent);
+            finish();
         }
-        finish();
     }
     
     public MapView getMapView() {

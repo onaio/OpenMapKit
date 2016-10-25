@@ -411,31 +411,50 @@ public class ExternalStorage {
      * @return TRUE if there was a successful copy
      */
     public static boolean copyFormFileFromOdkMediaDir(String formFileName, String file) {
+        try {
+            File odkMediaFile = getFileFromOdkMediaDir(formFileName, file);
+            if(odkMediaFile != null && odkMediaFile.exists() && !odkMediaFile.isDirectory()) {
+                File destinationFile = null;
+                if(file.equals(SETTINGS_FILE_NAME_ON_ODK)) {
+                    destinationFile = fetchSettingsFile(formFileName);
+                }
+                else if(file.equals(CONSTRAINTS_FILE_NAME_ON_ODK)) {
+                    destinationFile = fetchConstraintsFile(formFileName);
+                }
+                try {
+                    Files.copy(odkMediaFile, destinationFile);
+                    return true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static File getFileFromOdkMediaDir(String formFileName, String file) throws IOException {
+
         String sdCardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         if(formFileName != null) {
             String mediaDirPath = sdCardPath + "/odk/forms/" + formFileName + "-media";
             File mediaDirectory = new File(mediaDirPath);
-            if(mediaDirectory.exists() && mediaDirectory.isDirectory()) {
-                File odkMediaFile = new File(mediaDirectory, file);
-                if(odkMediaFile.exists() && !odkMediaFile.isDirectory()) {
-                    File destinationFile = null;
-                    if(file.equals(SETTINGS_FILE_NAME_ON_ODK)) {
-                        destinationFile = fetchSettingsFile(formFileName);
-                    }
-                    else if(file.equals(CONSTRAINTS_FILE_NAME_ON_ODK)) {
-                        destinationFile = fetchConstraintsFile(formFileName);
-                    }
-                    try {
-                        Files.copy(odkMediaFile, destinationFile);
-                        return true;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+            if(!mediaDirectory.exists()) {
+                if(!mediaDirectory.mkdirs()) {
+                    throw new IOException("Could no create the ODK Media directory");
                 }
             }
-        }
 
-        return false;
+            if(!mediaDirectory.isDirectory()) {
+                throw new IOException("The ODK Media directory path has a regular file");
+            }
+
+            return new File(mediaDirectory, file);
+        } else {
+            throw new IOException("The provided form filename is null");
+        }
     }
 
     /**

@@ -22,6 +22,7 @@ public class Settings {
     private static final String SUB_OSM_FROM_ODK = "osm_from_odk";
     private static final String SUB_PROXIMITY = "proximity";
     private static final String SUB_USER_LOCATION_TAGS = "user_location_tags";
+    private static final String SUB_PULL_CSV = "pull_csv";
 
     //defaults
     public static final double DEFAULT_PROXIMITY_RADIUS = 50d;
@@ -39,6 +40,9 @@ public class Settings {
     public static final String DEFAULT_USER_LOCATION_TAGS_LAT_LNG = null;
     public static final String DEFAULT_USER_LOCATION_TAGS_ACCURACY = null;
     public static final boolean DEFAULT_CLICKABLE_TAGS = true;
+    public static final JSONArray DEFAULT_PULL_CSV_TAGS = new JSONArray();
+    public static final String DEFAULT_PULL_CSV_PK_COLUMN = null;
+    public static final String DEFAULT_PULL_CSV_FILENAME = null;
     public static final float DEFAULT_MIN_VECTOR_RENDER_ZOOM = OSMMapBuilder.DEFAULT_MIN_VECTOR_RENDER_ZOOM;
 
 
@@ -120,6 +124,28 @@ public class Settings {
         return data.getJSONObject(SUB_OSM_FROM_ODK);
     }
 
+    private JSONObject getPullCsvSub() throws JSONException {
+        if(!data.has(SUB_PULL_CSV)) {
+            data.put(SUB_PULL_CSV, new JSONObject());
+        }
+
+        //set the default values
+        if(!data.getJSONObject(SUB_PULL_CSV).has("tags")) {
+            data.getJSONObject(SUB_PULL_CSV).put("tags", DEFAULT_PULL_CSV_TAGS);
+        }
+        if(!data.getJSONObject(SUB_PULL_CSV).has("filename")
+                || data.getJSONObject(SUB_PULL_CSV).getString("filename") == null
+                || data.getJSONObject(SUB_PULL_CSV).getString("filename").length() == 0) {
+            data.getJSONObject(SUB_PULL_CSV).put("filename", DEFAULT_PULL_CSV_FILENAME);
+        }
+        if(!data.getJSONObject(SUB_PULL_CSV).has("pk_column")
+                || data.getJSONObject(SUB_PULL_CSV).getString("pk_column") == null
+                || data.getJSONObject(SUB_PULL_CSV).getString("pk_column").length() == 0) {
+            data.getJSONObject(SUB_PULL_CSV).put("pk_column", DEFAULT_PULL_CSV_PK_COLUMN);
+        }
+        return data.getJSONObject(SUB_PULL_CSV);
+    }
+
     private JSONObject getProximitySub() throws JSONException {
         if(!data.has(SUB_PROXIMITY)) {
             data.put(SUB_PROXIMITY, new JSONObject());
@@ -134,6 +160,51 @@ public class Settings {
         }
 
         return data.getJSONObject(SUB_USER_LOCATION_TAGS);
+    }
+
+    public JSONArray getPullCsvTags() {
+        JSONArray tags = DEFAULT_PULL_CSV_TAGS;
+        if(data != null) {
+            try {
+                JSONObject pullCsvSub = getPullCsvSub();
+                if(pullCsvSub.has("tags")) {
+                    tags = pullCsvSub.getJSONArray("tags");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return tags;
+    }
+
+    public String getPullCsvFilename() {
+        String filename = DEFAULT_PULL_CSV_FILENAME;
+        if(data != null) {
+            try {
+                JSONObject pullCsvSub = getPullCsvSub();
+                if(pullCsvSub.has("filename")) {
+                    filename = pullCsvSub.getString("filename");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return  filename;
+    }
+
+    public String getPullCsvPkColumn() {
+        String pkColumn = DEFAULT_PULL_CSV_PK_COLUMN;
+        if(data != null) {
+            try {
+                JSONObject pullCsvSub = getPullCsvSub();
+                if(pullCsvSub.has("pk_column")) {
+                    pkColumn = pullCsvSub.getString("pk_column");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return  pkColumn;
     }
 
     public ArrayList<Form> getOSMFromODKForms() {
