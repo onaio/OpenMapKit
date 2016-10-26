@@ -1,6 +1,5 @@
 package org.redcross.openmapkit;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,7 +12,6 @@ import android.widget.Toast;
 import com.google.common.io.Files;
 
 import org.apache.commons.io.FilenameUtils;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,6 +40,7 @@ public class ExternalStorage {
      * Directories used by the app.
      * * * 
      */
+    public static final String ODK_DIR = "odk";
     public static final String APP_DIR = "openmapkit";
     public static final String MBTILES_DIR = "mbtiles";
     public static final String OSM_DIR = "osm";
@@ -249,6 +248,11 @@ public class ExternalStorage {
             }
         }
         return osmXmlFiles;
+    }
+
+    public static File odkDirectory() {
+        File storageDir = Environment.getExternalStorageDirectory();
+        return new File(storageDir, ODK_DIR);
     }
 
     public static File deploymentFPFile(String deploymentName) {
@@ -609,6 +613,26 @@ public class ExternalStorage {
         return Environment.getExternalStorageDirectory() + "/"
                 + APP_DIR + "/"
                 + SETTINGS_DIR + "/";
+    }
+
+    /**
+     * This method recursively checks and adds osm files in the provided directory
+     *
+     * @param directory The directory to recursively check for osm files
+     * @param osmFiles  The list object to place found files
+     */
+    public static void findAllOsmFileInDir(File directory, List<File> osmFiles) {
+        File[] filesInDir = directory.listFiles();
+        for (int i = 0; i < filesInDir.length; ++i) {
+            File file = filesInDir[i];
+            if(file.isDirectory()) {
+                findAllOsmFileInDir(file, osmFiles);
+            } else {
+                if(file.getName().lastIndexOf(".osm") > -1) {
+                    osmFiles.add(file);
+                }
+            }
+        }
     }
 
     public static class FileCopyAsyncTask extends AsyncTask<Void, Integer, Void> {

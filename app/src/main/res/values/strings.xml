@@ -98,5 +98,7 @@
     <string name="files_copying_in_background">Files being copied in the background</string>
     <string name="done_copying_media_files">Done copying media files</string>
     <string name="an_error_occurred_retag">An error occurred. Please re-tag the %1$s</string>
+    <string name="title_activity_query">QueryActivity</string>
+    <string name="querying_please_wait">Querying OMK, please wait...</string>
 
 </resources>
