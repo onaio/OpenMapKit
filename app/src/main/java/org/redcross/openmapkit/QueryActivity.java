@@ -3,7 +3,6 @@ package org.redcross.openmapkit;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Window;
 
 import org.redcross.openmapkit.querying.OnQueryCompleteListener;

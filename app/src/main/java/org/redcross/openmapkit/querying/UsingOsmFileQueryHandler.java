@@ -83,9 +83,7 @@ public class UsingOsmFileQueryHandler extends QueryHandler {
             Bundle bundle = intent.getExtras();
             if(bundle.containsKey(KEY_OSM_FILE)
                     && bundle.getString(KEY_OSM_FILE) != null
-                    && bundle.getString(KEY_OSM_FILE).length() > 0
-                    && bundle.getString(KEY_TAG) != null
-                    && bundle.getString(KEY_TAG).length() > 0) {
+                    && bundle.getString(KEY_OSM_FILE).length() > 0) {
                 return true;
             }
         }
@@ -104,7 +102,19 @@ public class UsingOsmFileQueryHandler extends QueryHandler {
         @Override
         protected Intent doInBackground(Void... voids) {
             final String queryOsmFile = queryIntent.getExtras().getString(KEY_OSM_FILE);
-            final String queryTag = queryIntent.getExtras().getString(KEY_TAG);
+            final ArrayList<String> queryTags = new ArrayList<>();
+            String mainQueryTag = null;
+            for(String currExtra : queryIntent.getExtras().keySet()) {
+                if(currExtra.equals(KEY_TAG)) {
+                    if(queryIntent.getExtras().getString(KEY_TAG) != null
+                            && queryIntent.getExtras().getString(KEY_TAG).length() > 0) {
+                        mainQueryTag = queryIntent.getExtras().getString(KEY_TAG);
+                        queryTags.add(queryIntent.getExtras().getString(KEY_TAG));
+                    }
+                } else if(!currExtra.equals(KEY_OSM_FILE)) {
+                    queryTags.add(currExtra);
+                }
+            }
 
             Intent result = new Intent();
             result.putExtra(KEY_INTENT_RESULT, DEFAULT_RESULT);
@@ -115,8 +125,16 @@ public class UsingOsmFileQueryHandler extends QueryHandler {
 
             for(File curOsmFile : osmFiles) {
                 if(curOsmFile.getName().trim().equals(queryOsmFile.trim())) {
-                    String tagValue = getTagInOsmFile(curOsmFile, queryTag);
-                    result.putExtra(KEY_INTENT_RESULT, tagValue);
+                    for(String  queryTag : queryTags) {
+                        String tagValue = getTagInOsmFile(curOsmFile, queryTag);
+                        if(tagValue != null) {
+                            if (mainQueryTag != null && mainQueryTag.equals(queryTag)) {
+                                result.putExtra(KEY_INTENT_RESULT, tagValue);
+                            } else {
+                                result.putExtra(queryTag, tagValue);
+                            }
+                        }
+                    }
                     break;
                 }
             }
