@@ -36,5 +36,6 @@
     }
   },
   "clickable_tags": false,
+  "show_add_node": true,
   "min_vector_render_zoom":1
 }

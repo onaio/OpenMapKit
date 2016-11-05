@@ -679,6 +679,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 toggleNodeMode();
             }
         });
+        if(Settings.singleton().shouldShowAddNode() == false) {
+            nodeModeButton.setVisibility(View.GONE);
+        }
     }
 
     protected void initializeAddNodeButtons() {

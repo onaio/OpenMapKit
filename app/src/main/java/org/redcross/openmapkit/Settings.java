@@ -44,6 +44,7 @@ public class Settings {
     public static final String DEFAULT_PULL_CSV_PK_COLUMN = null;
     public static final String DEFAULT_PULL_CSV_FILENAME = null;
     public static final float DEFAULT_MIN_VECTOR_RENDER_ZOOM = OSMMapBuilder.DEFAULT_MIN_VECTOR_RENDER_ZOOM;
+    public static final boolean DEFAULT_SHOW_ADD_NODE = true;
 
 
     private static Settings instance;
@@ -423,6 +424,18 @@ public class Settings {
         }
 
         return nodeName;
+    }
+
+    public boolean shouldShowAddNode() {
+        boolean result = DEFAULT_SHOW_ADD_NODE;
+        if(data.has("show_add_node")) {
+            try {
+                result = data.getBoolean("show_add_node");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 
     /**
