@@ -70,9 +70,19 @@
         <activity
             android:name=".QueryActivity"
             android:label="@string/title_activity_query"
-            android:theme="@style/DialogTheme" >
+            android:theme="@style/DialogTheme">
             <intent-filter>
                 <action android:name="org.redcross.openmapkit.action.QUERY" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".OsmFileGeneratorActivity"
+            android:theme="@style/DialogTheme">
+            <intent-filter>
+                <action android:name="org.redcross.openmapkit.action.GENERATE" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
