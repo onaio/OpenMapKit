@@ -86,6 +86,16 @@ public class ODKCollectHandler {
      * @return The full path of the saved OSM XML File
      */
     public static String saveXmlInODKCollect(OSMElement el, String osmUserName) {
+        return saveXmlInOdkCollect(odkCollectData, el, osmUserName);
+    }
+
+    /**
+     * Saves an OSM Element as XML in ODK Collect.
+     * * *
+     * @param el
+     * @return The full path of the saved OSM XML File
+     */
+    public static String saveXmlInOdkCollect(ODKCollectData odkCollectData, OSMElement el, String osmUserName) {
         try {
             odkCollectData.consumeOSMElement(el, osmUserName);
             odkCollectData.deleteOldOSMEdit();
