@@ -81,9 +81,11 @@
             android:name=".OsmFileGeneratorActivity"
             android:theme="@style/DialogTheme">
             <intent-filter>
-                <action android:name="org.redcross.openmapkit.action.GENERATE" />
+                <action android:name="org.odk.collect.android.osm.action.GENERATE" />
 
                 <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
     </application>
