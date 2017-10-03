@@ -1,11 +1,14 @@
 package org.redcross.openmapkit;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
 
 import org.redcross.openmapkit.odkcollect.ODKCollectData;
@@ -22,12 +25,7 @@ import java.util.regex.Pattern;
  */
 public class OsmFileGeneratorActivity extends Activity {
     private static final String TAG = OsmFileGeneratorActivity.class.getSimpleName();
-    public static final String KEY_FORM_FILE_NAME = "FORM_FILE_NAME";
-    public static final String KEY_FORM_ID = "FORM_ID";
-    public static final String KEY_INSTANCE_ID = "INSTANCE_ID";
-    public static final String KEY_INSTANCE_DIR = "INSTANCE_DIR";
     public static final String KEY_GPS = "gps";
-    public static final String KEY_FILENAME = "filename";
     public static final String VALUE_GPSLATLNG = "value:gps_latlng";
     public static final String VALUE_GPSACCURACY = "value:gps_accuracy";
     private static final Pattern ODK_GPS_PATTERN = Pattern.compile(
@@ -38,85 +36,67 @@ public class OsmFileGeneratorActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_osm_generator);
         if (getIntent().getExtras() != null) {
-            extractData(getIntent().getExtras());
+            extractData();
         }
     }
 
-    private void extractData(Bundle bundle) {
-        String formId = null;
-        String formFileName = null;
-        String instanceId = null;
-        String instanceDir = null;
-        String gps = null;
-        String filename = null;
-        String userLocTag = null;
-        HashMap<String, String> tags = new HashMap<>();
-        for (String curKey : bundle.keySet()) {
-            if (curKey.equals(KEY_FORM_FILE_NAME)) {
-                formFileName = bundle.getString(curKey);
-            } else if (curKey.equals(KEY_FORM_ID)) {
-                formId = bundle.getString(curKey);
-            } else if (curKey.equals(KEY_INSTANCE_ID)) {
-                instanceId = bundle.getString(curKey);
-            } else if (curKey.equals(KEY_INSTANCE_DIR)) {
-                instanceDir = bundle.getString(curKey);
-            } else if (curKey.equals(KEY_GPS)) {
-                gps = bundle.getString(curKey);
-            } else if (curKey.equals(KEY_FILENAME)) {
-                filename = bundle.getString(curKey);
-            } else {
-                tags.put(curKey, bundle.getString(curKey));
-            }
-        }
-
-        constructOsmFile(formId, formFileName, instanceId, instanceDir, filename, gps, tags, userLocTag);
+    private void extractData() {
+        Intent intent = getIntent();
+        ODKCollectHandler.registerIntent(getApplicationContext(), intent);
+        LinkedHashMap<String, ODKTag> requiredTags = ODKCollectHandler
+                .generateRequiredOSMTagsFromBundle(intent.getExtras(), false);
+        constructOsmFile(requiredTags);
     }
 
-    private void constructOsmFile(String formId, String formFileName, String instanceId,
-                                  String instanceDir, String filename, String gps,
-                                  HashMap<String, String> tags, String userLocTag) {
-        if (instanceDir != null) Log.d(TAG, "instance_dir : " + instanceDir);
-        if (filename != null) Log.d(TAG, "filename : " + filename);
-        if (gps != null) Log.d(TAG, "gps : " + gps);
-        for (String curKey : tags.keySet()) {
-            Log.d(TAG, curKey + " : " + tags.get(curKey));
-        }
-
+    private void constructOsmFile(LinkedHashMap<String, ODKTag> requiredTags) {
         String latitude = null;
         String longitude = null;
         String accuracy = null;
-        Matcher gpsMatcher = ODK_GPS_PATTERN.matcher(gps);
-        if (gpsMatcher.find()) {
-            latitude = gpsMatcher.group(1);
-            longitude = gpsMatcher.group(2);
-            accuracy = gpsMatcher.group(4);
+        if (requiredTags.containsKey(KEY_GPS)) {
+            String gps = requiredTags.get(KEY_GPS).getLabel();
+            Matcher gpsMatcher = ODK_GPS_PATTERN.matcher(gps);
+            if (gpsMatcher.find()) {
+                latitude = gpsMatcher.group(1);
+                longitude = gpsMatcher.group(2);
+                accuracy = gpsMatcher.group(4);
+            }
+            requiredTags.remove(KEY_GPS);
         }
 
         if (!TextUtils.isEmpty(latitude) && !TextUtils.isEmpty(longitude)) {
             LatLng latLng = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
             OSMNode node = new OSMNode(latLng, null);
 
-            for (String curKey : tags.keySet()) {
-                String curValue = tags.get(curKey);
+            for (String curKey : requiredTags.keySet()) {
+                String curValue = requiredTags.get(curKey).getLabel();
                 if (!TextUtils.isEmpty(curValue)) {
-                    if (curValue.equals(VALUE_GPSLATLNG)) {
+                    if (curValue.contains(VALUE_GPSLATLNG)) {
                         node.addOrEditTag(curKey, latitude + "," + longitude);
-                    } else if (curValue.equals(VALUE_GPSACCURACY)) {
+                    } else if (curValue.contains(VALUE_GPSACCURACY)) {
                         node.addOrEditTag(curKey, accuracy + " m");
                     } else {
-                        node.addOrEditTag(curKey, tags.get(curKey));
+                        node.addOrEditTag(curKey, curValue);
                     }
                 }
             }
 
-            ODKCollectData odkCollectData = new ODKCollectData(
-                    formId,
-                    formFileName,
-                    instanceId,
-                    instanceDir,
-                    null,
-                    new LinkedHashMap<String, ODKTag>());
-            ODKCollectHandler.saveXmlInOdkCollect(odkCollectData, node, "odk_collect");
+
+            ODKCollectHandler.saveXmlInODKCollect(node, "odk_collect");
+
+            final String osmXmlFileFullPath = ODKCollectHandler.getODKCollectData().getOSMFileFullPath();
+            final String osmXmlFileName = ODKCollectHandler.getODKCollectData().getOSMFileName();
+            if(osmXmlFileName != null && !osmXmlFileName.equals("null.osm")) {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("OSM_PATH", osmXmlFileFullPath);
+                resultIntent.putExtra("OSM_FILE_NAME", osmXmlFileName);
+                setResult(Activity.RESULT_OK, resultIntent);
+                finish();
+            } else {
+                Intent resultIntent = new Intent();
+                Toast.makeText(this, String.format(getResources().getString(R.string.an_error_occurred_retag), Settings.singleton().getNodeName()), Toast.LENGTH_LONG).show();
+                setResult(Activity.RESULT_CANCELED, resultIntent);
+                finish();
+            }
         }
     }
 }
