@@ -31,7 +31,8 @@ public class ODKCollectHandler {
     
     public static void registerIntent(Context context, Intent intent) {
         String action = intent.getAction();
-        if(action != null && action.equals("android.intent.action.SEND")) {
+        if(action != null && (action.equals("android.intent.action.SEND")
+                || action.equals("org.odk.collect.android.osm.action.GENERATE"))) {
             if (intent.getType().equals("text/plain")) {
                 Bundle extras = intent.getExtras();
                 if(extras != null) {
@@ -42,17 +43,19 @@ public class ODKCollectHandler {
                     String instanceDir = extras.getString("INSTANCE_DIR");
                     String previousOSMEditFileName = extras.getString("OSM_EDIT_FILE_NAME");
 
-                    //initialize settings
-                    ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
-                    Settings.initialize(context, formFileName);
+                    if (action.equals("android.intent.action.SEND")) {
+                        //initialize settings
+                        ExternalStorage.copyAssetsFileOrDirToExternalStorage(context, ExternalStorage.SETTINGS_DIR);
+                        Settings.initialize(context, formFileName);
+                    }
 
-                    LinkedHashMap<String, ODKTag> requiredTags = generateRequiredOSMTagsFromBundle(extras);
-                    odkCollectData = new ODKCollectData(formId, 
-                                                        formFileName,
-                                                        instanceId,
-                                                        instanceDir,
-                                                        previousOSMEditFileName,
-                                                        requiredTags);
+                    LinkedHashMap<String, ODKTag> requiredTags = generateRequiredOSMTagsFromBundle(extras, action.equals("android.intent.action.SEND"));
+                    odkCollectData = new ODKCollectData(formId,
+                            formFileName,
+                            instanceId,
+                            instanceDir,
+                            previousOSMEditFileName,
+                            requiredTags);
                 }
             }
         } else {
@@ -106,8 +109,9 @@ public class ODKCollectHandler {
         }
         return null;
     }
-    
-    private static LinkedHashMap<String, ODKTag> generateRequiredOSMTagsFromBundle(Bundle extras) {
+
+    public static LinkedHashMap<String, ODKTag> generateRequiredOSMTagsFromBundle(
+            Bundle extras, boolean addUserLocationTags) {
         List<String> tagKeys = extras.getStringArrayList("TAG_KEYS");
         if (tagKeys == null || tagKeys.size() == 0) {
             return null;
@@ -135,7 +139,7 @@ public class ODKCollectHandler {
             }
         }
 
-        tags = addUserLocationTags(tags);
+        if (addUserLocationTags) tags = addUserLocationTags(tags);
 
         return tags;
     }
