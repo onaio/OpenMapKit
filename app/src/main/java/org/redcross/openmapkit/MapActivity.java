@@ -84,6 +84,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
     protected static final String ODK_OMK_QUERY_VAL = "org.redcross.openmapkit.ODK_QUERY_VAL";
+    protected static final String ADMIN_PASSWORD = "org.redcross.openmapkit.ADMIN_PASSWORD";
     public static final ArrayList<Integer> MENU_ITEM_IDS;
     static{
         MENU_ITEM_IDS = new ArrayList<>();
@@ -131,6 +132,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private Location userLocation;//the location to be recorded in the user location OSM tags
 
     private AppCompatDialog odkQueryDialog;
+    private AppCompatDialog adminAuthorizationDialog;
     private HashMap<Integer, Form> downloadingForms, successfulForms;
     private ProgressDialog progressDialog;
     private DownloadManager downloadManager;
@@ -360,6 +362,17 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
+                            showAdminAuthorizationDialog(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+
+                                }
+                            }, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    gpsProviderAlertDialog.show();
+                                }
+                            });
                         }
                     })
                     .setCancelable(false)
@@ -368,6 +381,64 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         gpsProviderAlertDialog.show();
 
         return false;
+    }
+
+    /**
+     * This method with show the authorization dialog for when GPS is not enabled
+     */
+    private void showAdminAuthorizationDialog(final View.OnClickListener onAuthorized,
+                                              final View.OnClickListener onCancelClicked) {
+        if (Settings.singleton().getAdminPassword() != Settings.DEFAULT_ADMIN_PASSWORD) {
+            final SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+            if (adminAuthorizationDialog == null) {
+                final ContextThemeWrapper themedContext;
+                themedContext = new ContextThemeWrapper(this, R.style.CustomDialogStyle);
+                adminAuthorizationDialog = new AppCompatDialog(themedContext);
+                adminAuthorizationDialog.setContentView(R.layout.dialog_admin_authorization);
+                adminAuthorizationDialog.setTitle(R.string.authorization);
+                adminAuthorizationDialog.setCancelable(false);
+
+                Button cancelB = (Button) adminAuthorizationDialog.findViewById(R.id.cancelB);
+                cancelB.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                        adminAuthorizationDialog.dismiss();
+                        onCancelClicked.onClick(view);
+                    }
+                });
+
+                Button okB = (Button) adminAuthorizationDialog.findViewById(R.id.okB);
+                okB.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        EditText passwordET = (EditText) adminAuthorizationDialog.findViewById(R.id.passwordET);
+                        String password = passwordET.getText().toString().trim();
+                        String adminPassword = sharedPreferences.getString(ADMIN_PASSWORD,
+                                Settings.singleton().getAdminPassword());
+                        if (adminPassword.equals(password)) {
+                            onAuthorized.onClick(view);
+                            adminAuthorizationDialog.dismiss();
+                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                        } else {
+                            Toast.makeText(
+                                    MapActivity.this,
+                                    R.string.wrong_admin_password_entered,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+
+            EditText passwordET = (EditText) adminAuthorizationDialog.findViewById(R.id.passwordET);
+
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(passwordET.getWindowToken(), 0);
+
+            adminAuthorizationDialog.show();
+        }
     }
 
     @Override

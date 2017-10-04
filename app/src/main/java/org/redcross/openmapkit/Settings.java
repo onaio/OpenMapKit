@@ -2,7 +2,6 @@ package org.redcross.openmapkit;
 
 import android.content.Context;
 import android.location.LocationManager;
-import android.util.Log;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
@@ -45,6 +44,7 @@ public class Settings {
     public static final String DEFAULT_PULL_CSV_FILENAME = null;
     public static final float DEFAULT_MIN_VECTOR_RENDER_ZOOM = OSMMapBuilder.DEFAULT_MIN_VECTOR_RENDER_ZOOM;
     public static final boolean DEFAULT_SHOW_ADD_NODE = true;
+    public static final String DEFAULT_ADMIN_PASSWORD = null;
 
 
     private static Settings instance;
@@ -561,6 +561,24 @@ public class Settings {
         if(data.has("clickable_tags")) {
             try {
                 response = data.getBoolean("clickable_tags");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
+    }
+
+    /**
+     * This method returns the no GPS authorization password
+     *
+     * @return The no_gps_password field in the settings, or @link{DEFAULT_ADMIN_PASSWORD} if not
+     * defined in the settings file
+     */
+    public String getAdminPassword() {
+        String response = DEFAULT_ADMIN_PASSWORD;
+        if(data.has("admin_password")) {
+            try {
+                response = data.getString("admin_password");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
