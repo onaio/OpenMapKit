@@ -48,6 +48,7 @@ public class Settings {
     public static final boolean DEFAULT_SHOW_ADD_NODE = true;
     public static final GpsLocationProvider.LocationStrategy DEFAULT_LOCATION_STRATEGY =
             GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
+    public static final String DEFAULT_ADMIN_PASSWORD = null;
 
     private static Settings instance;
     private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
@@ -586,6 +587,24 @@ public class Settings {
         }
 
         return locationStrategy;
+    }
+
+    /**
+     * This method returns the no GPS authorization password
+     *
+     * @return The no_gps_password field in the settings, or @link{DEFAULT_ADMIN_PASSWORD} if not
+     * defined in the settings file
+     */
+    public String getAdminPassword() {
+        String response = DEFAULT_ADMIN_PASSWORD;
+        if(data.has("admin_password")) {
+            try {
+                response = data.getString("admin_password");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
     }
 
     /**
