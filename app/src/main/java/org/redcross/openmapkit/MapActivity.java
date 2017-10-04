@@ -24,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialog;
 import android.support.v7.view.ContextThemeWrapper;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -68,6 +69,9 @@ import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -84,7 +88,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
     protected static final String ODK_OMK_QUERY_VAL = "org.redcross.openmapkit.ODK_QUERY_VAL";
-    protected static final String ADMIN_PASSWORD = "org.redcross.openmapkit.ADMIN_PASSWORD";
+    protected static final String ADMIN_PASSWORD_PREFIX = "AP";
     public static final ArrayList<Integer> MENU_ITEM_IDS;
     static{
         MENU_ITEM_IDS = new ArrayList<>();
@@ -133,6 +137,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
     private AppCompatDialog odkQueryDialog;
     private AppCompatDialog adminAuthorizationDialog;
+    private AppCompatDialog changeAdminPasswordDialog;
     private HashMap<Integer, Form> downloadingForms, successfulForms;
     private ProgressDialog progressDialog;
     private DownloadManager downloadManager;
@@ -362,12 +367,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             dialogInterface.dismiss();
-                            showAdminAuthorizationDialog(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-
-                                }
-                            }, new View.OnClickListener() {
+                            showAdminAuthorizationDialog(null, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
                                     gpsProviderAlertDialog.show();
@@ -388,7 +388,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      */
     private void showAdminAuthorizationDialog(final View.OnClickListener onAuthorized,
                                               final View.OnClickListener onCancelClicked) {
-        if (Settings.singleton().getAdminPassword() != Settings.DEFAULT_ADMIN_PASSWORD) {
+        if (Settings.singleton().getAdminPassword() != Settings.DEFAULT_ADMIN_PASSWORD
+                && !TextUtils.isEmpty(getFormAdminPasswordSPKey())) {
             final SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
             if (adminAuthorizationDialog == null) {
                 final ContextThemeWrapper themedContext;
@@ -402,10 +403,12 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 cancelB.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        EditText passwordET = (EditText) adminAuthorizationDialog.findViewById(R.id.passwordET);
+                        passwordET.setText(null);
                         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                         adminAuthorizationDialog.dismiss();
-                        onCancelClicked.onClick(view);
+                        if (onCancelClicked != null) onCancelClicked.onClick(view);
                     }
                 });
 
@@ -415,10 +418,11 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     public void onClick(View view) {
                         EditText passwordET = (EditText) adminAuthorizationDialog.findViewById(R.id.passwordET);
                         String password = passwordET.getText().toString().trim();
-                        String adminPassword = sharedPreferences.getString(ADMIN_PASSWORD,
+                        String adminPassword = sharedPreferences.getString(getFormAdminPasswordSPKey(),
                                 Settings.singleton().getAdminPassword());
                         if (adminPassword.equals(password)) {
-                            onAuthorized.onClick(view);
+                            passwordET.setText(null);
+                            if (onAuthorized != null) onAuthorized.onClick(view);
                             adminAuthorizationDialog.dismiss();
                             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -447,6 +451,95 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         if (locationPreviouslyEnabled) {
             mapView.setUserLocationEnabled(true, getLocationStrategy());
         }
+    }
+
+    private void showChangeAdminPasswordDialog() {
+        if (Settings.singleton().getAdminPassword() != Settings.DEFAULT_ADMIN_PASSWORD
+                && !TextUtils.isEmpty(getFormAdminPasswordSPKey())) {
+            showAdminAuthorizationDialog(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (changeAdminPasswordDialog == null) {
+                        final ContextThemeWrapper themedContext;
+                        themedContext = new ContextThemeWrapper(MapActivity.this, R.style.CustomDialogStyle);
+                        changeAdminPasswordDialog = new AppCompatDialog(themedContext);
+                        changeAdminPasswordDialog.setContentView(R.layout.dialog_change_admin_password);
+                        changeAdminPasswordDialog.setTitle(R.string.change_admin_password);
+                        changeAdminPasswordDialog.setCancelable(false);
+
+                        Button cancelB = (Button) changeAdminPasswordDialog.findViewById(R.id.cancelB);
+                        cancelB.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                EditText password1ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password1ET);
+                                password1ET.setText(null);
+                                EditText password2ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password2ET);
+                                password2ET.setText(null);
+
+                                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                                changeAdminPasswordDialog.dismiss();
+                            }
+                        });
+
+                        Button okB = (Button) changeAdminPasswordDialog.findViewById(R.id.okB);
+                        okB.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                EditText password1ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password1ET);
+                                String password1 = password1ET.getText().toString().trim();
+                                EditText password2ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password2ET);
+                                String password2 = password2ET.getText().toString().trim();
+
+                                if (TextUtils.isEmpty(password1) || TextUtils.isEmpty(password2)) {
+                                    Toast.makeText(MapActivity.this, R.string.password_cannot_be_empty, Toast.LENGTH_LONG).show();
+                                } else if (!password1.equals(password2)) {
+                                    Toast.makeText(MapActivity.this, R.string.passwords_dont_match, Toast.LENGTH_LONG).show();
+                                } else {
+                                    password1ET.setText(null);
+                                    password2ET.setText(null);
+                                    SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
+                                    editor.putString(getFormAdminPasswordSPKey(), password1);
+                                    editor.apply();
+                                    changeAdminPasswordDialog.dismiss();
+                                }
+                            }
+                        });
+                    }
+
+                    EditText password1ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password1ET);
+
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(password1ET.getWindowToken(), 0);
+
+                    changeAdminPasswordDialog.show();
+                }
+            }, null);
+        }
+    }
+
+    /**
+     * This method returns the current ODK form's key for the shared preference holding the admin
+     * password.
+     *
+     * @return The Shared Preference key for the current ODK form or @code{NULL} if there is no open ODK form
+     */
+    private String getFormAdminPasswordSPKey() {
+        if (ODKCollectHandler.isODKCollectMode()) {
+            String formId = ODKCollectHandler.getODKCollectData().getFormId();
+            if (!TextUtils.isEmpty(formId)) {
+                try {
+                    String formIdHash = HashingUtils.getSHA1Hash(formId);
+                    return ADMIN_PASSWORD_PREFIX + "-" + formIdHash;
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -1163,6 +1256,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             return true;
         } else if (id == R.id.osmFromODK) {
             showOdkQueryDialog();
+        } else if (id == R.id.changeAdminPassword) {
+            showChangeAdminPasswordDialog();
         }
         return false;
     }
