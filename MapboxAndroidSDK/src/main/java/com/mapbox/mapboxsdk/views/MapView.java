@@ -183,6 +183,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     private boolean mShouldDisplayBubble = true;
     private final ArrayList<LocationListener> locationListeners;
     private GpsLocationProvider gpsLocationProvider;
+    private GpsLocationProvider.LocationStrategy locationStrategy;
     private double proximityRadius = -1;
 
     /**
@@ -1956,7 +1957,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     private UserLocationOverlay getOrCreateLocationOverlay() {
         if (mLocationOverlay == null) {
-            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext());
+            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext(), GpsLocationProvider.LocationStrategy.GOOGLE_PLAY_SERVICES);
             gpsLocationProvider.addLocationListeners(locationListeners);
             this.gpsLocationProvider = gpsLocationProvider;
             mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this, proximityRadius);
