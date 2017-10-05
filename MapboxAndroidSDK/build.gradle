@@ -30,6 +30,8 @@ dependencies {
     compile 'com.jakewharton:disklrucache:2.0.2'
     compile 'commons-codec:commons-codec:1.10'
     compile 'commons-io:commons-io:2.4'
+    compile 'com.google.android.gms:play-services-maps:8.4.0'
+    compile 'com.google.android.gms:play-services-location:8.4.0'
     androidTestCompile 'com.android.support.test:runner:0.5'
 }
 
