@@ -2,7 +2,8 @@ package org.redcross.openmapkit;
 
 import android.content.Context;
 import android.location.LocationManager;
-import android.util.Log;
+
+import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
@@ -45,7 +46,8 @@ public class Settings {
     public static final String DEFAULT_PULL_CSV_FILENAME = null;
     public static final float DEFAULT_MIN_VECTOR_RENDER_ZOOM = OSMMapBuilder.DEFAULT_MIN_VECTOR_RENDER_ZOOM;
     public static final boolean DEFAULT_SHOW_ADD_NODE = true;
-
+    public static final GpsLocationProvider.LocationStrategy DEFAULT_LOCATION_STRATEGY =
+            GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
 
     private static Settings instance;
     private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
@@ -566,6 +568,24 @@ public class Settings {
             }
         }
         return response;
+    }
+
+    public GpsLocationProvider.LocationStrategy getLocationStrategy() {
+        GpsLocationProvider.LocationStrategy locationStrategy = DEFAULT_LOCATION_STRATEGY;
+        if (data.has("location_strategy")) {
+            try {
+                String strategyString = data.getString("location_strategy");
+                if ("location_manager".equalsIgnoreCase(strategyString)) {
+                    locationStrategy = GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
+                } else if ("google_play_services".equalsIgnoreCase(strategyString)) {
+                    locationStrategy = GpsLocationProvider.LocationStrategy.GOOGLE_PLAY_SERVICES;
+                }
+            } catch (JSONException e) {
+
+            }
+        }
+
+        return locationStrategy;
     }
 
     /**

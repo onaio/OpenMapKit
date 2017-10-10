@@ -1957,7 +1957,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     private UserLocationOverlay getOrCreateLocationOverlay() {
         if (mLocationOverlay == null) {
-            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext(), GpsLocationProvider.LocationStrategy.GOOGLE_PLAY_SERVICES);
+            GpsLocationProvider gpsLocationProvider = new GpsLocationProvider(getContext());
             gpsLocationProvider.addLocationListeners(locationListeners);
             this.gpsLocationProvider = gpsLocationProvider;
             mLocationOverlay = new UserLocationOverlay(gpsLocationProvider, this, proximityRadius);
@@ -1969,9 +1969,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     /**
      * Show or hide the user location overlay
      */
-    public MapView setUserLocationEnabled(final boolean value) {
+    public MapView setUserLocationEnabled(final boolean value,
+                                          GpsLocationProvider.LocationStrategy locationStrategy) {
         if (value) {
-            getOrCreateLocationOverlay().enableMyLocation();
+            getOrCreateLocationOverlay().enableMyLocation(locationStrategy);
         } else if (mLocationOverlay != null) {
             mLocationOverlay.disableMyLocation();
             removeOverlay(mLocationOverlay);
@@ -2058,6 +2059,11 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
                         (int) (point.y + accuracyInPixels));
             }
         }
+        return false;
+    }
+
+    public boolean isUserLocationEnabled() {
+        if (mLocationOverlay != null) return mLocationOverlay.isMyLocationEnabled();
         return false;
     }
 
