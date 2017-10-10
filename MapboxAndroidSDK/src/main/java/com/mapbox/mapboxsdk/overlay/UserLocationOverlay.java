@@ -486,9 +486,27 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         mLatLng = new LatLng(mLocation);
         //if goToMyPosition return false, it means we are already there
         //which means we have to invalidate ourselves to make sure we are redrawn
-        if (!isFollowLocationEnabled() || !goToMyPosition(true)) {
+        if (!shouldGoToUserLocation() || !goToMyPosition(true)) {
             invalidate();
         }
+    }
+
+    private boolean shouldGoToUserLocation() {
+        if (!isFollowLocationEnabled()) {
+            // Location tracking is not enabled
+            // Check if the current location has gone out of bounds of the map.
+            //  If so then temporarily enable user tracking to prevent the user from being confused
+            if (isMyLocationEnabled()
+                    && getMyLocation() != null
+                    && mMapView != null
+                    && mMapView.getBoundingBox() != null) {
+                return !mMapView.getBoundingBox().contains(getMyLocation());
+            }
+        } else {
+            return true;
+        }
+
+        return false;
     }
 
     /**
