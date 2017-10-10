@@ -138,6 +138,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private HashMap<Integer, Form> downloadingForms, successfulForms;
     private ProgressDialog progressDialog;
     private DownloadManager downloadManager;
+    private boolean locationPreviouslyEnabled;// Used to track in onResume whether onPause disabled location providers
 
     /**
      * Which GPS provider should be used to get the User's current location
@@ -255,6 +256,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             showProgressDialog();
         }
 
+        locationPreviouslyEnabled = false;
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         cleanOsmFilesFromOdkInstances();
         checkIfOsmFilesNeedLoading();
@@ -373,9 +375,21 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (locationPreviouslyEnabled) {
+            mapView.setUserLocationEnabled(true, getLocationStrategy());
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         saveMapPosition();
+        locationPreviouslyEnabled = mapView.isUserLocationEnabled();
+        if (locationPreviouslyEnabled) {
+            mapView.setUserLocationEnabled(false, getLocationStrategy());
+        }
     }
 
     @Override
@@ -404,7 +418,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         // no shared pref
         if (lat == -999 || lng == -999 || z == -999) {
-            mapView.setUserLocationEnabled(true);
+            mapView.setUserLocationEnabled(true, getLocationStrategy());
             mapView.goToUserLocation(true);
         }
         // there is a shared pref
@@ -664,14 +678,22 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         return mapView.getUserLocationEnabled();
     }
 
+    private GpsLocationProvider.LocationStrategy getLocationStrategy() {
+        if (ODKCollectHandler.isODKCollectMode() && Settings.singleton() != null) {
+            return Settings.singleton().getLocationStrategy();
+        }
+
+        return GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
+    }
+
     private void toggleUserLocation(boolean goToUserLocation) {
         final ImageButton locationButton = (ImageButton)findViewById(R.id.locationButton);
         boolean userLocationIsEnabled = isUserLocationEnabled();
         if (userLocationIsEnabled) {
-            mapView.setUserLocationEnabled(false);
+            mapView.setUserLocationEnabled(false, getLocationStrategy());
             locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
         } else {
-            mapView.setUserLocationEnabled(true);
+            mapView.setUserLocationEnabled(true, getLocationStrategy());
             if(goToUserLocation) mapView.goToUserLocation(true);
             locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_blue));
         }

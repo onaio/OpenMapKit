@@ -432,10 +432,11 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         }
     }
 
-    public boolean enableMyLocation(GpsLocationProvider myLocationProvider) {
+    public boolean enableMyLocation(GpsLocationProvider myLocationProvider,
+                                    GpsLocationProvider.LocationStrategy locationStrategy) {
         this.setMyLocationProvider(myLocationProvider);
         mIsLocationEnabled = false;
-        return enableMyLocation();
+        return enableMyLocation(locationStrategy);
     }
 
     public boolean goToMyPosition(final boolean animated) {
@@ -497,12 +498,12 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
      * corresponding disableMyLocation() in your Activity's Activity.onPause() method to turn off
      * updates when in the background.
      */
-    public boolean enableMyLocation() {
+    public boolean enableMyLocation(GpsLocationProvider.LocationStrategy locationStrategy) {
         if (mIsLocationEnabled) {
             mMyLocationProvider.stopLocationProvider();
         }
 
-        boolean result = mMyLocationProvider.startLocationProvider(this);
+        boolean result = mMyLocationProvider.startLocationProvider(this, locationStrategy);
         mIsLocationEnabled = result;
 
         // set initial location when enabled
