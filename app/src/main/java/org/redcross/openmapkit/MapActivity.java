@@ -293,9 +293,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     if(location.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
                         if(!Settings.singleton().isProximityEnabled()) {
                             //means this is the first time a location fix for the user has been gotten
-                            if(!isUserLocationEnabled()) {
-                                toggleUserLocation(true);//zoom into the user's current position
-                            }
+                            goToUserLocation();
                         }
                         Settings.singleton().setProximityEnabled(true);
                     }
@@ -738,9 +736,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 if (Settings.singleton().getProximityCheck()) {
                     //check user's last location is accurate enough
                     if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
-                        if (!isUserLocationEnabled()) {
-                            toggleUserLocation(true);
-                        }
+                        goToUserLocation();
                         mapView.goToUserLocation(true);
                         mapView.setInteractionEnabled(false);
                     } else {
@@ -757,6 +753,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             }
         }
         nodeMode = !nodeMode;
+    }
+
+    private void goToUserLocation() {
+        if (!isUserLocationEnabled()) {
+            toggleUserLocation(true);
+        } else {
+            mapView.goToUserLocation(true);
+        }
     }
 
     /**
@@ -1282,9 +1286,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void showProgressDialog() {
-        if(!isUserLocationEnabled()) {
-            toggleUserLocation(true);
-        }
+        goToUserLocation();
         // custom dialog
         gpsCountdownDialog = new Dialog(this);
         gpsCountdownDialog.setContentView(R.layout.dialog_gps_countdown);
@@ -1304,9 +1306,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 MapActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (!isUserLocationEnabled()) {
-                            toggleUserLocation(true);
-                        }
+                        goToUserLocation();
                     }
                 });
             }
