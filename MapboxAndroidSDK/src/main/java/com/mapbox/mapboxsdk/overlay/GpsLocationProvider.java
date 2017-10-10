@@ -29,6 +29,8 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
         LOCATION_MANAGER,
         GOOGLE_PLAY_SERVICES
     }
+    private static final long PLAY_SERVICES_LOCATION_UPDATE_MIN_TIME = 10000000l;
+    private static final float PLAY_SERVICES_LOCATION_UPDATE_MIN_DIST = 100000000f;
 
     private final LocationManager mLocationManager;
     private Location mLocation;
@@ -39,15 +41,15 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
     private final NetworkLocationIgnorer mIgnorer = new NetworkLocationIgnorer();
     private final ArrayList<LocationListener> locationListeners;
     private final Context context;
-    private final LocationStrategy locationStrategy;
+    private LocationStrategy locationStrategy;
     private GoogleApiClient googleApiClient;
     private LocationCallback locationCallback;
 
-    public GpsLocationProvider(Context context, LocationStrategy locationStrategy) {
+    public GpsLocationProvider(Context context) {
         this.context = context;
-        this.locationStrategy = locationStrategy;
         mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         locationListeners = new ArrayList<>();
+        this.locationStrategy = null;
     }
 
     public void addLocationListener(final LocationListener locationListener) {
@@ -98,19 +100,39 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
      * distance by calling {@link setLocationUpdateMinTime(long)} and/or {@link
      * setLocationUpdateMinDistance(float)} before calling this method.
      */
-    public boolean startLocationProvider(UserLocationOverlay myLocationConsumer) {
+    public boolean startLocationProvider(UserLocationOverlay myLocationConsumer,
+                                         @NonNull LocationStrategy locationStrategy) {
         mMyLocationConsumer = myLocationConsumer;
+
+        if (this.locationStrategy != null && !this.locationStrategy.equals(locationStrategy)) {
+            // Location strategy has changed, make sure you stop the previous strategy before
+            // starting the new one
+            if (this.locationStrategy.equals(LocationStrategy.GOOGLE_PLAY_SERVICES)) {
+                disconnectGoogleApiClient();
+            } else if (this.locationStrategy.equals(LocationStrategy.LOCATION_MANAGER)) {
+                disconnectLocationManager();
+            }
+        }
+
+        this.locationStrategy = locationStrategy;
+
         boolean result = false;
         if (locationStrategy.equals(LocationStrategy.LOCATION_MANAGER)) {
-            result = connectLocationManager(myLocationConsumer);
+            result = connectLocationManager(myLocationConsumer, true);
         } else if (locationStrategy.equals(LocationStrategy.GOOGLE_PLAY_SERVICES)) {
-            result = connectGoogleApiClient();
+            result = connectGoogleApiClient(myLocationConsumer);
         }
 
         return result;
     }
 
-    private boolean connectLocationManager(UserLocationOverlay mMyLocationConsumer) {
+    public boolean isListeningForLocation() {
+        return mMyLocationConsumer != null;// If location consumer is not null then we should be
+        // listening for location
+    }
+
+    private boolean connectLocationManager(UserLocationOverlay mMyLocationConsumer,
+                                           boolean getLocationUpdates) {
         boolean result = false;
         for (final String provider : mLocationManager.getProviders(true)) {
             if (LocationManager.GPS_PROVIDER.equals(provider)
@@ -123,23 +145,27 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
                         mMyLocationConsumer.onLocationChanged(mLocation, this);
                     }
                 }
-                mLocationManager.requestLocationUpdates(provider, mLocationUpdateMinTime,
-                        mLocationUpdateMinDistance, this);
+                if (getLocationUpdates) {
+                    mLocationManager.requestLocationUpdates(provider, mLocationUpdateMinTime,
+                            mLocationUpdateMinDistance, this);
+                } else {
+                    mLocationManager.requestLocationUpdates(provider,
+                            PLAY_SERVICES_LOCATION_UPDATE_MIN_TIME,
+                            PLAY_SERVICES_LOCATION_UPDATE_MIN_DIST, this);
+                }
             }
         }
 
         return result;
     }
 
-    private boolean connectGoogleApiClient() {
+    private boolean connectGoogleApiClient(UserLocationOverlay mMyLocationConsumer) {
         if (googleApiClient == null) {
-            Log.d("google_api", "Connecting to google api");
-
+            connectLocationManager(mMyLocationConsumer, true);
             locationCallback = new LocationCallback() {
                 @Override
                 public void onLocationResult(LocationResult result) {
                     super.onLocationResult(result);
-
                 }
 
                 @Override
@@ -160,7 +186,6 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
 
     private void disconnectGoogleApiClient() {
         if (googleApiClient != null) {
-            Log.d("google_api", "Disconnecting from google api");
             googleApiClient.disconnect();
         }
     }
@@ -188,7 +213,6 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
 
     @Override
     public void onLocationChanged(final Location location) {
-        Log.d("google_api", "Location changed to "+location.getLatitude() + " " + location.getLongitude());
         locationChanged(location);
     }
 
@@ -235,25 +259,20 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d("google_api", "Connected to api");
         LocationRequest mLocationRequest=new LocationRequest();
 
         mLocationRequest.setInterval(10000);
         mLocationRequest.setFastestInterval(5000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest, this);
+        LocationServices.FusedLocationApi
+                .requestLocationUpdates(googleApiClient, mLocationRequest, this);
 
         if (mMyLocationConsumer != null) {
             mLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
             if (mLocation != null) {
-                Log.d("google_api", "Last location is " + mLocation.getLatitude() + " " + mLocation.getLongitude());
                 mMyLocationConsumer.onLocationChanged(mLocation, this);
-            } else {
-                Log.d("google_api", "Last location is null");
             }
-        } else {
-            Log.d("google_api", "Location consumer is null");
         }
 
         for(int i = 0; i < locationListeners.size(); i++) {
@@ -263,7 +282,6 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
 
     @Override
     public void onConnectionSuspended(int status) {
-        Log.d("google_api", "Connection to google api suspended");
         for(int i = 0; i < locationListeners.size(); i++) {
             locationListeners.get(i).onStatusChanged(null, status, null);
         }
@@ -271,7 +289,6 @@ public class GpsLocationProvider implements LocationListener, GoogleApiClient.Co
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d("google_api", "Connection to google api failed");
         for(int i = 0; i < locationListeners.size(); i++) {
             locationListeners.get(i).onProviderDisabled(null);
         }
