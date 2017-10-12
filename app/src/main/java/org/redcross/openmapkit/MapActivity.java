@@ -134,6 +134,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private HashMap<Integer, Form> downloadingForms, successfulForms;
     private ProgressDialog progressDialog;
     private DownloadManager downloadManager;
+    private boolean locationPreviouslyEnabled;// Used to track in onResume whether onPause disabled location providers
 
     /**
      * Which GPS provider should be used to get the User's current location
@@ -251,6 +252,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             showProgressDialog();
         }
 
+        locationPreviouslyEnabled = false;
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         cleanOsmFilesFromOdkInstances();
         checkIfOsmFilesNeedLoading();
@@ -293,9 +295,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     if(location.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
                         if(!Settings.singleton().isProximityEnabled()) {
                             //means this is the first time a location fix for the user has been gotten
-                            if(!isUserLocationEnabled()) {
-                                toggleUserLocation(true);//zoom into the user's current position
-                            }
+                            goToUserLocation();
                         }
                         Settings.singleton().setProximityEnabled(true);
                     }
@@ -371,9 +371,21 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (locationPreviouslyEnabled) {
+            mapView.setUserLocationEnabled(true, getLocationStrategy());
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         saveMapPosition();
+        locationPreviouslyEnabled = mapView.isUserLocationEnabled();
+        if (locationPreviouslyEnabled) {
+            mapView.setUserLocationEnabled(false, getLocationStrategy());
+        }
     }
 
     @Override
@@ -402,7 +414,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
 
         // no shared pref
         if (lat == -999 || lng == -999 || z == -999) {
-            mapView.setUserLocationEnabled(true);
+            mapView.setUserLocationEnabled(true, getLocationStrategy());
             mapView.goToUserLocation(true);
         }
         // there is a shared pref
@@ -648,14 +660,22 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         return mapView.getUserLocationEnabled();
     }
 
+    private GpsLocationProvider.LocationStrategy getLocationStrategy() {
+        if (ODKCollectHandler.isODKCollectMode() && Settings.singleton() != null) {
+            return Settings.singleton().getLocationStrategy();
+        }
+
+        return GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
+    }
+
     private void toggleUserLocation(boolean goToUserLocation) {
         final ImageButton locationButton = (ImageButton)findViewById(R.id.locationButton);
         boolean userLocationIsEnabled = isUserLocationEnabled();
         if (userLocationIsEnabled) {
-            mapView.setUserLocationEnabled(false);
+            mapView.setUserLocationEnabled(false, getLocationStrategy());
             locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
         } else {
-            mapView.setUserLocationEnabled(true);
+            mapView.setUserLocationEnabled(true, getLocationStrategy());
             if(goToUserLocation) mapView.goToUserLocation(true);
             locationButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_blue));
         }
@@ -738,9 +758,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 if (Settings.singleton().getProximityCheck()) {
                     //check user's last location is accurate enough
                     if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
-                        if (!isUserLocationEnabled()) {
-                            toggleUserLocation(true);
-                        }
+                        goToUserLocation();
                         mapView.goToUserLocation(true);
                         mapView.setInteractionEnabled(false);
                     } else {
@@ -757,6 +775,14 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             }
         }
         nodeMode = !nodeMode;
+    }
+
+    private void goToUserLocation() {
+        if (!isUserLocationEnabled()) {
+            toggleUserLocation(true);
+        } else {
+            mapView.goToUserLocation(true);
+        }
     }
 
     /**
@@ -1282,9 +1308,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void showProgressDialog() {
-        if(!isUserLocationEnabled()) {
-            toggleUserLocation(true);
-        }
+        goToUserLocation();
         // custom dialog
         gpsCountdownDialog = new Dialog(this);
         gpsCountdownDialog.setContentView(R.layout.dialog_gps_countdown);
@@ -1304,9 +1328,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 MapActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (!isUserLocationEnabled()) {
-                            toggleUserLocation(true);
-                        }
+                        goToUserLocation();
                     }
                 });
             }

@@ -432,10 +432,11 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         }
     }
 
-    public boolean enableMyLocation(GpsLocationProvider myLocationProvider) {
+    public boolean enableMyLocation(GpsLocationProvider myLocationProvider,
+                                    GpsLocationProvider.LocationStrategy locationStrategy) {
         this.setMyLocationProvider(myLocationProvider);
         mIsLocationEnabled = false;
-        return enableMyLocation();
+        return enableMyLocation(locationStrategy);
     }
 
     public boolean goToMyPosition(final boolean animated) {
@@ -485,9 +486,27 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
         mLatLng = new LatLng(mLocation);
         //if goToMyPosition return false, it means we are already there
         //which means we have to invalidate ourselves to make sure we are redrawn
-        if (!isFollowLocationEnabled() || !goToMyPosition(true)) {
+        if (!shouldGoToUserLocation() || !goToMyPosition(true)) {
             invalidate();
         }
+    }
+
+    private boolean shouldGoToUserLocation() {
+        if (!isFollowLocationEnabled()) {
+            // Location tracking is not enabled
+            // Check if the current location has gone out of bounds of the map.
+            //  If so then temporarily enable user tracking to prevent the user from being confused
+            if (isMyLocationEnabled()
+                    && getMyLocation() != null
+                    && mMapView != null
+                    && mMapView.getBoundingBox() != null) {
+                return !mMapView.getBoundingBox().contains(getMyLocation());
+            }
+        } else {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -497,12 +516,12 @@ public class UserLocationOverlay extends SafeDrawOverlay implements Snappable, M
      * corresponding disableMyLocation() in your Activity's Activity.onPause() method to turn off
      * updates when in the background.
      */
-    public boolean enableMyLocation() {
+    public boolean enableMyLocation(GpsLocationProvider.LocationStrategy locationStrategy) {
         if (mIsLocationEnabled) {
             mMyLocationProvider.stopLocationProvider();
         }
 
-        boolean result = mMyLocationProvider.startLocationProvider(this);
+        boolean result = mMyLocationProvider.startLocationProvider(this, locationStrategy);
         mIsLocationEnabled = result;
 
         // set initial location when enabled

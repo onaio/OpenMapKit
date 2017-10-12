@@ -183,6 +183,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     private boolean mShouldDisplayBubble = true;
     private final ArrayList<LocationListener> locationListeners;
     private GpsLocationProvider gpsLocationProvider;
+    private GpsLocationProvider.LocationStrategy locationStrategy;
     private double proximityRadius = -1;
 
     /**
@@ -1968,9 +1969,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     /**
      * Show or hide the user location overlay
      */
-    public MapView setUserLocationEnabled(final boolean value) {
+    public MapView setUserLocationEnabled(final boolean value,
+                                          GpsLocationProvider.LocationStrategy locationStrategy) {
         if (value) {
-            getOrCreateLocationOverlay().enableMyLocation();
+            getOrCreateLocationOverlay().enableMyLocation(locationStrategy);
         } else if (mLocationOverlay != null) {
             mLocationOverlay.disableMyLocation();
             removeOverlay(mLocationOverlay);
@@ -2057,6 +2059,11 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
                         (int) (point.y + accuracyInPixels));
             }
         }
+        return false;
+    }
+
+    public boolean isUserLocationEnabled() {
+        if (mLocationOverlay != null) return mLocationOverlay.isMyLocationEnabled();
         return false;
     }
 
