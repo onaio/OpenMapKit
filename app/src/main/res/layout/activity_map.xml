@@ -89,7 +89,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/addNodeMarkerBtn"
-                android:src="@mipmap/greenstarmarkermedium"
+                android:src="@mipmap/drop_pin"
                 android:background="@null"
                 android:layout_centerVertical="true"
                 android:layout_centerHorizontal="true"
