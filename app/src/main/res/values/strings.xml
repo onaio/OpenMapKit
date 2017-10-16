@@ -100,5 +100,6 @@
     <string name="an_error_occurred_retag">An error occurred. Please re-tag the %1$s</string>
     <string name="title_activity_query">QueryActivity</string>
     <string name="querying_please_wait">Querying OMK, please wait...</string>
+    <string name="fill_tag">Make sure you fill this tag before proceeding to the next screen</string>
 
 </resources>

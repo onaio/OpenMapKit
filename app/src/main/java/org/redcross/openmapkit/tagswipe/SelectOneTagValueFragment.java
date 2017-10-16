@@ -214,7 +214,7 @@ public class SelectOneTagValueFragment extends Fragment {
         
         @Override
         public void onClick(View v) {
-            radioButton.toggle();
+            radioButton.performClick();
         }
     }
     

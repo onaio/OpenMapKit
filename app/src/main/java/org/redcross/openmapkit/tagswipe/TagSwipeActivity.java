@@ -12,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
@@ -37,6 +38,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.redcross.openmapkit.Constraints;
 import org.redcross.openmapkit.R;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
@@ -55,6 +57,7 @@ public class TagSwipeActivity extends ActionBarActivity {
     private EditText osmUsernameEditText;
     private String osmFilePath;
     private Menu menu;
+    private int lastPage;
 
     private void setupModel() {
         tagEdits = TagEdit.buildTagEdits();
@@ -74,6 +77,8 @@ public class TagSwipeActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tag_swipe);
+
+        lastPage = -1;
         setupModel();
         
         // Create the adapter that will return a fragment for each of the three
@@ -83,6 +88,39 @@ public class TagSwipeActivity extends ActionBarActivity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.tagSwipeActivity);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if (lastPage != -1 && position > lastPage) {
+                    // check if last page is in the list of required tags that haven't been filled
+                    if (tagEdits.size() > lastPage) {
+                        TagEdit lastTagEdit = tagEdits.get(lastPage);
+                        Set<String> missingRequiredTags = Constraints.singleton()
+                                .requiredTagsNotMet(TagEdit.getOsmElement());
+                        if (missingRequiredTags != null
+                                && lastTagEdit != null
+                                && missingRequiredTags.contains(lastTagEdit.getTagKey())) {
+                            lastPage = -1;
+                            Toast.makeText(TagSwipeActivity.this,
+                                    R.string.fill_tag, Toast.LENGTH_LONG).show();
+                            updateUI(lastTagEdit.getTagKey());
+                            return;
+                        }
+                    }
+                }
+
+                lastPage = position;
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
     
         pageToCorrectTag();
         setUserLocation();
