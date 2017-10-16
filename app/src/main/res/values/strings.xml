@@ -101,5 +101,6 @@
     <string name="title_activity_query">QueryActivity</string>
     <string name="querying_please_wait">Querying OMK, please wait...</string>
     <string name="structure_not_selectable_reason">The structure is not selectable because %1$s has been set to %2$s</string>
+    <string name="fill_tag">Make sure you fill this tag before proceeding to the next screen</string>
 
 </resources>
