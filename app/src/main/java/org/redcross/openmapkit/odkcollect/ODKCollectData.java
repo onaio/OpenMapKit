@@ -2,20 +2,26 @@ package org.redcross.openmapkit.odkcollect;
 
 import android.util.Log;
 
+import com.spatialdev.osm.model.OSMDataSet;
 import com.spatialdev.osm.model.OSMElement;
+import com.spatialdev.osm.model.OSMNode;
+import com.spatialdev.osm.model.OSMWay;
 import com.spatialdev.osm.model.OSMXmlWriter;
 
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.redcross.openmapkit.ExternalStorage;
 import org.redcross.openmapkit.MapActivity;
+import org.redcross.openmapkit.OSMXmlParserInOSMMapBuilder;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.odkcollect.tag.ODKTagItem;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +35,7 @@ import java.util.List;
  * * * 
  */
 public class ODKCollectData {
-    
+    private static final String TAG = ODKCollectData.class.getSimpleName();
     public static final String APP_NAME = "OpenMapKit Android";
             
     private String formId;
@@ -38,6 +44,7 @@ public class ODKCollectData {
     private String instanceDir;
     private String previousOSMEditFileName;
     private LinkedHashMap<String, ODKTag> requiredTags;
+    private ArrayList<Long> previousOSMEditFileStructureIds;
     private List<File> editedOSM = new ArrayList<>();
     
     private String editedXml;
@@ -58,6 +65,43 @@ public class ODKCollectData {
         this.requiredTags = requiredTags;
         this.appVersion = MapActivity.getVersion();
         findEditedOSMForForm(formFileName);
+        extractOsmIdsFromPreviousEdit();
+    }
+
+    private void extractOsmIdsFromPreviousEdit() {
+        previousOSMEditFileStructureIds = new ArrayList<>();
+        try {
+            File file = getPreviousEditedFile();
+            if (file != null) {
+                InputStream inputStream = new FileInputStream(file);
+                OSMDataSet ds = OSMXmlParserInOSMMapBuilder.parseFromInputStream(inputStream);
+                if (ds != null) {
+                    if (ds.getNodes() != null) {
+                        for (OSMNode curNode : ds.getNodes().values()) {
+                            Log.d(TAG, "Adding "+curNode.getId() + " to list");
+                            previousOSMEditFileStructureIds.add(curNode.getId());
+                        }
+                    } else {
+                        Log.d(TAG, "Nodes is null");
+                    }
+
+                    if (ds.getWays() != null) {
+                        for (OSMWay curWay : ds.getWays().values()) {
+                            Log.d(TAG, "Adding "+curWay.getId() + " to list");
+                            previousOSMEditFileStructureIds.add(curWay.getId());
+                        }
+                    } else {
+                        Log.d(TAG, "Ways is null");
+                    }
+                } else {
+                    Log.d(TAG, "DS is null");
+                }
+            } else {
+                Log.d(TAG, "File is null");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+        }
     }
 
     private void findEditedOSMForForm(String formFileName) {
@@ -132,6 +176,10 @@ public class ODKCollectData {
         }
         return false;
     }
+
+    public ArrayList<Long> getPreviousOSMEditFileStructureIds() {
+        return previousOSMEditFileStructureIds;
+    }
     
     public List<File> getEditedOSM() {
         return editedOSM;
@@ -196,11 +244,19 @@ public class ODKCollectData {
         if (previousOSMEditFileName == null) {
             return;
         }
-        String path = instanceDir + '/' + previousOSMEditFileName;
-        File f = new File(path);
-        if (f.exists()) {
+        File f = getPreviousEditedFile();
+        if (f != null && f.exists()) {
             f.delete();
         }
+    }
+
+    private File getPreviousEditedFile() {
+        if (previousOSMEditFileName != null && instanceDir != null) {
+            String path = instanceDir + '/' + previousOSMEditFileName;
+            return new File(path);
+        }
+
+        return null;
     }
     
     public void writeXmlToOdkCollectInstanceDir() throws IOException {
