@@ -1,15 +1,19 @@
 package org.redcross.openmapkit;
 
+import android.util.Log;
+
 import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMElement;
 
 import org.apache.commons.io.FileUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Constraints {
+    private static final String TAG = Constraints.class.getSimpleName();
 
     private static Constraints instance;
 
@@ -211,6 +216,42 @@ public class Constraints {
 
         //if search for color constraints in the default constraints file
         return defaultConfig;
+    }
+
+    /**
+     * Returns a map of tags as keys and a list of values as the map values where a structure is not
+     * selectable if any of the tags on the list has any of its corresponding values
+     *
+     * @return A map of tag IDs which have values that will render a structure not selectable
+     */
+    public HashMap<String, ArrayList<String>> getNotSelectableIfList() {
+        HashMap<String, ArrayList<String>> response = new HashMap<>();
+
+        if (formConstraintsJson != null) {
+            Iterator<String> tagKeys = formConstraintsJson.keys();
+            try {
+                while (tagKeys.hasNext()) {
+                    String curKey = tagKeys.next();
+                    if (formConstraintsJson.getJSONObject(curKey).has("not_selectable_if")) {
+                        if (!response.containsKey(curKey) || response.get(curKey) == null) {
+                            response.put(curKey, new ArrayList<String>());
+                        }
+
+                        JSONArray values = formConstraintsJson.getJSONObject(curKey)
+                                .getJSONArray("not_selectable_if");
+                        if (values != null) {
+                            for (int i = 0; i < values.length(); i++) {
+                                response.get(curKey).add(values.getString(i));
+                            }
+                        }
+                    }
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, Log.getStackTraceString(e));
+            }
+        }
+
+        return response;
     }
 
     private OSMColorConfig getFirstColorConfig(JSONObject constraintsJson) {
