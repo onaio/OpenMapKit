@@ -2,9 +2,7 @@ package org.redcross.openmapkit.tagswipe;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
@@ -18,13 +16,11 @@ import android.support.test.runner.lifecycle.Stage;
 import android.util.Log;
 import android.util.Xml;
 import android.view.Menu;
-import android.widget.EditText;
 
 import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
 
 import junit.framework.Assert;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Set;
 
@@ -87,7 +82,7 @@ public class TagSwipeActivityTest {
                     Assert.assertTrue(TagEdit.locationToString(userLocation).equals(userLocationTag.getTagVal()));
 
                     TagEdit userLocationAccuracy = TagEdit.getHiddenTag(Settings.singleton().getUserAccuracyName());
-                    Assert.assertTrue(TagEdit.locationAccuracyToString(userLocation.getAccuracy()).equals(userLocationAccuracy.getTagVal()));
+                    Assert.assertTrue(TagEdit.distanceToString(userLocation.getAccuracy()).equals(userLocationAccuracy.getTagVal()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     Assert.assertTrue(e.getMessage(), false);
@@ -244,7 +239,7 @@ public class TagSwipeActivityTest {
                             userLocationFound = true;
                         }
                     } else if(parser.getAttributeValue(0).trim().equals(Settings.singleton().getUserAccuracyName())) {
-                        if(parser.getAttributeValue(1).trim().equals(TagEdit.locationAccuracyToString(location.getAccuracy()))) {
+                        if(parser.getAttributeValue(1).trim().equals(TagEdit.distanceToString(location.getAccuracy()))) {
                             userLocationAccuracyFound = true;
                         }
                     }

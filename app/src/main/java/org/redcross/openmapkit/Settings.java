@@ -2,7 +2,6 @@ package org.redcross.openmapkit;
 
 import android.content.Context;
 import android.location.LocationManager;
-import android.util.Log;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
@@ -38,6 +37,7 @@ public class Settings {
     public static final String DEFAULT_NODE_NAME = "node";
     public static final ArrayList<String> DEFAULT_HIDDEN_MENU_ITEMS = new ArrayList<>();
     public static final String DEFAULT_USER_LOCATION_TAGS_LAT_LNG = null;
+    public static final String DEFAULT_USER_LOCATION_TAGS_DISTANCE = null;
     public static final String DEFAULT_USER_LOCATION_TAGS_ACCURACY = null;
     public static final boolean DEFAULT_CLICKABLE_TAGS = true;
     public static final JSONArray DEFAULT_PULL_CSV_TAGS = new JSONArray();
@@ -477,7 +477,8 @@ public class Settings {
     public boolean isUserLocationTagsEnabled(boolean shouldIgnoreGpsStatus) {
         boolean result = false;
         if(getUserLatLngName() != null
-                || getUserAccuracyName() != null) {
+                || getUserAccuracyName() != null
+                || getUserDistanceName() != null) {
             if(shouldIgnoreGpsStatus == true || isGpsEnabled()) result = true;
         }
         return result;
@@ -511,6 +512,34 @@ public class Settings {
         return latLng;
     }
 
+    public String getUserDistanceName() {
+        String latLng = DEFAULT_USER_LOCATION_TAGS_DISTANCE;
+        try {
+            JSONObject userLocationTags = getUserLocationTagsSub();
+            if(userLocationTags.has("distance")
+                    && userLocationTags.getJSONObject("distance").has("name")) {
+                latLng = userLocationTags.getJSONObject("distance").getString("name");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return latLng;
+    }
+
+    public String getUserDistanceLabel() {
+        String distance = getUserDistanceName();
+        try {
+            JSONObject userLocationTags = getUserLocationTagsSub();
+            if(userLocationTags.has("distance")
+                    && userLocationTags.getJSONObject("distance").has("label")) {
+                distance = userLocationTags.getJSONObject("distance").getString("label");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return distance;
+    }
+
     public String getUserAccuracyName() {
         String accuracy = DEFAULT_USER_LOCATION_TAGS_ACCURACY;
         try {
@@ -542,7 +571,8 @@ public class Settings {
     public boolean isUserLocationTag(String name) {
         if(isUserLocationTagsEnabled(true)) {
             if((getUserLatLngName() != null && name.equals(getUserLatLngName()))
-                    || (getUserAccuracyName() != null && name.equals(getUserAccuracyName()))) {
+                    || (getUserAccuracyName() != null && name.equals(getUserAccuracyName()))
+                    || (getUserDistanceName() != null && name.equals(getUserDistanceName()))) {
                 return true;
             }
         }
