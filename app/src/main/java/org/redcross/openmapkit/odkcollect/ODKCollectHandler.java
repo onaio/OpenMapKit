@@ -151,6 +151,13 @@ public class ODKCollectHandler {
                 userLocationAccuracy.setLabel(Settings.singleton().getUserAccuracyLabel());
                 tags.put(Settings.singleton().getUserAccuracyName(), userLocationAccuracy);
             }
+
+            if(Settings.singleton().getUserDistanceName() != null) {
+                ODKTag userDistance = new ODKTag();
+                userDistance.setKey(Settings.singleton().getUserDistanceName());
+                userDistance.setLabel(Settings.singleton().getUserDistanceLabel());
+                tags.put(Settings.singleton().getUserDistanceName(), userDistance);
+            }
         }
         return tags;
     }
