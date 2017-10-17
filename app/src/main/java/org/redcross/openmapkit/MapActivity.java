@@ -43,6 +43,7 @@ import android.widget.Toast;
 
 import com.spatialdev.osm.model.OSMWay;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateSequence;
 import com.vividsolutions.jts.geom.Geometry;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -53,7 +54,9 @@ import com.spatialdev.osm.OSMMap;
 import com.spatialdev.osm.events.OSMSelectionListener;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 
 import org.fieldpapers.listeners.FPListener;
 import org.fieldpapers.model.FPAtlas;
@@ -461,7 +464,21 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                     if(!Settings.singleton().isUserLocationTagsEnabled() || userLocation != null) {
                         //launch the TagSwipeActivity
                         Intent tagSwipe = new Intent(getApplicationContext(), TagSwipeActivity.class);
-                        if(userLocation != null) tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, userLocation);
+                        if(userLocation != null) {
+                            Location locToBeSent = new Location(userLocation);
+                            tagSwipe.putExtra(TagSwipeActivity.KEY_USER_LOCATION, locToBeSent);
+                            LinkedList<OSMElement> selectedElements = OSMElement.getSelectedElements();
+                            if (selectedElements != null && selectedElements.size() == 1) {
+                                OSMElement selectedStructure = selectedElements.get(0);
+                                CoordinateSequence sequence = new CoordinateArraySequence
+                                        (new Coordinate[]{
+                                                new Coordinate(locToBeSent.getLatitude(),
+                                                        locToBeSent.getLongitude())});
+                                double distance = selectedStructure.getJTSGeom()
+                                        .distance(new Point(sequence, new GeometryFactory()));
+                                tagSwipe.putExtra(TagSwipeActivity.KEY_USER_DISTANCE, distance);
+                            }
+                        }
                         startActivityForResult(tagSwipe, ODK_COLLECT_TAG_ACTIVITY_CODE);
                     } else {
                         Toast.makeText(MapActivity.this, R.string.waiting_for_accurate_location, Toast.LENGTH_LONG).show();
