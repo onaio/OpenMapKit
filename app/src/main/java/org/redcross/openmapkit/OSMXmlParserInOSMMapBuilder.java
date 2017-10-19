@@ -1,5 +1,7 @@
 package org.redcross.openmapkit;
 
+import android.support.annotation.Nullable;
+
 import com.spatialdev.osm.model.OSMDataSet;
 import com.spatialdev.osm.model.OSMXmlParser;
 
@@ -20,8 +22,20 @@ public class OSMXmlParserInOSMMapBuilder extends OSMXmlParser {
 
     private OSMMapBuilder osmMapBuilder;
 
-    public static OSMDataSet parseFromInputStream(InputStream in, OSMMapBuilder osmMapBuilder) throws IOException {
+    public static OSMDataSet parseFromInputStream(InputStream in) throws IOException {
+        OSMXmlParser osmXmlParser = new OSMXmlParserInOSMMapBuilder();
+        parse(osmXmlParser, in);
+        return osmXmlParser.getDataSet();
+    }
+
+    public static OSMDataSet parseFromInputStream(InputStream in, OSMMapBuilder osmMapBuilder)
+            throws IOException {
         OSMXmlParser osmXmlParser = new OSMXmlParserInOSMMapBuilder(osmMapBuilder);
+        parse(osmXmlParser, in);
+        return osmXmlParser.getDataSet();
+    }
+
+    private static void parse(OSMXmlParser osmXmlParser, InputStream in) throws IOException {
         try {
             osmXmlParser.parse(in);
         } catch (XmlPullParserException e) {
@@ -31,7 +45,10 @@ public class OSMXmlParserInOSMMapBuilder extends OSMXmlParser {
                 in.close();
             }
         }
-        return osmXmlParser.getDataSet();
+    }
+
+    private OSMXmlParserInOSMMapBuilder() {
+        super(null);
     }
 
     private OSMXmlParserInOSMMapBuilder(OSMMapBuilder osmMapBuilder) {
@@ -41,6 +58,9 @@ public class OSMXmlParserInOSMMapBuilder extends OSMXmlParser {
 
     @Override
     protected void notifyProgress() {
-        osmMapBuilder.updateFromParser(elementReadCount, nodeReadCount, wayReadCount, relationReadCount, tagReadCount);
+        if (osmMapBuilder != null) {
+            osmMapBuilder.updateFromParser(
+                    elementReadCount, nodeReadCount, wayReadCount, relationReadCount, tagReadCount);
+        }
     }
 }

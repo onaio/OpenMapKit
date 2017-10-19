@@ -75,6 +75,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -1099,16 +1100,52 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 mapView.setCenter(centroidLatLng);
 
                 //check whether the user is within the proximity
-                if (isWithinUserProximity(tappedOSMElement)) {
-                    //present OSM Feature tags in bottom ListView
-                    identifyOSMFeature(tappedOSMElement);
-                } else {
+                String notSeletableMessage = isUnselectableDueToTagValue(tappedOSMElement);
+                if (!isWithinUserProximity(tappedOSMElement)) {
                     String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
                     Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
                     proportionMapAndList(100, 0);
+                    return;
+                } else if (notSeletableMessage != null) {
+                    Toast.makeText(this, notSeletableMessage, Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                identifyOSMFeature(tappedOSMElement);
+            }
+        }
+    }
+
+    /**
+     * Checks if there is a tag tied to the provided {@link OSMElement} that should prevent it from
+     * being selectable.
+     *
+     * @param element   The element to check tags in
+     * @return  {@code NULL} if there is no tag that should prevent the element from being
+     *          selectable or a message that can be displayed to the user if a tag matching the
+     *          criteria is found
+     */
+    private String isUnselectableDueToTagValue(OSMElement element) {
+        if (element != null
+                && !ODKCollectHandler.getODKCollectData().getPreviousOSMEditFileStructureIds()
+                    .contains(element.getId())
+                && Constraints.singleton() != null) {
+            HashMap<String, ArrayList<String>> tags =
+                    Constraints.singleton().getNotSelectableIfList();
+            Map<String, String> elementTags = element.getTags();
+            for (String curKey : tags.keySet()) {
+                if (elementTags.containsKey(curKey)) {
+                    String curTagValue = elementTags.get(curKey);
+
+                    if (tags.get(curKey).contains(curTagValue)) {
+                        return String.format(getString(R.string.structure_not_selectable_reason),
+                                curKey, curTagValue);
+                    }
                 }
             }
         }
+
+        return null;
     }
 
     /**
