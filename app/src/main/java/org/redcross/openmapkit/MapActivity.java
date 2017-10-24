@@ -141,6 +141,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private HashMap<Integer, Form> downloadingForms, successfulForms;
     private ProgressDialog progressDialog;
     private DownloadManager downloadManager;
+    private boolean noGpsAuthorized;
 
     /**
      * Which GPS provider should be used to get the User's current location
@@ -227,6 +228,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         
         // initialize basemap object
         basemap = new Basemap(this);
+
+        noGpsAuthorized = false;
 
         initializeFP();
 
@@ -332,6 +335,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         mapView.addLocationListener(locationListener);
     }
 
+    public boolean checkLocationProviderEnabled() {
+        return checkLocationProviderEnabled(true);
+    }
 
     /**
      * This method checks whether the preferred location provider is enabled in the device and shows
@@ -339,7 +345,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      *
      * @return TRUE if the preferred location provider is enabled
      */
-    public boolean checkLocationProviderEnabled() {
+    public boolean checkLocationProviderEnabled(boolean showDialog) {
         if(isGPSEnabled()) {
             if(gpsProviderAlertDialog != null) {
                 gpsProviderAlertDialog.dismiss();
@@ -347,38 +353,36 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             return true;
         }
 
-        //if we've reached this point, it means the location provider is not enabled
-        //show the enable location provider dialog
-        if(gpsProviderAlertDialog == null) {
-            gpsProviderAlertDialog = new android.support.v7.app.AlertDialog.Builder(MapActivity.this)
-                    .setMessage(getResources().getString(R.string.enable_gps))
-                    .setPositiveButton("Enable GPS", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            if (isGPSEnabled()) {
-                                dialogInterface.dismiss();
-                            } else {
-                                MapActivity.this.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                            }
-                            MapActivity.this.finish();
-                        }
-                    })
-                    .setNegativeButton("Continue", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                            showAdminAuthorizationDialog(null, new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    gpsProviderAlertDialog.show();
+        if (showDialog) {
+            //if we've reached this point, it means the location provider is not enabled
+            //show the enable location provider dialog
+            if (gpsProviderAlertDialog == null) {
+                gpsProviderAlertDialog = new android.support.v7.app.AlertDialog.Builder(MapActivity.this)
+                        .setMessage(getResources().getString(R.string.enable_gps))
+                        .setPositiveButton("Enable GPS", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (isGPSEnabled()) {
+                                    dialogInterface.dismiss();
+                                } else {
+                                    MapActivity.this.startActivity(
+                                            new Intent(android.provider.Settings
+                                                    .ACTION_LOCATION_SOURCE_SETTINGS));
                                 }
-                            });
-                        }
-                    })
-                    .setCancelable(false)
-                    .create();
+                                MapActivity.this.finish();
+                            }
+                        })
+                        .setNegativeButton("Continue", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .setCancelable(false)
+                        .create();
+            }
+            gpsProviderAlertDialog.show();
         }
-        gpsProviderAlertDialog.show();
 
         return false;
     }
@@ -898,29 +902,51 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
             mapView.setInteractionEnabled(true);
         } else {
-            if(recordUserLocation()) {
-                if (Settings.singleton().getProximityCheck()) {
-                    //check user's last location is accurate enough
-                    if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
-                        if (!isUserLocationEnabled()) {
-                            toggleUserLocation(true);
-                        }
-                        mapView.goToUserLocation(true);
-                        mapView.setInteractionEnabled(false);
-                    } else {
-                        Toast.makeText(this, getResources().getString(R.string.waiting_for_accurate_location), Toast.LENGTH_LONG).show();
-                        return;
+            if (Settings.singleton().isUserLocationTagsEnabled() || noGpsAuthorized) {
+                focusOnNewNode();
+            } else {
+                showAdminAuthorizationDialog(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        noGpsAuthorized = true;
+                        focusOnNewNode();
                     }
-                }
-
-                addNodeBtn.setVisibility(View.VISIBLE);
-                addNodeMarkerBtn.setVisibility(View.VISIBLE);
-                nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_green));
-                OSMElement.deselectAll();
-                mapView.invalidate();
+                }, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        noGpsAuthorized = false;
+                        toggleNodeMode();
+                    }
+                });
             }
         }
         nodeMode = !nodeMode;
+    }
+
+    private void focusOnNewNode() {
+        final Button addNodeBtn = (Button)findViewById(R.id.addNodeBtn);
+        final ImageButton addNodeMarkerBtn = (ImageButton)findViewById(R.id.addNodeMarkerBtn);
+        if(recordUserLocation()) {
+            if (Settings.singleton().getProximityCheck()) {
+                //check user's last location is accurate enough
+                if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
+                    if (!isUserLocationEnabled()) {
+                        toggleUserLocation(true);
+                    }
+                    mapView.goToUserLocation(true);
+                    mapView.setInteractionEnabled(false);
+                } else {
+                    Toast.makeText(this, getResources().getString(R.string.waiting_for_accurate_location), Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+
+            addNodeBtn.setVisibility(View.VISIBLE);
+            addNodeMarkerBtn.setVisibility(View.VISIBLE);
+            nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_green));
+            OSMElement.deselectAll();
+            mapView.invalidate();
+        }
     }
 
     /**
@@ -1252,7 +1278,27 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     @Override
-    public void selectedElementsChanged(LinkedList<OSMElement> selectedElements) {
+    public void selectedElementsChanged(final LinkedList<OSMElement> selectedElements) {
+        if (Settings.singleton().isUserLocationTagsEnabled() || noGpsAuthorized) {
+            focusOnSelectedElements(selectedElements);
+        } else {
+            showAdminAuthorizationDialog(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    noGpsAuthorized = true;
+                    focusOnSelectedElements(selectedElements);
+                }
+            }, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    noGpsAuthorized = false;
+                    selectedElementsChanged(selectedElements);
+                }
+            });
+        }
+    }
+
+    private void focusOnSelectedElements(LinkedList<OSMElement> selectedElements) {
         if(recordUserLocation()) {
             if (selectedElements != null && selectedElements.size() > 0) {
                 //fetch the tapped feature
