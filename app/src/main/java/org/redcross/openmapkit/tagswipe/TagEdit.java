@@ -10,6 +10,11 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import com.spatialdev.osm.model.OSMElement;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateSequence;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 
 import org.redcross.openmapkit.Constraints;
 import org.redcross.openmapkit.Settings;
@@ -130,7 +135,8 @@ public class TagEdit {
 
         tagEditHiddenHash = new LinkedHashMap<>();
         tagEditHiddenHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), "-1.22321132,36.32234233", true));
-        tagEditHiddenHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), locationAccuracyToString(32f), true));
+        tagEditHiddenHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), distanceToString(32f), true));
+        tagEditHiddenHash.put(Settings.singleton().getUserDistanceName(), new TagEdit(Settings.singleton().getUserDistanceName(), distanceToString(8), true));
     }
 
     /**
@@ -169,6 +175,7 @@ public class TagEdit {
         tagEditHiddenHash = new LinkedHashMap<>();
         tagEditHiddenHash.put(Settings.singleton().getUserLatLngName(), new TagEdit(Settings.singleton().getUserLatLngName(), null, true));
         tagEditHiddenHash.put(Settings.singleton().getUserAccuracyName(), new TagEdit(Settings.singleton().getUserAccuracyName(), "", true));
+        tagEditHiddenHash.put(Settings.singleton().getUserDistanceName(), new TagEdit(Settings.singleton().getUserDistanceName(), "", true));
     }
 
     /**
@@ -192,6 +199,15 @@ public class TagEdit {
                 }
             }
         }
+
+        if(Settings.singleton().getUserDistanceName() != null) {
+            if(tagEditHiddenHash.containsKey(Settings.singleton().getUserDistanceName())) {
+                tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).tagVal = null;
+                if(tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).editText != null) {
+                    tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).editText.setText(null);
+                }
+            }
+        }
     }
 
     /**
@@ -201,7 +217,7 @@ public class TagEdit {
      *                  accuracy
      * @see Location
      */
-    public static void updateUserLocationTags(Location location) {
+    public static void updateUserLocationTags(Location location, double distance) {
         if(location != null) {
             tagSwipeActivity.hideGpsSearchingProgressDialog();
 
@@ -213,7 +229,14 @@ public class TagEdit {
 
             if(Settings.singleton().getUserAccuracyName() != null) {
                 if (tagEditHiddenHash.containsKey(Settings.singleton().getUserAccuracyName())) {
-                    tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).tagVal = locationAccuracyToString(location.getAccuracy());
+                    tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).tagVal = distanceToString(location.getAccuracy());
+                }
+            }
+
+            if(Settings.singleton().getUserDistanceName() != null) {
+                if (tagEditHiddenHash.containsKey(Settings.singleton().getUserDistanceName())) {
+                    Log.d("userdistance", "Distance is " + distance);
+                    tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).tagVal = distanceToString(distance);
                 }
             }
         }
@@ -235,8 +258,8 @@ public class TagEdit {
         return null;
     }
 
-    public static String locationAccuracyToString(float accuracy) {
-        return String.valueOf(accuracy) + " m";
+    public static String distanceToString(double accuracy) {
+        return String.valueOf((float) accuracy) + " m";
     }
 
     private static String tagValueOrDefaultValue(Map<String,String> tags, String tagKey) {
@@ -314,6 +337,14 @@ public class TagEdit {
                     return false;
                 }
             }
+
+            if(Settings.singleton().getUserDistanceName() != null) {//distance required
+                if(!tagEditHiddenHash.containsKey(Settings.singleton().getUserDistanceName())
+                        || tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).tagVal == null
+                        || tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).tagVal.length() == 0) {
+                    return false;
+                }
+            }
         }
 
         return true;
@@ -360,6 +391,12 @@ public class TagEdit {
     }
     
     private static void updateTagsInOSMElement() {
+        Collection<ODKTag> requiredTags = ODKCollectHandler.getODKCollectData().getRequiredTags();
+        ArrayList<String> requiredTagNames = new ArrayList<>();
+        for (ODKTag curTag : requiredTags) {
+            requiredTagNames.add(curTag.getKey());
+        }
+
         for (TagEdit tagEdit : tagEdits) {
             tagEdit.updateTagInOSMElement();
         }
@@ -367,11 +404,27 @@ public class TagEdit {
         if(Settings.singleton().isUserLocationTagsEnabled()) {
             if(Settings.singleton().getUserLatLngName() != null
                     && tagEditHiddenHash.containsKey(Settings.singleton().getUserLatLngName())) {
+                requiredTagNames.remove(Settings.singleton().getUserLatLngName());
                 tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).updateTagInOSMElement();
             }
             if(Settings.singleton().getUserAccuracyName() != null
                     && tagEditHiddenHash.containsKey(Settings.singleton().getUserAccuracyName())) {
+                requiredTagNames.remove(Settings.singleton().getUserAccuracyName());
                 tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).updateTagInOSMElement();
+            }
+            if(Settings.singleton().getUserDistanceName() != null
+                    && tagEditHiddenHash.containsKey(Settings.singleton().getUserDistanceName())) {
+                requiredTagNames.remove(Settings.singleton().getUserDistanceName());
+                tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).updateTagInOSMElement();
+            }
+        }
+
+        // set all hidden tags that are supposed to be collected but hidden to null
+        if (tagEditHiddenHash != null) {
+            for (TagEdit curTagEdit : tagEditHiddenHash.values()) {
+                if (requiredTagNames.contains(curTagEdit.getTagKey())) {
+                    curTagEdit.getOsmElement().addOrEditTag(curTagEdit.getTagKey(), "");
+                }
             }
         }
     }
@@ -464,7 +517,8 @@ public class TagEdit {
             addOrEditTag(tagKey, tagVal);
         }
         else if(tagKey.equals(Settings.singleton().getUserLatLngName())
-                || tagKey.equals(Settings.singleton().getUserAccuracyName())) {
+                || tagKey.equals(Settings.singleton().getUserAccuracyName())
+                || tagKey.equals(Settings.singleton().getUserDistanceName())) {
             if(tagVal != null) {
                 addOrEditTag(tagKey, tagVal);
             } else {

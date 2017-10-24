@@ -42,6 +42,7 @@ import org.redcross.openmapkit.odkcollect.ODKCollectHandler;
 
 public class TagSwipeActivity extends ActionBarActivity {
     public static final String KEY_USER_LOCATION = "user_location";
+    public static final String KEY_USER_DISTANCE = "user_distance";
     public static final ArrayList<Integer> MENU_ITEM_IDS;
     static{
         MENU_ITEM_IDS = new ArrayList<>();
@@ -102,9 +103,11 @@ public class TagSwipeActivity extends ActionBarActivity {
         TagEdit.cleanUserLocationTags();
         if(org.redcross.openmapkit.Settings.singleton().isUserLocationTagsEnabled()
                 && bundle != null
-                && bundle.containsKey(KEY_USER_LOCATION)) {
+                && bundle.containsKey(KEY_USER_LOCATION)
+                && bundle.containsKey(KEY_USER_DISTANCE)) {
             Location userLocation = bundle.getParcelable(KEY_USER_LOCATION);
-            TagEdit.updateUserLocationTags(userLocation);
+            double distance = bundle.getDouble(KEY_USER_DISTANCE);
+            TagEdit.updateUserLocationTags(userLocation, distance);
         }
     }
 
