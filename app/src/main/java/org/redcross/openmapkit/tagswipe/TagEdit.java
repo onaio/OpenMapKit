@@ -318,11 +318,14 @@ public class TagEdit {
 
         return true;
     }
+
+    private static Set<String> getMissingRequiredTags() {
+        updateTagsInOSMElement();
+        return Constraints.singleton().requiredTagsNotMet(osmElement);
+    }
     
     public static boolean saveToODKCollect(String osmUserName) {
-        updateTagsInOSMElement();
-
-        Set<String> missingTags = Constraints.singleton().requiredTagsNotMet(osmElement);
+        Set<String> missingTags = getMissingRequiredTags();
         tagSwipeActivity.setOsmFilePath(null);
         if (missingTags.size() > 0) {
             tagSwipeActivity.notifyMissingTags(missingTags);
