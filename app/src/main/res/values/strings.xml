@@ -100,5 +100,16 @@
     <string name="an_error_occurred_retag">An error occurred. Please re-tag the %1$s</string>
     <string name="title_activity_query">QueryActivity</string>
     <string name="querying_please_wait">Querying OMK, please wait...</string>
+    <string name="authorization">Authorization</string>
+    <string name="password">Password</string>
+    <string name="admin_authorization_instructions">Please enter the administrator password to authorize this action.</string>
+    <string name="wrong_admin_password_entered">Wrong administrator password entered</string>
+    <string name="change_admin_password">Change Admin Password</string>
+    <string name="change_admin_password_instructions">Enter the new administrator password below. If you ever forget the new password, you will have to uninstall then reinstall OMK to reset to the default password.</string>
+    <string name="new_password">New password</string>
+    <string name="retype_password">Retype password</string>
+    <string name="change">Change</string>
+    <string name="password_cannot_be_empty">Password cannot be empty</string>
+    <string name="passwords_dont_match">The provided passwords don\'t match</string>
 
 </resources>

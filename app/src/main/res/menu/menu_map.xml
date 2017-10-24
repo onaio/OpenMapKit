@@ -26,6 +26,9 @@
                 android:id="@+id/osmFromODK"
                 android:title="@string/action_osmFromODK"/>
             <item
+                android:id="@+id/changeAdminPassword"
+                android:title="@string/change_admin_password"/>
+            <item
                 android:id="@+id/info"
                 android:title="@string/action_info" />
             </menu>

@@ -24,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialog;
 import android.support.v7.view.ContextThemeWrapper;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -68,6 +69,9 @@ import org.redcross.openmapkit.tagswipe.TagSwipeActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -84,6 +88,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected static final String PREVIOUS_LNG = "org.redcross.openmapkit.PREVIOUS_LNG";
     protected static final String PREVIOUS_ZOOM = "org.redcross.openmapkit.PREVIOUS_ZOOM";
     protected static final String ODK_OMK_QUERY_VAL = "org.redcross.openmapkit.ODK_QUERY_VAL";
+    protected static final String ADMIN_PASSWORD_PREFIX = "AP";
     public static final ArrayList<Integer> MENU_ITEM_IDS;
     static{
         MENU_ITEM_IDS = new ArrayList<>();
@@ -131,9 +136,12 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     private Location userLocation;//the location to be recorded in the user location OSM tags
 
     private AppCompatDialog odkQueryDialog;
+    private AppCompatDialog adminAuthorizationDialog;
+    private AppCompatDialog changeAdminPasswordDialog;
     private HashMap<Integer, Form> downloadingForms, successfulForms;
     private ProgressDialog progressDialog;
     private DownloadManager downloadManager;
+    private boolean noGpsAuthorized;
 
     /**
      * Which GPS provider should be used to get the User's current location
@@ -220,6 +228,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         
         // initialize basemap object
         basemap = new Basemap(this);
+
+        noGpsAuthorized = false;
 
         initializeFP();
 
@@ -325,6 +335,9 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         mapView.addLocationListener(locationListener);
     }
 
+    public boolean checkLocationProviderEnabled() {
+        return checkLocationProviderEnabled(true);
+    }
 
     /**
      * This method checks whether the preferred location provider is enabled in the device and shows
@@ -332,7 +345,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      *
      * @return TRUE if the preferred location provider is enabled
      */
-    public boolean checkLocationProviderEnabled() {
+    public boolean checkLocationProviderEnabled(boolean showDialog) {
         if(isGPSEnabled()) {
             if(gpsProviderAlertDialog != null) {
                 gpsProviderAlertDialog.dismiss();
@@ -340,34 +353,189 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             return true;
         }
 
-        //if we've reached this point, it means the location provider is not enabled
-        //show the enable location provider dialog
-        if(gpsProviderAlertDialog == null) {
-            gpsProviderAlertDialog = new android.support.v7.app.AlertDialog.Builder(MapActivity.this)
-                    .setMessage(getResources().getString(R.string.enable_gps))
-                    .setPositiveButton("Enable GPS", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            if (isGPSEnabled()) {
-                                dialogInterface.dismiss();
-                            } else {
-                                MapActivity.this.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+        if (showDialog) {
+            //if we've reached this point, it means the location provider is not enabled
+            //show the enable location provider dialog
+            if (gpsProviderAlertDialog == null) {
+                gpsProviderAlertDialog = new android.support.v7.app.AlertDialog.Builder(MapActivity.this)
+                        .setMessage(getResources().getString(R.string.enable_gps))
+                        .setPositiveButton("Enable GPS", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (isGPSEnabled()) {
+                                    dialogInterface.dismiss();
+                                } else {
+                                    MapActivity.this.startActivity(
+                                            new Intent(android.provider.Settings
+                                                    .ACTION_LOCATION_SOURCE_SETTINGS));
+                                }
+                                MapActivity.this.finish();
                             }
-                            MapActivity.this.finish();
-                        }
-                    })
-                    .setNegativeButton("Continue", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                        }
-                    })
-                    .setCancelable(false)
-                    .create();
+                        })
+                        .setNegativeButton("Continue", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .setCancelable(false)
+                        .create();
+            }
+            gpsProviderAlertDialog.show();
         }
-        gpsProviderAlertDialog.show();
 
         return false;
+    }
+
+    /**
+     * This method with show the authorization dialog for when GPS is not enabled
+     */
+    private void showAdminAuthorizationDialog(final View.OnClickListener onAuthorized,
+                                              final View.OnClickListener onCancelClicked) {
+        if (Settings.singleton().getAdminPassword() != Settings.DEFAULT_ADMIN_PASSWORD
+                && !TextUtils.isEmpty(getFormAdminPasswordSPKey())) {
+            final SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+            if (adminAuthorizationDialog == null) {
+                final ContextThemeWrapper themedContext;
+                themedContext = new ContextThemeWrapper(this, R.style.CustomDialogStyle);
+                adminAuthorizationDialog = new AppCompatDialog(themedContext);
+                adminAuthorizationDialog.setContentView(R.layout.dialog_admin_authorization);
+                adminAuthorizationDialog.setTitle(R.string.authorization);
+                adminAuthorizationDialog.setCancelable(false);
+
+                Button cancelB = (Button) adminAuthorizationDialog.findViewById(R.id.cancelB);
+                cancelB.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        EditText passwordET = (EditText) adminAuthorizationDialog.findViewById(R.id.passwordET);
+                        passwordET.setText(null);
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                        adminAuthorizationDialog.dismiss();
+                        if (onCancelClicked != null) onCancelClicked.onClick(view);
+                    }
+                });
+
+                Button okB = (Button) adminAuthorizationDialog.findViewById(R.id.okB);
+                okB.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        EditText passwordET = (EditText) adminAuthorizationDialog.findViewById(R.id.passwordET);
+                        String password = passwordET.getText().toString().trim();
+                        String adminPassword = sharedPreferences.getString(getFormAdminPasswordSPKey(),
+                                Settings.singleton().getAdminPassword());
+                        if (adminPassword.equals(password)) {
+                            passwordET.setText(null);
+                            if (onAuthorized != null) onAuthorized.onClick(view);
+                            adminAuthorizationDialog.dismiss();
+                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                        } else {
+                            Toast.makeText(
+                                    MapActivity.this,
+                                    R.string.wrong_admin_password_entered,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+
+            EditText passwordET = (EditText) adminAuthorizationDialog.findViewById(R.id.passwordET);
+
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(passwordET.getWindowToken(), 0);
+
+            adminAuthorizationDialog.show();
+        }
+    }
+
+    private void showChangeAdminPasswordDialog() {
+        if (Settings.singleton().getAdminPassword() != Settings.DEFAULT_ADMIN_PASSWORD
+                && !TextUtils.isEmpty(getFormAdminPasswordSPKey())) {
+            showAdminAuthorizationDialog(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (changeAdminPasswordDialog == null) {
+                        final ContextThemeWrapper themedContext;
+                        themedContext = new ContextThemeWrapper(MapActivity.this, R.style.CustomDialogStyle);
+                        changeAdminPasswordDialog = new AppCompatDialog(themedContext);
+                        changeAdminPasswordDialog.setContentView(R.layout.dialog_change_admin_password);
+                        changeAdminPasswordDialog.setTitle(R.string.change_admin_password);
+                        changeAdminPasswordDialog.setCancelable(false);
+
+                        Button cancelB = (Button) changeAdminPasswordDialog.findViewById(R.id.cancelB);
+                        cancelB.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                EditText password1ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password1ET);
+                                password1ET.setText(null);
+                                EditText password2ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password2ET);
+                                password2ET.setText(null);
+
+                                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                                changeAdminPasswordDialog.dismiss();
+                            }
+                        });
+
+                        Button okB = (Button) changeAdminPasswordDialog.findViewById(R.id.okB);
+                        okB.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                EditText password1ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password1ET);
+                                String password1 = password1ET.getText().toString().trim();
+                                EditText password2ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password2ET);
+                                String password2 = password2ET.getText().toString().trim();
+
+                                if (TextUtils.isEmpty(password1) || TextUtils.isEmpty(password2)) {
+                                    Toast.makeText(MapActivity.this, R.string.password_cannot_be_empty, Toast.LENGTH_LONG).show();
+                                } else if (!password1.equals(password2)) {
+                                    Toast.makeText(MapActivity.this, R.string.passwords_dont_match, Toast.LENGTH_LONG).show();
+                                } else {
+                                    password1ET.setText(null);
+                                    password2ET.setText(null);
+                                    SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
+                                    editor.putString(getFormAdminPasswordSPKey(), password1);
+                                    editor.apply();
+                                    changeAdminPasswordDialog.dismiss();
+                                }
+                            }
+                        });
+                    }
+
+                    EditText password1ET = (EditText) changeAdminPasswordDialog.findViewById(R.id.password1ET);
+
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(password1ET.getWindowToken(), 0);
+
+                    changeAdminPasswordDialog.show();
+                }
+            }, null);
+        }
+    }
+
+    /**
+     * This method returns the current ODK form's key for the shared preference holding the admin
+     * password.
+     *
+     * @return The Shared Preference key for the current ODK form or @code{NULL} if there is no open ODK form
+     */
+    private String getFormAdminPasswordSPKey() {
+        if (ODKCollectHandler.isODKCollectMode()) {
+            String formId = ODKCollectHandler.getODKCollectData().getFormId();
+            if (!TextUtils.isEmpty(formId)) {
+                try {
+                    String formIdHash = HashingUtils.getSHA1Hash(formId);
+                    return ADMIN_PASSWORD_PREFIX + "-" + formIdHash;
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -734,29 +902,51 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton));
             mapView.setInteractionEnabled(true);
         } else {
-            if(recordUserLocation()) {
-                if (Settings.singleton().getProximityCheck()) {
-                    //check user's last location is accurate enough
-                    if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
-                        if (!isUserLocationEnabled()) {
-                            toggleUserLocation(true);
-                        }
-                        mapView.goToUserLocation(true);
-                        mapView.setInteractionEnabled(false);
-                    } else {
-                        Toast.makeText(this, getResources().getString(R.string.waiting_for_accurate_location), Toast.LENGTH_LONG).show();
-                        return;
+            if (Settings.singleton().isUserLocationTagsEnabled() || noGpsAuthorized) {
+                focusOnNewNode();
+            } else {
+                showAdminAuthorizationDialog(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        noGpsAuthorized = true;
+                        focusOnNewNode();
                     }
-                }
-
-                addNodeBtn.setVisibility(View.VISIBLE);
-                addNodeMarkerBtn.setVisibility(View.VISIBLE);
-                nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_green));
-                OSMElement.deselectAll();
-                mapView.invalidate();
+                }, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        noGpsAuthorized = false;
+                        toggleNodeMode();
+                    }
+                });
             }
         }
         nodeMode = !nodeMode;
+    }
+
+    private void focusOnNewNode() {
+        final Button addNodeBtn = (Button)findViewById(R.id.addNodeBtn);
+        final ImageButton addNodeMarkerBtn = (ImageButton)findViewById(R.id.addNodeMarkerBtn);
+        if(recordUserLocation()) {
+            if (Settings.singleton().getProximityCheck()) {
+                //check user's last location is accurate enough
+                if (lastLocation != null && lastLocation.getAccuracy() <= Settings.singleton().getGpsProximityAccuracy()) {
+                    if (!isUserLocationEnabled()) {
+                        toggleUserLocation(true);
+                    }
+                    mapView.goToUserLocation(true);
+                    mapView.setInteractionEnabled(false);
+                } else {
+                    Toast.makeText(this, getResources().getString(R.string.waiting_for_accurate_location), Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+
+            addNodeBtn.setVisibility(View.VISIBLE);
+            addNodeMarkerBtn.setVisibility(View.VISIBLE);
+            nodeModeButton.setBackground(getResources().getDrawable(R.drawable.roundedbutton_green));
+            OSMElement.deselectAll();
+            mapView.invalidate();
+        }
     }
 
     /**
@@ -1066,6 +1256,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             return true;
         } else if (id == R.id.osmFromODK) {
             showOdkQueryDialog();
+        } else if (id == R.id.changeAdminPassword) {
+            showChangeAdminPasswordDialog();
         }
         return false;
     }
@@ -1086,7 +1278,27 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     @Override
-    public void selectedElementsChanged(LinkedList<OSMElement> selectedElements) {
+    public void selectedElementsChanged(final LinkedList<OSMElement> selectedElements) {
+        if (Settings.singleton().isUserLocationTagsEnabled() || noGpsAuthorized) {
+            focusOnSelectedElements(selectedElements);
+        } else {
+            showAdminAuthorizationDialog(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    noGpsAuthorized = true;
+                    focusOnSelectedElements(selectedElements);
+                }
+            }, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    noGpsAuthorized = false;
+                    selectedElementsChanged(selectedElements);
+                }
+            });
+        }
+    }
+
+    private void focusOnSelectedElements(LinkedList<OSMElement> selectedElements) {
         if(recordUserLocation()) {
             if (selectedElements != null && selectedElements.size() > 0) {
                 //fetch the tapped feature
