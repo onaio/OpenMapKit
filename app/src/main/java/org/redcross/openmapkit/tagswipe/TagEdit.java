@@ -360,6 +360,12 @@ public class TagEdit {
     }
     
     private static void updateTagsInOSMElement() {
+        Collection<ODKTag> requiredTags = ODKCollectHandler.getODKCollectData().getRequiredTags();
+        ArrayList<String> requiredTagNames = new ArrayList<>();
+        for (ODKTag curTag : requiredTags) {
+            requiredTagNames.add(curTag.getKey());
+        }
+
         for (TagEdit tagEdit : tagEdits) {
             tagEdit.updateTagInOSMElement();
         }
@@ -367,11 +373,22 @@ public class TagEdit {
         if(Settings.singleton().isUserLocationTagsEnabled()) {
             if(Settings.singleton().getUserLatLngName() != null
                     && tagEditHiddenHash.containsKey(Settings.singleton().getUserLatLngName())) {
+                requiredTagNames.remove(Settings.singleton().getUserLatLngName());
                 tagEditHiddenHash.get(Settings.singleton().getUserLatLngName()).updateTagInOSMElement();
             }
             if(Settings.singleton().getUserAccuracyName() != null
                     && tagEditHiddenHash.containsKey(Settings.singleton().getUserAccuracyName())) {
+                requiredTagNames.remove(Settings.singleton().getUserAccuracyName());
                 tagEditHiddenHash.get(Settings.singleton().getUserAccuracyName()).updateTagInOSMElement();
+            }
+        }
+
+        // set all hidden tags that are supposed to be collected but hidden to null
+        if (tagEditHiddenHash != null) {
+            for (TagEdit curTagEdit : tagEditHiddenHash.values()) {
+                if (requiredTagNames.contains(curTagEdit.getTagKey())) {
+                    curTagEdit.getOsmElement().addOrEditTag(curTagEdit.getTagKey(), "");
+                }
             }
         }
     }
