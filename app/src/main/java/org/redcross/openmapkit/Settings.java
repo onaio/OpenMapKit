@@ -50,6 +50,7 @@ public class Settings {
     public static final GpsLocationProvider.LocationStrategy DEFAULT_LOCATION_STRATEGY =
             GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
     public static final String DEFAULT_ADMIN_PASSWORD = null;
+    public static final String DEFAULT_GEO_CONTEXT_TAG = null;
 
     private static Settings instance;
     private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
@@ -631,6 +632,24 @@ public class Settings {
         if(data.has("admin_password")) {
             try {
                 response = data.getString("admin_password");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
+    }
+
+    /**
+     * This method returns the geo context tag
+     *
+     * @return The geo_context_tag field in the settings, or @link{DEFAULT_GEO_CONTEXT_TAG} if not
+     * defined in the settings file
+     */
+    public String getGeoContextTag() {
+        String response = DEFAULT_GEO_CONTEXT_TAG;
+        if(data.has("geo_context_tag")) {
+            try {
+                response = data.getString("geo_context_tag");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
