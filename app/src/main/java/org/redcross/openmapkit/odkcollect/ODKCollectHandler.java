@@ -42,6 +42,7 @@ public class ODKCollectHandler {
                     String instanceId = extras.getString("INSTANCE_ID");
                     String instanceDir = extras.getString("INSTANCE_DIR");
                     String previousOSMEditFileName = extras.getString("OSM_EDIT_FILE_NAME");
+                    String geoContext = extras.getString("GEO_CONTEXT");
 
                     if (action.equals("android.intent.action.SEND")) {
                         //initialize settings
@@ -55,6 +56,7 @@ public class ODKCollectHandler {
                             instanceId,
                             instanceDir,
                             previousOSMEditFileName,
+                            geoContext,
                             requiredTags);
                 }
             }

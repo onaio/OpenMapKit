@@ -50,13 +50,15 @@ public class ODKCollectData {
     private String editedXml;
     private String checksum;
     private String appVersion;
+    private String geoContext;
 
-    public ODKCollectData ( String formId, 
+    public ODKCollectData ( String formId,
                             String formFileName,
-                            String instanceId, 
+                            String instanceId,
                             String instanceDir,
                             String previousOSMEditFileName,
-                            LinkedHashMap<String, ODKTag> requiredTags ) {
+                            String geoContext,
+                            LinkedHashMap<String, ODKTag> requiredTags) {
         this.formId = formId;
         this.formFileName = formFileName;
         this.instanceId = instanceId;
@@ -64,6 +66,7 @@ public class ODKCollectData {
         this.previousOSMEditFileName = previousOSMEditFileName;
         this.requiredTags = requiredTags;
         this.appVersion = MapActivity.getVersion();
+        this.geoContext = geoContext;
         findEditedOSMForForm(formFileName);
         extractOsmIdsFromPreviousEdit();
     }
@@ -203,6 +206,10 @@ public class ODKCollectData {
 
     public Collection<ODKTag> getRequiredTags() {
         return requiredTags.values();
+    }
+
+    public String getGeoContext() {
+        return this.geoContext;
     }
 
     /**
