@@ -46,7 +46,8 @@ public class TagListAdapter extends BaseAdapter {
             }
             Set<String> readOnlyKeys = readOnlyTags.keySet();
             for (String readOnlyKey : readOnlyKeys) {
-                if(Constraints.singleton().tagIsHidden(readOnlyKey) == false) {
+                if(Constraints.singleton().tagIsHidden(readOnlyKey) == false
+                        && !readOnlyKey.equals(Settings.singleton().getGeoContextTag())) {
                     tagMap.put(readOnlyKey, tags.get(readOnlyKey));
                 }
             }

@@ -2,6 +2,7 @@ package org.redcross.openmapkit.tagswipe;
 
 import android.location.Location;
 import android.util.Log;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -94,7 +95,9 @@ public class TagEdit {
             Set<String> readOnlyKeys = readOnlyTags.keySet();
             for (String readOnlyKey : readOnlyKeys) {
                 TagEdit tagEdit = new TagEdit(readOnlyKey, readOnlyTags.get(readOnlyKey), true);
-                if(Constraints.singleton().tagIsHidden(readOnlyKey) == true) {
+                if(Constraints.singleton().tagIsHidden(readOnlyKey) == true
+                        || (Settings.singleton().isGeoContextTagEnabled()
+                            && readOnlyKey.equals(Settings.singleton().getGeoContextTag()))) {
                     tagEditHiddenHash.put(readOnlyKey, tagEdit);
                 } else {
                     tagEditHash.put(readOnlyKey, tagEdit);
@@ -242,6 +245,15 @@ public class TagEdit {
         }
     }
 
+    public static void updateGeoContextTag(String tagName, String tagValue, boolean force) {
+        if (force
+                || !tagEditHiddenHash.containsKey(tagName)
+                || tagEditHiddenHash.get(tagName) == null) {
+            if (tagValue == null) tagValue = "";
+            tagEditHiddenHash.put(tagName, new TagEdit(tagName, tagValue, true));
+        }
+    }
+
     /**
      * This method converts a location object to a string containing the latitude and longitude
      * (separated using a comma i.e latitude,longitude)
@@ -350,6 +362,18 @@ public class TagEdit {
         return true;
     }
 
+    public static boolean checkGeoContextTag() {
+        if (Settings.singleton().isGeoContextTagEnabled()) {
+            if(!tagEditHiddenHash.containsKey(Settings.singleton().getGeoContextTag())
+                    || (!TextUtils.isEmpty(ODKCollectHandler.getODKCollectData().getGeoContext())
+                        && TextUtils.isEmpty(tagEditHiddenHash.get(Settings.singleton().getGeoContextTag()).tagVal))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static Set<String> getMissingRequiredTags() {
         updateTagsInOSMElement();
         return Constraints.singleton().requiredTagsNotMet(osmElement);
@@ -363,6 +387,9 @@ public class TagEdit {
             return false;
         } else if(checkUserLocationTags() == false) {
             tagSwipeActivity.notifyMissingUserLocation();
+            return false;
+        } else if (checkGeoContextTag() == false) {
+            tagSwipeActivity.notifyMissingGeoContext();
             return false;
         } else {
             tagSwipeActivity.setOsmFilePath(
@@ -420,6 +447,11 @@ public class TagEdit {
                 requiredTagNames.remove(Settings.singleton().getUserDistanceName());
                 tagEditHiddenHash.get(Settings.singleton().getUserDistanceName()).updateTagInOSMElement();
             }
+        }
+
+        if (Settings.singleton().isGeoContextTagEnabled()) {
+            requiredTagNames.remove(Settings.singleton().getGeoContextTag());
+            tagEditHiddenHash.get(Settings.singleton().getGeoContextTag()).updateTagInOSMElement();
         }
 
         // set all hidden tags that are supposed to be collected but hidden to null
@@ -521,7 +553,9 @@ public class TagEdit {
         }
         else if(tagKey.equals(Settings.singleton().getUserLatLngName())
                 || tagKey.equals(Settings.singleton().getUserAccuracyName())
-                || tagKey.equals(Settings.singleton().getUserDistanceName())) {
+                || tagKey.equals(Settings.singleton().getUserDistanceName())
+                || (Settings.singleton().isGeoContextTagEnabled()
+                    && tagKey.equals(Settings.singleton().getGeoContextTag()))) {
             if(tagVal != null) {
                 addOrEditTag(tagKey, tagVal);
             } else {

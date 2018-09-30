@@ -657,6 +657,15 @@ public class Settings {
         return response;
     }
 
+    public boolean isGeoContextTagEnabled() {
+        if (getGeoContextTag() != null
+                && !getGeoContextTag().equals(DEFAULT_GEO_CONTEXT_TAG)) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * This method temporarily sets the value of clickable_tags. Value will not persist when settings
      * singleton is re-instantiated

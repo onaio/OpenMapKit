@@ -123,6 +123,7 @@ public class TagSwipeActivity extends ActionBarActivity {
     
         pageToCorrectTag();
         setUserLocation();
+        setGeoContextTag();
     }
 
     @Override
@@ -144,6 +145,18 @@ public class TagSwipeActivity extends ActionBarActivity {
             Location userLocation = bundle.getParcelable(KEY_USER_LOCATION);
             double distance = bundle.getDouble(KEY_USER_DISTANCE);
             TagEdit.updateUserLocationTags(userLocation, distance);
+        }
+    }
+
+    /**
+     * This method sets the geo context tag if the geo_context_tag setting is set. Value of the geo
+     * context comes from ODK Collect
+     */
+    private void setGeoContextTag() {
+        if (org.redcross.openmapkit.Settings.singleton().isGeoContextTagEnabled()) {
+            String geoContextTag = org.redcross.openmapkit.Settings.singleton().getGeoContextTag();
+            String geoContext = ODKCollectHandler.getODKCollectData().getGeoContext();
+            TagEdit.updateGeoContextTag(geoContextTag, geoContext, false);
         }
     }
 
@@ -310,6 +323,10 @@ public class TagSwipeActivity extends ActionBarActivity {
 
     public void notifyMissingUserLocation() {
         Toast.makeText(this, String.format(getResources().getString(R.string.could_not_append_location), org.redcross.openmapkit.Settings.singleton().getNodeName()), Toast.LENGTH_LONG).show();
+    }
+
+    public void notifyMissingGeoContext() {
+        Toast.makeText(this, String.format(getResources().getString(R.string.could_not_attach_geo_context), org.redcross.openmapkit.Settings.singleton().getGeoContextTag()), Toast.LENGTH_LONG).show();
     }
 
     private String missingTagsText(Set<String> missingTags) {
