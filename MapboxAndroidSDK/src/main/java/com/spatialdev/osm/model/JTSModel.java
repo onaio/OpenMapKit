@@ -59,6 +59,10 @@ public class JTSModel {
         addOSMDataSet(absPath, ds);
     }
 
+    public Map<Long, OSMElement> getElementHashMap() {
+        return elementHashMap;
+    }
+
     /**
      * Removes a specific OSM XML Data Set based off of the path of the file.
      * * * 

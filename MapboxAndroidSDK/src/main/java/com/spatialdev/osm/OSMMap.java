@@ -27,11 +27,14 @@ import com.spatialdev.osm.model.OSMColorConfig;
 import com.spatialdev.osm.model.OSMElement;
 import com.spatialdev.osm.model.OSMNode;
 import com.spatialdev.osm.renderer.OSMOverlay;
+import com.spatialdev.osm.indicators.*;
 import com.vividsolutions.jts.geom.Envelope;
 
 import org.fieldpapers.model.FPAtlas;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class OSMMap implements MapViewListener, MapListener {
 
@@ -43,6 +46,7 @@ public class OSMMap implements MapViewListener, MapListener {
     private JTSModel jtsModel;
     private OSMSelectionListener selectionListener;
     private OSMOverlay osmOverlay;
+    private Map<String, Map<Long, OSMElement>> mappedElements;
 
     private PathOverlay debugTapEnvelopePath;
 
@@ -248,5 +252,33 @@ public class OSMMap implements MapViewListener, MapListener {
         selectedNode.delete(jtsModel);
         mapView.invalidate();
         return selectedNode;
+    }
+
+    public Map<String, OSMIndicator> getIndicators(String mapReduceTagKey, String filterTagKey, String filterTagValue) {
+        if (mappedElements == null) {
+            mappedElements = OSMIndicator.getMappedData(mapReduceTagKey, filterTagKey, filterTagValue, jtsModel);
+        }
+
+        Map<String, OSMIndicator> indicators = new HashMap<String, OSMIndicator>();
+        indicators.put(MsprayEligibleFoundIndicator.NAME,
+                new MsprayEligibleFoundIndicator(mappedElements));
+        indicators.put(MsprayFoundCoverageIndicator.NAME,
+                new MsprayFoundCoverageIndicator(mappedElements));
+        indicators.put(MsprayNotSprayableIndicator.NAME,
+                new MsprayNotSprayableIndicator(mappedElements));
+        indicators.put(MsprayNotSprayedIndicator.NAME,
+                new MsprayNotSprayedIndicator(mappedElements));
+        indicators.put(MspraySprayCoverageIndicator.NAME,
+                new MspraySprayCoverageIndicator(mappedElements));
+        indicators.put(MspraySprayedIndicator.NAME,
+                new MspraySprayedIndicator(mappedElements));
+        indicators.put(MspraySprayEffectivenessIndicator.NAME,
+                new MspraySprayEffectivenessIndicator(mappedElements));
+        indicators.put(MsprayTotalEligibleIndicator.NAME,
+                new MsprayTotalEligibleIndicator(mappedElements));
+        indicators.put(TotalIndicator.NAME,
+                new TotalIndicator(mappedElements));
+
+        return indicators;
     }
 }
