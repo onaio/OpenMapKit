@@ -54,6 +54,7 @@ import com.mapbox.mapboxsdk.views.MapView;
 import com.spatialdev.osm.OSMMap;
 import com.spatialdev.osm.events.OSMSelectionListener;
 import com.spatialdev.osm.model.OSMElement;
+import com.spatialdev.osm.indicators.OSMIndicator;
 import com.spatialdev.osm.model.OSMNode;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -111,17 +112,23 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     protected OSMMap osmMap;
     protected TextView fieldPapersMsg;
     protected ListView mTagListView;
+    protected ListView mIndicatorListView;
     protected ImageButton mCloseListViewButton;
+    protected ImageButton mIndicatorsCloseList;
     protected ImageButton tagButton;
     protected ImageButton moveButton;
+    protected ImageButton indicatorButton;
     protected ImageButton deleteButton;
     protected Button nodeModeButton;
     protected Button addTagsButton;
     protected LinearLayout mTopLinearLayout;
     protected LinearLayout mBottomLinearLayout;
+    protected LinearLayout mIndicatorLinearLayout;
     protected TextView mTagTextView;
+    protected TextView mIndicatorTextView;
     protected Basemap basemap;
     protected TagListAdapter tagListAdapter;
+    protected IndicatorListAdapter indicatorListAdapter;
     protected Menu menu;
     protected TextView gpsAccuracyView;
 
@@ -215,11 +222,17 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         //get the layout the ListView is nested in
         mBottomLinearLayout = (LinearLayout)findViewById(R.id.bottomLinearLayout);
 
+        mIndicatorLinearLayout = (LinearLayout) findViewById(R.id.indicatorLinearLayout);
+
         //the ListView from layout
         mTagListView = (ListView)findViewById(R.id.tagListView);
 
+        mIndicatorListView = (ListView)findViewById(R.id.indicatorListView);
+
         //the ListView close image button
         mCloseListViewButton = (ImageButton)findViewById(R.id.imageViewCloseList);
+
+        mIndicatorsCloseList = (ImageButton)findViewById(R.id.indicatorsCloseList);
 
         //get the layout the Map is nested in
         mTopLinearLayout = (LinearLayout)findViewById(R.id.topLinearLayout);
@@ -243,6 +256,8 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         // setup move button
         initializeMoveButton();
 
+        initializeIndicatorButton();
+
         initializeNodeModeButton();
         initializeAddNodeButtons();
         initializeMoveNodeButtons();
@@ -252,6 +267,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         positionMap();
 
         initializeListView();
+        initializeIndicatorView();
         initLocationListener();
 
         // Proximity is disabled until there is a GPS fix.
@@ -592,7 +608,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             mapView.setZoom(z);
         }
     }
-    
+
     /**
      * For initializing the ListView of tags
      */
@@ -603,13 +619,13 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         mTagTextView.setText(R.string.tagListViewTitle);
 
         //hide the ListView by default
-        proportionMapAndList(100, 0);
+        proportionMapAndList(100, 0, 0);
 
         //handle when user taps on the close button in the list view
         mCloseListViewButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                proportionMapAndList(100, 0);
+                proportionMapAndList(100, 0, 0);
             }
         });
 
@@ -696,6 +712,49 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         });
     }
 
+    /**
+     * For initializing the ListView of indicators
+     */
+    protected void initializeIndicatorView() {
+
+        mIndicatorTextView = (TextView)findViewById(R.id.indicatorTextView);
+        mIndicatorTextView.setText(String.format(getResources().getString(R.string.indicators),
+                ODKCollectHandler.getODKCollectData().getGeoContext()));
+
+        //hide the ListView by default
+        proportionMapAndList(100, 0, 0);
+
+        //handle when user taps on the close button in the list view
+        mIndicatorsCloseList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                proportionMapAndList(100, 0, 0);
+                mIndicatorListView.setVisibility(View.GONE);
+            }
+        });
+
+        //increase the 'hit area' of the down arrow
+        View parent = findViewById(R.id.indicatorLinearLayout);
+        parent.post(new Runnable() {
+            public void run() {
+
+                Rect delegateArea = new Rect();
+                ImageButton delegate = mIndicatorsCloseList;
+                delegate.getHitRect(delegateArea);
+                delegateArea.top -= 100;
+                delegateArea.bottom += 100;
+                delegateArea.left -= 100;
+                delegateArea.right += 100;
+
+                TouchDelegate expandedArea = new TouchDelegate(delegateArea, delegate);
+
+                if (View.class.isInstance(delegate.getParent())) {
+                    ((View) delegate.getParent()).setTouchDelegate(expandedArea);
+                }
+            }
+        });
+    }
+
     private void initializeGpsAccuracyView() {
         gpsAccuracyView = (TextView) findViewById(R.id.gpsAccuracyView);
         if(Settings.singleton().getProximityCheck()) {
@@ -756,7 +815,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
         mTagListView.setAdapter(tagListAdapter);
 
         //show the ListView under the map
-        proportionMapAndList(50, 50);
+        proportionMapAndList(50, 50, 0);
     }
 
     private void launchDeleteDialog() {
@@ -768,7 +827,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 public void onClick(DialogInterface dialogInterface, int i) {
                     deleteNode();
                     dialogInterface.dismiss();
-                    proportionMapAndList(100, 0);
+                    proportionMapAndList(100, 0, 0);
                 }
             });
 
@@ -789,14 +848,16 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * @param topWeight Refers to the layout weight.  Note, topWeight + bottomWeight must equal the weight sum of 100
      * @param bottomWeight Referes to the layotu height.  Note, bottomWeight + topWeight must equal the weight sum of 100
      */
-    protected void proportionMapAndList(int topWeight, int bottomWeight) {
+    protected void proportionMapAndList(int topWeight, int bottomWeight, int indicatorWeight) {
 
         LinearLayout.LayoutParams topLayoutParams = (LinearLayout.LayoutParams)mTopLinearLayout.getLayoutParams();
         LinearLayout.LayoutParams bottomLayoutParams = (LinearLayout.LayoutParams)mBottomLinearLayout.getLayoutParams();
+        LinearLayout.LayoutParams indicatorLayoutParams = (LinearLayout.LayoutParams)mIndicatorLinearLayout.getLayoutParams();
 
         //update weight of top and bottom linear layouts
         mTopLinearLayout.setLayoutParams(new LinearLayout.LayoutParams(topLayoutParams.width, topLayoutParams.height, topWeight));
         mBottomLinearLayout.setLayoutParams(new LinearLayout.LayoutParams(bottomLayoutParams.width, bottomLayoutParams.height, bottomWeight));
+        mIndicatorLinearLayout.setLayoutParams(new LinearLayout.LayoutParams(indicatorLayoutParams.width, indicatorLayoutParams.height, indicatorWeight));
     }
 
     /**
@@ -870,6 +931,22 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             public void onClick(View v) {
                 toggleMoveNodeMode();
             }
+        });
+    }
+
+    protected void initializeIndicatorButton() {
+        indicatorButton = (ImageButton)findViewById(R.id.indicatorBtn);
+        if (Settings.singleton().getIndicators().size() == 0) {
+            indicatorButton.setVisibility(View.GONE);
+        } else {
+            indicatorButton.setVisibility(View.VISIBLE);
+        }
+
+        indicatorButton.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View v) {
+               showIndicators();
+           }
         });
     }
     
@@ -994,7 +1071,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
             }
 
             if(userLocation == null) {
-                proportionMapAndList(100, 0);
+                proportionMapAndList(100, 0, 0);
                 result = false;
             }
         }
@@ -1034,10 +1111,26 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 moveNodeBtn.setVisibility(View.VISIBLE);
                 moveNodeModeBtn.setBackground(getResources().getDrawable(R.drawable.roundedbutton_orange));
                 hideSelectedMarker();
-                proportionMapAndList(100, 0);
+                proportionMapAndList(100, 0, 0);
             }
             moveNodeMode = !moveNodeMode;
         }
+    }
+
+    private void showIndicators() {
+        proportionMapAndList(50, 0, 50);
+        mIndicatorListView.setVisibility(View.VISIBLE);
+
+        Map<String, OSMIndicator> indicators = osmMap.getIndicators(
+                this,
+                "spray_status",
+                Settings.singleton().getGeoContextTag(),
+                ODKCollectHandler.getODKCollectData().getGeoContext());
+
+        indicatorListAdapter = new IndicatorListAdapter(this, indicators);
+
+        //set the ListView's adapter
+        mIndicatorListView.setAdapter(indicatorListAdapter);
     }
 
     private void hideSelectedMarker() {
@@ -1313,7 +1406,7 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
                 if (!isWithinUserProximity(tappedOSMElement)) {
                     String warning = String.format(getResources().getString(R.string.need_to_be_close_node), Settings.singleton().getProximityRadius() + "m");
                     Toast.makeText(this, warning, Toast.LENGTH_LONG).show();
-                    proportionMapAndList(100, 0);
+                    proportionMapAndList(100, 0, 0);
                     return;
                 } else if (notSeletableMessage != null) {
                     Toast.makeText(this, notSeletableMessage, Toast.LENGTH_LONG).show();

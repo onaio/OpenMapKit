@@ -3,4 +3,13 @@
     <string name="toolTipTitle">Title</string>
     <string name="toolTipDescription">Description</string>
     <string name="toolTipAddress">Address</string>
+    <string name="indicatorTotalStructures">Total Number of Structures in Spray Area</string>
+    <string name="indicatorMsprayTotalEligible">Total Number of Eligible Structures in Spray Area</string>
+    <string name="indicatorMspraySprayEffectiveness">Spray Effectiveness</string>
+    <string name="indicatorMspraySprayed">Number of Structures Sprayed</string>
+    <string name="indicatorMspraySprayCoverage">Spray Coverage</string>
+    <string name="indicatorMsprayNotSprayed">Number of Structures Not Sprayed</string>
+    <string name="indicatorMsprayNotSprayable">Number of Structures Not Eligible</string>
+    <string name="indicatorMsprayFoundCoverage">Found Coverage</string>
+    <string name="indicatorMsprayEligibleFound">Total Number of Eligible Structures Found</string>
 </resources>

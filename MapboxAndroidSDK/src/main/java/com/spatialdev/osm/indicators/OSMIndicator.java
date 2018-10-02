@@ -1,5 +1,6 @@
 package com.spatialdev.osm.indicators;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.spatialdev.osm.model.JTSModel;
@@ -12,8 +13,10 @@ import java.util.List;
 public abstract class OSMIndicator {
     protected final Map<String, Map<Long, OSMElement>> mappedData;
     protected final String name;
+    protected final Context context;
 
-    public OSMIndicator(String name, Map<String, Map<Long, OSMElement>> mappedData) {
+    public OSMIndicator(Context context, String name, Map<String, Map<Long, OSMElement>> mappedData) {
+        this.context = context;
         this.name = name;
         this.mappedData = mappedData;
     }
@@ -62,4 +65,6 @@ public abstract class OSMIndicator {
     }
 
     public abstract double calculate(Map<String, OSMIndicator> indicators);
+    public abstract String getTitle();
+    public abstract String getFormattedCalculation(Map<String, OSMIndicator> indicators);
 }

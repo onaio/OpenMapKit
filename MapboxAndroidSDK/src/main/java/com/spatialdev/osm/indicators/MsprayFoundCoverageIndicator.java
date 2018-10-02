@@ -1,10 +1,14 @@
 package com.spatialdev.osm.indicators;
 
+import android.content.Context;
+
+import com.mapbox.mapboxsdk.R;
 import com.spatialdev.osm.model.OSMElement;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.lang.Math;
 
 /**
  * Found Coverage = Total Number of eligible structures "Found" / Total Number of eligible structures in Spray Area
@@ -12,8 +16,8 @@ import java.util.List;
 public class MsprayFoundCoverageIndicator extends OSMIndicator {
     public static final String NAME = "MsprayFoundCoverageIndicator";
 
-    public MsprayFoundCoverageIndicator(Map<String, Map<Long, OSMElement>> mappedData) {
-        super(NAME, mappedData);
+    public MsprayFoundCoverageIndicator(Context context, Map<String, Map<Long, OSMElement>> mappedData) {
+        super(context, NAME, mappedData);
     }
 
     @Override
@@ -25,5 +29,16 @@ public class MsprayFoundCoverageIndicator extends OSMIndicator {
         }
 
         return 0d;
+    }
+
+    @Override
+    public String getFormattedCalculation(Map<String, OSMIndicator> indicators) {
+        double percent = calculate(indicators) * 100;
+        return String.valueOf(Math.round(percent)) + "%";
+    }
+
+    @Override
+    public String getTitle() {
+        return context.getResources().getString(R.string.indicatorMsprayFoundCoverage);
     }
 }

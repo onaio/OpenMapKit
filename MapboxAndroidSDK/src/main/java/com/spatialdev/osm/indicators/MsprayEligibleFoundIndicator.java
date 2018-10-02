@@ -1,10 +1,14 @@
 package com.spatialdev.osm.indicators;
 
+import android.content.Context;
+
+import com.mapbox.mapboxsdk.R;
 import com.spatialdev.osm.model.OSMElement;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.lang.Math;
 
 /**
  * Total Number of eligible structures "Found" = (Number of structures "Sprayed" + Number of
@@ -13,8 +17,8 @@ import java.util.List;
 public class MsprayEligibleFoundIndicator extends OSMIndicator {
     public static final String NAME = "MsprayEligibleFoundIndicator";
 
-    public MsprayEligibleFoundIndicator(Map<String, Map<Long, OSMElement>> mappedData) {
-        super(NAME, mappedData);
+    public MsprayEligibleFoundIndicator(Context context, Map<String, Map<Long, OSMElement>> mappedData) {
+        super(context, NAME, mappedData);
     }
 
     @Override
@@ -28,5 +32,16 @@ public class MsprayEligibleFoundIndicator extends OSMIndicator {
         }
 
         return 0d;
+    }
+
+    @Override
+    public String getFormattedCalculation(Map<String, OSMIndicator> indicators) {
+        double calculation = calculate(indicators);
+        return String.valueOf(Math.round(calculation));
+    }
+
+    @Override
+    public String getTitle() {
+        return context.getResources().getString(R.string.indicatorMsprayEligibleFound);
     }
 }

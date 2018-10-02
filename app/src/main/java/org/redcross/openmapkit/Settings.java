@@ -1,6 +1,7 @@
 package org.redcross.openmapkit;
 
 import android.content.Context;
+import android.util.Log;
 import android.location.LocationManager;
 
 import com.mapbox.mapboxsdk.overlay.GpsLocationProvider;
@@ -51,6 +52,7 @@ public class Settings {
             GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
     public static final String DEFAULT_ADMIN_PASSWORD = null;
     public static final String DEFAULT_GEO_CONTEXT_TAG = null;
+    public static final ArrayList<String> DEFAULT_INDICATORS = new ArrayList<>();
 
     private static Settings instance;
     private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
@@ -636,6 +638,29 @@ public class Settings {
                 e.printStackTrace();
             }
         }
+        return response;
+    }
+
+    /**
+     * This method returns the list of indicators to display
+     *
+     * @return The indicators field in the settings, or @link{DEFAULT_INDICATORS} if not
+     * defined in the settings file
+     */
+    public ArrayList<String> getIndicators() {
+        ArrayList<String> response = DEFAULT_INDICATORS;
+        if(data.has("indicators")) {
+            response = new ArrayList<>();
+            try {
+                JSONArray array = data.getJSONArray("indicators");
+                for (int c = 0; c < array.length(); c++) {
+                    response.add(array.getString(c));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
         return response;
     }
 

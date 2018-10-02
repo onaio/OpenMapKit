@@ -114,5 +114,6 @@
     <string name="change">Change</string>
     <string name="password_cannot_be_empty">Password cannot be empty</string>
     <string name="passwords_dont_match">The provided passwords don\'t match</string>
+    <string name="indicators">Indicators for %1$s</string>
 
 </resources>
