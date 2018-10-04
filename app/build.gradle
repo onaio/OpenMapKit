@@ -32,8 +32,8 @@ android {
         applicationId "org.redcross.openmapkit"
         minSdkVersion 16
         targetSdkVersion 21
-        versionCode 34
-        versionName "1.1.22-mspray"
+        versionCode 35
+        versionName "1.1.23-mspray"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
