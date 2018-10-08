@@ -53,6 +53,7 @@ public class Settings {
     public static final String DEFAULT_ADMIN_PASSWORD = null;
     public static final String DEFAULT_GEO_CONTEXT_TAG = null;
     public static final ArrayList<String> DEFAULT_INDICATORS = new ArrayList<>();
+    public static final ArrayList<String> DEFAULT_EXTRA_ODK_INSTANCE_DIRECTORIES = new ArrayList<>();
 
     private static Settings instance;
     private static boolean proximityEnabled = DEFAULT_PROXIMITY_ENABLED;
@@ -653,6 +654,30 @@ public class Settings {
             response = new ArrayList<>();
             try {
                 JSONArray array = data.getJSONArray("indicators");
+                for (int c = 0; c < array.length(); c++) {
+                    response.add(array.getString(c));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return response;
+    }
+
+    /**
+     * This method returns the list of extra ODK instance directories (apart from those that, by default will be
+     * scanned) that should be scanned for OSM files.
+     *
+     * @return The list of directories, or @link{DEFAULT_EXTRA_OSM_DIRECTORIES} if not
+     * defined in the settings file
+     */
+    public ArrayList<String> getExtraOdkInstanceDirectories() {
+        ArrayList<String> response = DEFAULT_EXTRA_ODK_INSTANCE_DIRECTORIES;
+        if(data.has("extra_odk_instance_directories")) {
+            response = new ArrayList<>();
+            try {
+                JSONArray array = data.getJSONArray("extra_odk_instance_directories");
                 for (int c = 0; c < array.length(); c++) {
                     response.add(array.getString(c));
                 }

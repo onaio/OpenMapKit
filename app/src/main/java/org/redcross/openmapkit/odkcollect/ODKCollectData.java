@@ -15,6 +15,7 @@ import org.redcross.openmapkit.MapActivity;
 import org.redcross.openmapkit.OSMXmlParserInOSMMapBuilder;
 import org.redcross.openmapkit.odkcollect.tag.ODKTag;
 import org.redcross.openmapkit.odkcollect.tag.ODKTagItem;
+import org.redcross.openmapkit.Settings;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -68,6 +69,13 @@ public class ODKCollectData {
         this.appVersion = MapActivity.getVersion();
         this.geoContext = geoContext;
         findEditedOSMForForm(formFileName);
+        if (Settings.singleton() != null) {
+            ArrayList<String> extraInstanceDirs = Settings.singleton().getExtraOdkInstanceDirectories();
+
+            for (String curDir : extraInstanceDirs) {
+                findEditedOSMForForm(curDir, null, false);
+            }
+        }
         extractOsmIdsFromPreviousEdit();
     }
 
@@ -112,48 +120,56 @@ public class ODKCollectData {
             return;
         }
 
-        String instanceDirName = new File(instanceDir).getName();
         String instances = new File(instanceDir).getParent();
+
+        findEditedOSMForForm(instances, formFileName, true);
+    }
+
+    private void findEditedOSMForForm(String instances, String formFileName, boolean checkIfFromSameForm) {
         File[] instancesDirs = new File(instances).listFiles();
-        for (int i = 0; i < instancesDirs.length; ++i) {
-            File dir = instancesDirs[i];
-            if (!dir.isDirectory()) {
-                continue;
-            }
-            // check if the instance dir is for the form we are dealing with
-            // it is 0 if the form file name is the first substring of the dirname
-            if (dir.getName().indexOf(formFileName) != 0) {
-                continue;
-            }
-            
-            String[] files = dir.list();
-            for (int j = 0; j < files.length; ++j) {
-                String fname = files[j];
-                if (fname.lastIndexOf(".osm") > -1) {
+        String instanceDirName = new File(instanceDir).getName();
+
+        if (instancesDirs != null) {
+            for (int i = 0; i < instancesDirs.length; ++i) {
+                File dir = instancesDirs[i];
+                if (!dir.isDirectory()) {
+                    continue;
+                }
+                // check if the instance dir is for the form we are dealing with
+                // it is 0 if the form file name is the first substring of the dirname
+                if (checkIfFromSameForm && dir.getName().indexOf(formFileName) != 0) {
+                    continue;
+                }
+
+                String[] files = dir.list();
+                for (int j = 0; j < files.length; ++j) {
+                    String fname = files[j];
+                    if (fname.lastIndexOf(".osm") > -1) {
                     /*
                     determine whether the current file j is in the same instance directory as
                     previousOSMEditFileName. If so, don't add it
                      */
-                    if(dir.getName().equals(instanceDirName)) {
-                        if(previousOSMEditFileName == null) {
-                            //means that none of the OSM files in the ODK instance directory have been
-                            //marked as previous. Very fishy. Check if the file is the youngest in the instance directory
+                        if(dir.getName().equals(instanceDirName)) {
+                            if(previousOSMEditFileName == null) {
+                                //means that none of the OSM files in the ODK instance directory have been
+                                //marked as previous. Very fishy. Check if the file is the youngest in the instance directory
+                                if(!isLastModifiedOsmFileInDirectory(dir, fname)) {
+                                    continue;
+                                }
+                            }
+                            else if(!fname.equals(previousOSMEditFileName)) {
+                                //means that the current file is something the user entered then overwrote
+                                //with the previousOSMEditFileName
+                                continue;
+                            }
+                        } else {
                             if(!isLastModifiedOsmFileInDirectory(dir, fname)) {
                                 continue;
                             }
                         }
-                        else if(!fname.equals(previousOSMEditFileName)) {
-                            //means that the current file is something the user entered then overwrote
-                            //with the previousOSMEditFileName
-                            continue;
-                        }
-                    } else {
-                        if(!isLastModifiedOsmFileInDirectory(dir, fname)) {
-                            continue;
-                        }
+                        File osmFile = new File(dir, fname);
+                        editedOSM.add(osmFile);
                     }
-                    File osmFile = new File(dir, fname);
-                    editedOSM.add(osmFile);
                 }
             }
         }
