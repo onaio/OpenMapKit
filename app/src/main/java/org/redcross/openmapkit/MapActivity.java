@@ -716,43 +716,44 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
      * For initializing the ListView of indicators
      */
     protected void initializeIndicatorView() {
+        if (ODKCollectHandler.isODKCollectMode()) {
+            mIndicatorTextView = (TextView) findViewById(R.id.indicatorTextView);
+            mIndicatorTextView.setText(String.format(getResources().getString(R.string.indicators),
+                    ODKCollectHandler.getODKCollectData().getGeoContext()));
 
-        mIndicatorTextView = (TextView)findViewById(R.id.indicatorTextView);
-        mIndicatorTextView.setText(String.format(getResources().getString(R.string.indicators),
-                ODKCollectHandler.getODKCollectData().getGeoContext()));
+            //hide the ListView by default
+            proportionMapAndList(100, 0, 0);
 
-        //hide the ListView by default
-        proportionMapAndList(100, 0, 0);
-
-        //handle when user taps on the close button in the list view
-        mIndicatorsCloseList.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                proportionMapAndList(100, 0, 0);
-                mIndicatorListView.setVisibility(View.GONE);
-            }
-        });
-
-        //increase the 'hit area' of the down arrow
-        View parent = findViewById(R.id.indicatorLinearLayout);
-        parent.post(new Runnable() {
-            public void run() {
-
-                Rect delegateArea = new Rect();
-                ImageButton delegate = mIndicatorsCloseList;
-                delegate.getHitRect(delegateArea);
-                delegateArea.top -= 100;
-                delegateArea.bottom += 100;
-                delegateArea.left -= 100;
-                delegateArea.right += 100;
-
-                TouchDelegate expandedArea = new TouchDelegate(delegateArea, delegate);
-
-                if (View.class.isInstance(delegate.getParent())) {
-                    ((View) delegate.getParent()).setTouchDelegate(expandedArea);
+            //handle when user taps on the close button in the list view
+            mIndicatorsCloseList.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    proportionMapAndList(100, 0, 0);
+                    mIndicatorListView.setVisibility(View.GONE);
                 }
-            }
-        });
+            });
+
+            //increase the 'hit area' of the down arrow
+            View parent = findViewById(R.id.indicatorLinearLayout);
+            parent.post(new Runnable() {
+                public void run() {
+
+                    Rect delegateArea = new Rect();
+                    ImageButton delegate = mIndicatorsCloseList;
+                    delegate.getHitRect(delegateArea);
+                    delegateArea.top -= 100;
+                    delegateArea.bottom += 100;
+                    delegateArea.left -= 100;
+                    delegateArea.right += 100;
+
+                    TouchDelegate expandedArea = new TouchDelegate(delegateArea, delegate);
+
+                    if (View.class.isInstance(delegate.getParent())) {
+                        ((View) delegate.getParent()).setTouchDelegate(expandedArea);
+                    }
+                }
+            });
+        }
     }
 
     private void initializeGpsAccuracyView() {
