@@ -26,11 +26,8 @@ public class MsprayEligibleFoundIndicator extends OSMIndicator {
         if (indicators.get(MspraySprayedIndicator.NAME) != null
                 && indicators.get(MsprayNotSprayedIndicator.NAME) != null
                 && indicators.get(MsprayNotSprayableIndicator.NAME) != null) {
-            double val = (indicators.get(MspraySprayedIndicator.NAME).calculate(indicators)
-                        + indicators.get(MsprayNotSprayedIndicator.NAME).calculate(indicators))
-                    - indicators.get(MsprayNotSprayableIndicator.NAME).calculate(indicators);
-
-            if (val < 0d) val = 0d;
+            double val = indicators.get(MspraySprayedIndicator.NAME).calculate(indicators)
+                        + indicators.get(MsprayNotSprayedIndicator.NAME).calculate(indicators);
 
             return val;
         }
