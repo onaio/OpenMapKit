@@ -21,11 +21,21 @@ public class MspraySprayCoverageIndicator extends OSMIndicator {
     }
 
     @Override
-    public double calculate(Map<String, OSMIndicator> indicators) {
+    public double calculate(Map<String, OSMIndicator> indicators) throws IndicatorCalculationException {
         if (indicators.get(MspraySprayedIndicator.NAME) != null
                 && indicators.get(MsprayEligibleFoundIndicator.NAME) != null) {
-            return indicators.get(MspraySprayedIndicator.NAME).calculate(indicators)
-                    / indicators.get(MsprayEligibleFoundIndicator.NAME).calculate(indicators);
+            double denominator = indicators.get(MsprayEligibleFoundIndicator.NAME).calculate(indicators);
+
+            if (denominator == 0d) {
+                throw new IndicatorCalculationException("Division by 0 error");
+            }
+
+            double val = indicators.get(MspraySprayedIndicator.NAME).calculate(indicators)
+                    / denominator;
+
+            if (val > 1d) val = 1d;
+
+            return val;
         }
 
         return 0d;
@@ -33,8 +43,14 @@ public class MspraySprayCoverageIndicator extends OSMIndicator {
 
     @Override
     public String getFormattedCalculation(Map<String, OSMIndicator> indicators) {
-        double percent = calculate(indicators) * 100;
-        return String.valueOf(Math.round(percent)) + "%";
+        try {
+            double percent = calculate(indicators) * 100;
+            return String.valueOf(Math.round(percent)) + "%";
+        } catch (IndicatorCalculationException e) {
+
+        }
+
+        return NULL_VALUE;
     }
 
     @Override

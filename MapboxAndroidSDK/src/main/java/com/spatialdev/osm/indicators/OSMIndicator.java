@@ -14,6 +14,7 @@ public abstract class OSMIndicator {
     protected final Map<String, Map<Long, OSMElement>> mappedData;
     protected final String name;
     protected final Context context;
+    protected final static String NULL_VALUE = "-";
 
     public OSMIndicator(Context context, String name, Map<String, Map<Long, OSMElement>> mappedData) {
         this.context = context;
@@ -64,7 +65,7 @@ public abstract class OSMIndicator {
         return mappedData;
     }
 
-    public abstract double calculate(Map<String, OSMIndicator> indicators);
+    public abstract double calculate(Map<String, OSMIndicator> indicators) throws IndicatorCalculationException;
     public abstract String getTitle();
     public abstract String getFormattedCalculation(Map<String, OSMIndicator> indicators);
 }

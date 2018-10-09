@@ -101,7 +101,6 @@ public class IndicatorListAdapter extends BaseAdapter {
 
         mViewHolder.textViewTagKey.setText(indicators.get(indicatorName).getTitle());
         mViewHolder.textViewTagValue.setText(indicators.get(indicatorName).getFormattedCalculation(indicators));
-        Log.d("TestIndicators", indicators.get(indicatorName).getTitle() + " = " + String.valueOf(indicators.get(indicatorName).calculate(indicators)));
 
         return view;
     }

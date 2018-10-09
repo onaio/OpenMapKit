@@ -22,7 +22,7 @@ public class MsprayNotSprayableIndicator extends OSMIndicator {
     }
 
     @Override
-    public double calculate(Map<String, OSMIndicator> indicators) {
+    public double calculate(Map<String, OSMIndicator> indicators) throws IndicatorCalculationException {
         if (mappedData.containsKey(NOT_SPRAYABLE_VALUE)
                 && mappedData.get(NOT_SPRAYABLE_VALUE) != null) {
             return mappedData.get(NOT_SPRAYABLE_VALUE).size();
@@ -33,8 +33,14 @@ public class MsprayNotSprayableIndicator extends OSMIndicator {
 
     @Override
     public String getFormattedCalculation(Map<String, OSMIndicator> indicators) {
-        double calculation = calculate(indicators);
-        return String.valueOf(Math.round(calculation));
+        try {
+            double calculation = calculate(indicators);
+            return String.valueOf(Math.round(calculation));
+        } catch (IndicatorCalculationException e) {
+
+        }
+
+        return NULL_VALUE;
     }
 
     @Override

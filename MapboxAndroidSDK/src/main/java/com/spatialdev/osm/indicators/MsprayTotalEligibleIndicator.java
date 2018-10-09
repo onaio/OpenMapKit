@@ -21,11 +21,15 @@ public class MsprayTotalEligibleIndicator extends OSMIndicator {
     }
 
     @Override
-    public double calculate(Map<String, OSMIndicator> indicators) {
+    public double calculate(Map<String, OSMIndicator> indicators) throws IndicatorCalculationException {
         if (indicators.get(TotalIndicator.NAME) != null
                 && indicators.get(MsprayNotSprayableIndicator.NAME) != null) {
-            return indicators.get(TotalIndicator.NAME).calculate(indicators)
+            double val = indicators.get(TotalIndicator.NAME).calculate(indicators)
                     - indicators.get(MsprayNotSprayableIndicator.NAME).calculate(indicators);
+
+            if (val < 0d) val = 0d;
+
+            return val;
         }
 
         return 0d;
@@ -33,8 +37,14 @@ public class MsprayTotalEligibleIndicator extends OSMIndicator {
 
     @Override
     public String getFormattedCalculation(Map<String, OSMIndicator> indicators) {
-        double calculation = calculate(indicators);
-        return String.valueOf(Math.round(calculation));
+        try {
+            double calculation = calculate(indicators);
+            return String.valueOf(Math.round(calculation));
+        } catch (IndicatorCalculationException e) {
+
+        }
+
+        return NULL_VALUE;
     }
 
     @Override

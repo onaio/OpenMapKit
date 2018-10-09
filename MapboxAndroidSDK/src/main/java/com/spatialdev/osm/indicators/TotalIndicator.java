@@ -18,7 +18,7 @@ public class TotalIndicator extends OSMIndicator {
     }
 
     @Override
-    public double calculate(Map<String, OSMIndicator> indicators) {
+    public double calculate(Map<String, OSMIndicator> indicators) throws IndicatorCalculationException {
         double total = 0d;
         for (String curMapKey : mappedData.keySet()) {
             if (mappedData.get(curMapKey) != null) {
@@ -31,8 +31,14 @@ public class TotalIndicator extends OSMIndicator {
 
     @Override
     public String getFormattedCalculation(Map<String, OSMIndicator> indicators) {
-        double calculation = calculate(indicators);
-        return String.valueOf(Math.round(calculation));
+        try {
+            double calculation = calculate(indicators);
+            return String.valueOf(Math.round(calculation));
+        } catch (IndicatorCalculationException e) {
+
+        }
+
+        return NULL_VALUE;
     }
 
     @Override
