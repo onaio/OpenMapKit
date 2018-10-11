@@ -277,6 +277,8 @@ public class OSMMap implements MapViewListener, MapListener {
                 new MspraySprayEffectivenessIndicator(context, mappedElements));
         indicators.put(MsprayTotalEligibleIndicator.NAME,
                 new MsprayTotalEligibleIndicator(context, mappedElements));
+        indicators.put(MsprayStructuresRequiredTo90PcIndicator.NAME,
+                new MsprayStructuresRequiredTo90PcIndicator(context, mappedElements));
         indicators.put(TotalIndicator.NAME,
                 new TotalIndicator(context, mappedElements));
 

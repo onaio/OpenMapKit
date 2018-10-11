@@ -12,4 +12,5 @@
     <string name="indicatorMsprayNotSprayable">Number of Structures Not Eligible</string>
     <string name="indicatorMsprayFoundCoverage">Found Coverage</string>
     <string name="indicatorMsprayEligibleFound">Total Number of Eligible Structures Found</string>
+    <string name="indicatorMsprayStructuresRequiredTo90Pc">Structures Required to Reach 90%</string>
 </resources>
