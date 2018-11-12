@@ -52,6 +52,7 @@ public class Settings {
             GpsLocationProvider.LocationStrategy.LOCATION_MANAGER;
     public static final String DEFAULT_ADMIN_PASSWORD = null;
     public static final String DEFAULT_GEO_CONTEXT_TAG = null;
+    public static final String DEFAULT_INDICATORS_TAG = null;
     public static final ArrayList<String> DEFAULT_INDICATORS = new ArrayList<>();
     public static final ArrayList<String> DEFAULT_EXTRA_ODK_INSTANCE_DIRECTORIES = new ArrayList<>();
 
@@ -700,6 +701,24 @@ public class Settings {
         if(data.has("geo_context_tag")) {
             try {
                 response = data.getString("geo_context_tag");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
+    }
+
+    /**
+     * This method returns the indicators tag
+     *
+     * @return The indicators_tag field in the settings, or @link{DEFAULT_INDICATORS_TAG} if not
+     * defined in the settings file
+     */
+    public String getIndicatorsTag() {
+        String response = DEFAULT_INDICATORS_TAG;
+        if(data.has("indicators_tag")) {
+            try {
+                response = data.getString("indicators_tag");
             } catch (JSONException e) {
                 e.printStackTrace();
             }

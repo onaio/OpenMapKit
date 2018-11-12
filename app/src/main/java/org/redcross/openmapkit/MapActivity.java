@@ -1119,19 +1119,21 @@ public class MapActivity extends AppCompatActivity implements OSMSelectionListen
     }
 
     private void showIndicators() {
-        proportionMapAndList(50, 0, 50);
-        mIndicatorListView.setVisibility(View.VISIBLE);
+        if (Settings.singleton().getIndicatorsTag() != Settings.DEFAULT_INDICATORS_TAG) {
+            proportionMapAndList(50, 0, 50);
+            mIndicatorListView.setVisibility(View.VISIBLE);
 
-        Map<String, OSMIndicator> indicators = osmMap.getIndicators(
-                this,
-                "spray_status",
-                Settings.singleton().getGeoContextTag(),
-                ODKCollectHandler.getODKCollectData().getGeoContext());
+            Map<String, OSMIndicator> indicators = osmMap.getIndicators(
+                    this,
+                    Settings.singleton().getIndicatorsTag(),
+                    Settings.singleton().getGeoContextTag(),
+                    ODKCollectHandler.getODKCollectData().getGeoContext());
 
-        indicatorListAdapter = new IndicatorListAdapter(this, indicators);
+            indicatorListAdapter = new IndicatorListAdapter(this, indicators);
 
-        //set the ListView's adapter
-        mIndicatorListView.setAdapter(indicatorListAdapter);
+            //set the ListView's adapter
+            mIndicatorListView.setAdapter(indicatorListAdapter);
+        }
     }
 
     private void hideSelectedMarker() {
