@@ -13,4 +13,16 @@
     <string name="indicatorMsprayFoundCoverage">Found Coverage</string>
     <string name="indicatorMsprayEligibleFound">Total Number of Eligible Structures Found</string>
     <string name="indicatorMsprayStructuresRequiredTo90Pc">Structures Required to Reach 90%</string>
+    <string name="indicatorMacepaAllReceived">All Received</string>
+    <string name="indicatorMacepaSomeReceived">Some Received</string>
+    <string name="indicatorMacepaNoneReceived">Not Received</string>
+    <string name="indicatorMacepaNotFoundYet">Not Found Yet</string>
+    <string name="indicatorMacepaAllEligible">All Eligible</string>
+    <string name="indicatorMacepaReceivedCoverage">Received Coverage</string>
+    <string name="indicatorMacepaReceived">Received</string>
+    <string name="indicatorMacepaFound">Found</string>
+    <string name="indicatorMacepaFoundCoverage">Found Coverage</string>
+    <string name="indicatorMacepaReceivedSuccessRate">Received Success Rate</string>
+    <string name="indicatorMacepaNotResidential">Not Residential</string>
+    <string name="indicatorMacepaStructuresRequiredTo90Pc">Structures Required to Reach 90%</string>
 </resources>

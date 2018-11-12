@@ -281,6 +281,31 @@ public class OSMMap implements MapViewListener, MapListener {
                 new MsprayStructuresRequiredTo90PcIndicator(context, mappedElements));
         indicators.put(TotalIndicator.NAME,
                 new TotalIndicator(context, mappedElements));
+        indicators.put(MacepaAllEligibleIndicator.NAME,
+                new MacepaAllEligibleIndicator(context, mappedElements));
+        indicators.put(MacepaAllReceivedIndicator.NAME,
+                new MacepaAllReceivedIndicator(context, mappedElements));
+        indicators.put(MacepaFoundCoverageIndicator.NAME,
+                new MacepaFoundCoverageIndicator(context, mappedElements));
+        indicators.put(MacepaFoundIndicator.NAME,
+                new MacepaFoundIndicator(context, mappedElements));
+        indicators.put(MacepaNoneReceivedIndicator.NAME,
+                new MacepaNoneReceivedIndicator(context, mappedElements));
+        indicators.put(MacepaNotFoundYetIndicator.NAME,
+                new MacepaNotFoundYetIndicator(context, mappedElements));
+        indicators.put(MacepaNotResidentialIndicator.NAME,
+                new MacepaNotResidentialIndicator(context, mappedElements));
+        indicators.put(MacepaReceivedCoverageIndicator.NAME,
+                new MacepaReceivedCoverageIndicator(context, mappedElements));
+        indicators.put(MacepaReceivedIndicator.NAME,
+                new MacepaReceivedIndicator(context, mappedElements));
+        indicators.put(MacepaReceivedSuccessRateIndicator.NAME,
+                new MacepaReceivedSuccessRateIndicator(context, mappedElements));
+        indicators.put(MacepaSomeReceivedIndicator.NAME,
+                new MacepaSomeReceivedIndicator(context, mappedElements));
+        indicators.put(MacepaStructuresRequiredTo90PcIndicator.NAME,
+                new MacepaStructuresRequiredTo90PcIndicator(context, mappedElements));
+
 
         return indicators;
     }
