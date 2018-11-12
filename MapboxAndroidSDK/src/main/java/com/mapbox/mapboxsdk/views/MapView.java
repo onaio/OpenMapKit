@@ -111,8 +111,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
      */
     private float mZoomLevel = 11;
     protected float mRequestedMinimumZoomLevel = 0;
-    private float mMinimumZoomLevel = 0;
-    private float mMaximumZoomLevel = 22;
+    private static final float DEFAULT_MIN_ZOOM_LEVEL = 0;
+    private static final float DEFAULT_MAX_ZOOM_LEVEL = 22;
+    private float mMinimumZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
+    private float mMaximumZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
     private boolean interactionEnabled = true;
 
     /**
@@ -855,9 +857,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     }
 
     public MapView setScale(float scale) {
+        Log.d("ZoomTest", "setScale called");
         float zoomDelta = (float) (Math.log(scale) / Math.log(2d));
         float newZoom = mZoomLevel + zoomDelta;
-        if (newZoom <= mMaximumZoomLevel && newZoom >= mMinimumZoomLevel) {
+        if (newZoom <= DEFAULT_MAX_ZOOM_LEVEL && newZoom >= DEFAULT_MIN_ZOOM_LEVEL) {
             mMultiTouchScale = scale;
             updateInversedTransformMatrix();
             invalidate();
@@ -893,6 +896,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
      * @return the map view, for chaining
      */
     public MapView setZoom(final float aZoomLevel) {
+        Log.d("ZoomTest", "setZoom called " + aZoomLevel);
         return this.mController.setZoom(aZoomLevel);
     }
 
@@ -901,12 +905,14 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     }
 
     protected MapView setZoomInternal(final float aZoomLevel, ILatLng center, final PointF decale) {
-
+        Log.d("ZoomTest", "setZoomInternal called");
         if (center == null) {
             center = getCenter();
         }
 
+        Log.d("ZoomTest", "aZoomLevel = " + aZoomLevel);
         final float newZoomLevel = getClampedZoomLevel(aZoomLevel);
+        Log.d("ZoomTest", "newZoomLevel = " + newZoomLevel);
         final float curZoomLevel = this.mZoomLevel;
 
         // reset the touchScale because from now on the zoom is the new one
@@ -1095,8 +1101,8 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     }
 
     public float getClampedZoomLevel(float zoom) {
-        final float minZoomLevel = getMinZoomLevel();
-        final float maxZoomLevel = getMaxZoomLevel();
+        final float minZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
+        final float maxZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
 
         return Math.max(minZoomLevel, Math.min(maxZoomLevel, zoom));
     }
